@@ -40,7 +40,6 @@ public class RootDocParseUtils {
      * Javadoc parse
      *
      * @param files Class source files
-     * @return
      */
     public static RootDoc parse(List<File> files) {
         if (!CollectionUtils.isEmpty(files)) {
@@ -59,7 +58,6 @@ public class RootDocParseUtils {
      * This requestMethod is for JVM use only
      *
      * @param root javadoc message
-     * @return
      */
     @Deprecated
     public static boolean start(RootDoc root) {

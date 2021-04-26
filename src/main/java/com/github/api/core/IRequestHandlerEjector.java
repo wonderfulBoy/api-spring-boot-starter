@@ -12,6 +12,11 @@ import java.util.Set;
  */
 public interface IRequestHandlerEjector {
 
+    /**
+     * Exclude the request mapping form the list
+     *
+     * @param requestMappingInfos the list of request mapping
+     */
     void handle(Set<RequestMappingInfo> requestMappingInfos);
 
 }

@@ -22,9 +22,8 @@ public class Documentation {
      */
     private String value;
 
-
     /**
-     * @return
+     * convert to yaml
      */
     public String toYaml() {
         return null;

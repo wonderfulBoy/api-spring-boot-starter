@@ -35,8 +35,6 @@ class GitRepositoryManager {
 
     /**
      * Determine whether the current project is a Git project
-     *
-     * @return
      */
     boolean isGitProject() {
         try {

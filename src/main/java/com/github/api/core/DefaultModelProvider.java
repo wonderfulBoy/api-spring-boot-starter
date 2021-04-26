@@ -54,7 +54,6 @@ public class DefaultModelProvider {
      * @param handlerMethod
      * @param classDocListMap
      * @param methodDoc
-     * @return
      */
     ModelReference returnModelBuild(HandlerMethod handlerMethod,
                                     Map<String, ClassDoc> classDocListMap,
@@ -103,7 +102,6 @@ public class DefaultModelProvider {
      * @param handlerMethod
      * @param classDocListMap
      * @param methodDoc
-     * @return
      */
     List<ParameterReference> paramModelBuild(HandlerMethod handlerMethod,
                                              Map<String, ClassDoc> classDocListMap,
@@ -118,7 +116,6 @@ public class DefaultModelProvider {
      * Obtain controller class
      *
      * @param handlerMethod
-     * @return
      */
     private Class obtainControllerClass(HandlerMethod handlerMethod) {
         Class<?> beanTypeClass = handlerMethod.getBeanType();
@@ -136,8 +133,6 @@ public class DefaultModelProvider {
     /**
      * Matched the method with all member methods in class.
      * The method cannot be matched by URL, so it can only be matched according to the overload mechanism
-     *
-     * @return
      */
     private Optional<ResolvedMethod> matchedMethod(Method method, List<ResolvedMethod> filteredMethod) {
         for (ResolvedMethod resolvedMethod : filteredMethod) {
@@ -170,7 +165,6 @@ public class DefaultModelProvider {
      * Get all member methods in the class
      *
      * @param hostClass
-     * @return
      */
     private List<ResolvedMethod> getMemberMethods(Class hostClass) {
         if (!methodsResolvedForHostClasses.containsKey(hostClass)) {
@@ -239,7 +233,6 @@ public class DefaultModelProvider {
      * Determine whether it is a container type
      *
      * @param type
-     * @return
      */
     private boolean isContainerType(ResolvedType type) {
         return List.class.isAssignableFrom(type.getErasedType()) ||
@@ -253,7 +246,6 @@ public class DefaultModelProvider {
      * Determine  container type
      *
      * @param type
-     * @return
      */
     private String containerType(ResolvedType type) {
         if (List.class.isAssignableFrom(type.getErasedType())) {

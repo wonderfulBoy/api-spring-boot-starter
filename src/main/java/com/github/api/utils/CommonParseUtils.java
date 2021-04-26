@@ -23,8 +23,7 @@ public class CommonParseUtils {
     /**
      * List all java source files of the project
      *
-     * @param projectFile
-     * @return
+     * @param projectFile the project file
      */
     public static List<File> listJavaSourceFiles(File projectFile) {
         return listFiles(projectFile, file -> file.getPath().endsWith(SUPPORT_PARSE_FILE_TYPE));
@@ -34,8 +33,8 @@ public class CommonParseUtils {
     /**
      * Recursively enumerate all files in the specified file or directory, support filtering
      *
-     * @param file
-     * @return
+     * @param file      the target file
+     * @param predicate {@link Predicate}
      */
     public static List<File> listFiles(File file, Predicate<File> predicate) {
         if (file == null) {
@@ -60,8 +59,7 @@ public class CommonParseUtils {
     /**
      * Concatenate file paths through file separators to adapt to different operating systems
      *
-     * @param filePaths
-     * @return
+     * @param filePaths the path need to be concatenated
      */
     public static String fileSeparatorJoin(String... filePaths) {
         if (filePaths == null || filePaths.length == 0) {
@@ -99,8 +97,7 @@ public class CommonParseUtils {
     /**
      * trim all blank
      *
-     * @param source
-     * @return
+     * @param source the value need be trim
      */
     public static String trimAll(String source) {
         if (StringUtils.isBlank(source)) {
@@ -108,4 +105,5 @@ public class CommonParseUtils {
         }
         return source.replace(" ", "");
     }
+
 }

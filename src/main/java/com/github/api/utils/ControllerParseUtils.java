@@ -15,8 +15,7 @@ public class ControllerParseUtils {
     /**
      * Determine whether the controller request has been deprecated
      *
-     * @param handlerMethod
-     * @return
+     * @param handlerMethod {@link HandlerMethod}
      */
     public static boolean isDeprecatedMethod(HandlerMethod handlerMethod) {
         Deprecated annotation = handlerMethod.getMethod().getAnnotation(Deprecated.class);
@@ -27,8 +26,7 @@ public class ControllerParseUtils {
     /**
      * Resolve the name of the controller into an api group
      *
-     * @param handlerMethod
-     * @return
+     * @param handlerMethod {@link HandlerMethod}
      */
     public static String controllerNameAsGroup(HandlerMethod handlerMethod) {
         Class<?> controllerClass = handlerMethod.getBeanType();

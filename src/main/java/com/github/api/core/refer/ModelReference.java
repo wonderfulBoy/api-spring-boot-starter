@@ -43,4 +43,5 @@ public class ModelReference {
      * Model data example
      */
     private Object example;
+
 }

@@ -82,4 +82,5 @@ public class Types {
     public static boolean isMapType(ResolvedType type) {
         return Map.class.isAssignableFrom(type.getErasedType());
     }
+
 }

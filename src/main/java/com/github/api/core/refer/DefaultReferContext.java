@@ -9,14 +9,14 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 import static com.google.common.collect.Maps.newLinkedHashMap;
 import static com.google.common.collect.Sets.newHashSet;
-import static java.util.Arrays.asList;
-import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 /**
@@ -49,19 +49,12 @@ public class DefaultReferContext {
     }
 
     private static void initResponseMessages() {
+
         responses = newLinkedHashMap();
-        responses.put(GET, asList(new ResponseMessage(OK.value(), "Query success"),
-                new ResponseMessage(NOT_FOUND.value(), "Not found"),
-                new ResponseMessage(UNAUTHORIZED.value(), "Unauthorized")));
-        responses.put(PUT, asList(new ResponseMessage(CREATED.value(), "Update success"),
-                new ResponseMessage(NOT_FOUND.value(), "Not found"),
-                new ResponseMessage(UNAUTHORIZED.value(), "Unauthorized")));
-        responses.put(POST, asList(new ResponseMessage(CREATED.value(), "Create success"),
-                new ResponseMessage(NOT_FOUND.value(), "Not found"),
-                new ResponseMessage(UNAUTHORIZED.value(), "Unauthorized")));
-        responses.put(DELETE, asList(new ResponseMessage(NO_CONTENT.value(), "Delete success"),
-                new ResponseMessage(NOT_FOUND.value(), "Not found"),
-                new ResponseMessage(UNAUTHORIZED.value(), "Unauthorized")));
+        responses.put(GET, Collections.singletonList(new ResponseMessage(OK.value(), "Query success")));
+        responses.put(PUT, Collections.singletonList(new ResponseMessage(OK.value(), "Query success")));
+        responses.put(POST, Collections.singletonList(new ResponseMessage(OK.value(), "Query success")));
+        responses.put(DELETE, Collections.singletonList(new ResponseMessage(OK.value(), "Query success")));
     }
 
 

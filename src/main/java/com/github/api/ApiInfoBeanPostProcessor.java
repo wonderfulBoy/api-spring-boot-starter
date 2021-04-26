@@ -85,7 +85,6 @@ public class ApiInfoBeanPostProcessor implements BeanPostProcessor {
      * Normally, the path where the pom file is located is the project root directory
      *
      * @param applicationFile {@link SpringBootApplication}
-     * @return
      */
     private String obtainProjectRoot(File applicationFile) {
 
@@ -109,7 +108,7 @@ public class ApiInfoBeanPostProcessor implements BeanPostProcessor {
      * If the user does not have custom documentation information,
      * the default API documentation information is built from the POM file information
      *
-     * @param pomFile
+     * @param pomFile the pom.xml
      */
     private void defaultApiInfoBuild(File pomFile) {
         ApiDocumentProperties.ApiInfo apiInfo = apiDocumentProperties.getInfo();
@@ -137,4 +136,5 @@ public class ApiInfoBeanPostProcessor implements BeanPostProcessor {
         }
 
     }
+
 }

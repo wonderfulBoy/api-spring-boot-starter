@@ -18,4 +18,5 @@ class ResponseMessage {
     private int code;
 
     private String message;
+
 }

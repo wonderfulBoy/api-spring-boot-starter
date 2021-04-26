@@ -26,4 +26,5 @@ public class GitOperateException extends RuntimeException {
     public GitOperateException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
+
 }
