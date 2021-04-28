@@ -52,6 +52,7 @@ public class ApiDocumentArchives {
         File outputFile = new File(outputPath);
         outputFile.getParentFile().mkdirs();
         try (FileOutputStream outputStream = new FileOutputStream(outputFile)) {
+
             outputStream.write(documentation.toYaml().getBytes());
             outputStream.flush();
         } catch (Exception e) {
