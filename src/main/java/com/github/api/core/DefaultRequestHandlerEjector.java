@@ -20,6 +20,9 @@ import static com.github.api.ApiDocumentContext.*;
  */
 public class DefaultRequestHandlerEjector implements IRequestHandlerEjector {
 
+    /**
+     * Logger
+     */
     private static final Logger logger = LoggerFactory.getLogger(DefaultRequestHandlerEjector.class);
 
     private List<String> excludePatternList;

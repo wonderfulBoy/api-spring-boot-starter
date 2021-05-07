@@ -7,6 +7,7 @@ import com.sun.javadoc.ClassDoc;
 import com.sun.javadoc.MethodDoc;
 import com.sun.javadoc.RootDoc;
 import com.sun.tools.javadoc.MethodDocImpl;
+import io.swagger.models.Swagger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,9 @@ import java.util.stream.Stream;
 @Component
 public class ApiDocumentationScanner {
 
-
+    /**
+     * Logger
+     */
     private static final Logger logger = LoggerFactory.getLogger(ApiDocumentationScanner.class);
 
     @Autowired
@@ -105,7 +108,7 @@ public class ApiDocumentationScanner {
             apiListingReferences.add(apiListingReference);
 
         }
-        return new Documentation();
+        return new Documentation(new Swagger());
     }
 
 }

@@ -51,10 +51,10 @@ public class DefaultReferContext {
     private static void initResponseMessages() {
 
         responses = newLinkedHashMap();
-        responses.put(GET, Collections.singletonList(new ResponseMessage(OK.value(), "Query success")));
-        responses.put(PUT, Collections.singletonList(new ResponseMessage(OK.value(), "Query success")));
-        responses.put(POST, Collections.singletonList(new ResponseMessage(OK.value(), "Query success")));
-        responses.put(DELETE, Collections.singletonList(new ResponseMessage(OK.value(), "Query success")));
+        responses.put(GET, Collections.singletonList(new ResponseMessage(OK.value(), "Success")));
+        responses.put(PUT, Collections.singletonList(new ResponseMessage(OK.value(), "Success")));
+        responses.put(POST, Collections.singletonList(new ResponseMessage(OK.value(), "Success")));
+        responses.put(DELETE, Collections.singletonList(new ResponseMessage(OK.value(), "Success")));
     }
 
 

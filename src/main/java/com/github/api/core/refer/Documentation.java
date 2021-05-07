@@ -1,7 +1,9 @@
 package com.github.api.core.refer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.models.Swagger;
-import lombok.Data;
 
 /**
  * Documentation
@@ -9,7 +11,6 @@ import lombok.Data;
  * @author echils
  * @since 2021-02-28 22:30:53
  */
-@Data
 public class Documentation {
 
     /**
@@ -17,16 +18,41 @@ public class Documentation {
      */
     private Swagger swagger;
 
-    /**
-     * The json of swagger {@link io.swagger.models.Swagger}
-     */
-    private String value;
+
+    public Documentation(Swagger swagger) {
+        this.swagger = swagger;
+    }
 
     /**
-     * convert to yaml
+     * Convert to YAML
      */
     public String toYaml() {
-        return null;
+
+        if (swagger == null) {
+            return "";
+        }
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.writer(new DefaultPrettyPrinter()).writeValueAsString(swagger);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Could not write YAML", e);
+        }
+    }
+
+    /**
+     * Convert to JSON
+     */
+    public String toJson() {
+
+        if (swagger == null) {
+            return "";
+        }
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.writeValueAsString(swagger);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Could not write JSON", e);
+        }
     }
 
 }

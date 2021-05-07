@@ -39,6 +39,9 @@ public class ApiDocumentProperties {
     private Profile profile = LOCAL;
 
 
+    /**
+     * Api runtime profile
+     */
     public enum Profile {
 
         /**
@@ -53,6 +56,7 @@ public class ApiDocumentProperties {
          */
         CLOUD
     }
+
 
     /**
      * Api base information
@@ -75,6 +79,7 @@ public class ApiDocumentProperties {
             return StringUtils.isBlank(version) && StringUtils.isBlank(title);
         }
     }
+
 
     /**
      * Project directory structure information,

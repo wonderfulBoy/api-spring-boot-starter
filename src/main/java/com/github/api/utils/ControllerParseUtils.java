@@ -18,6 +18,7 @@ public class ControllerParseUtils {
      * @param handlerMethod {@link HandlerMethod}
      */
     public static boolean isDeprecatedMethod(HandlerMethod handlerMethod) {
+
         Deprecated annotation = handlerMethod.getMethod().getAnnotation(Deprecated.class);
         return annotation != null;
     }
@@ -29,19 +30,18 @@ public class ControllerParseUtils {
      * @param handlerMethod {@link HandlerMethod}
      */
     public static String controllerNameAsGroup(HandlerMethod handlerMethod) {
+
         Class<?> controllerClass = handlerMethod.getBeanType();
-        return splitCamelCase(controllerClass.getSimpleName(), "-")
+        String classSimpleName = controllerClass.getSimpleName();
+        if (StringUtils.isBlank(classSimpleName)) {
+            return "";
+        }
+
+        return classSimpleName.replaceAll(String.format("%s|%s|%s", "(?<=[A-Z])(?=[A-Z][a-z])",
+                "(?<=[^A-Z])(?=[A-Z])", "(?<=[A-Za-z])(?=[^A-Za-z])"), "-")
                 .replace("/", "")
                 .toLowerCase();
     }
 
-
-    private static String splitCamelCase(String s, String separator) {
-        if (StringUtils.isBlank(s)) {
-            return "";
-        }
-        return s.replaceAll(String.format("%s|%s|%s", "(?<=[A-Z])(?=[A-Z][a-z])",
-                "(?<=[^A-Z])(?=[A-Z])", "(?<=[A-Za-z])(?=[^A-Za-z])"), separator);
-    }
 
 }

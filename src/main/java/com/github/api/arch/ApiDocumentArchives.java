@@ -19,6 +19,9 @@ import java.io.FileOutputStream;
  */
 public class ApiDocumentArchives {
 
+    /**
+     * Logger
+     */
     private static final Logger logger = LoggerFactory.getLogger(ApiDocumentArchives.class);
 
     private ApiDocumentProperties apiDocumentProperties;
@@ -37,10 +40,13 @@ public class ApiDocumentArchives {
      * @param documentation api doc
      */
     public void depict(Documentation documentation) {
+
         if (documentation == null) {
             logger.warn("Api document is null,there is no need to start the persistence process");
             return;
         }
+
+        ApiDocumentContext.documentation = documentation;
         String outputPath = ApiDocumentContext.resourceDirectory + File.separator +
                 ApiDocumentContext.DEFAULT_ARCHIVES_DIRECTORY + File.separator +
                 apiDocumentProperties.getInfo().getTitle() + ApiDocumentContext.SUPPORT_OUTPUT_DOCUMENT_TYPE;
@@ -49,10 +55,10 @@ public class ApiDocumentArchives {
             logger.warn("Persistence path is blank,there is no need to start the persistence process");
             return;
         }
+
         File outputFile = new File(outputPath);
         outputFile.getParentFile().mkdirs();
         try (FileOutputStream outputStream = new FileOutputStream(outputFile)) {
-
             outputStream.write(documentation.toYaml().getBytes());
             outputStream.flush();
         } catch (Exception e) {

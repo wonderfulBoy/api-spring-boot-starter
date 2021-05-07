@@ -25,7 +25,9 @@ import static com.github.api.ApiDocumentContext.*;
  */
 public class ApiInfoBeanPostProcessor implements BeanPostProcessor {
 
-
+    /**
+     * Logger
+     */
     private static final Logger logger = LoggerFactory.getLogger(ApiInfoBeanPostProcessor.class);
 
     @Autowired
@@ -34,6 +36,7 @@ public class ApiInfoBeanPostProcessor implements BeanPostProcessor {
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) {
+
         Class<?> beanClass = bean.getClass();
         SpringBootApplication springBootApplication = beanClass.getAnnotation(SpringBootApplication.class);
         if (springBootApplication != null && apiDocumentProperties.getProfile() == ApiDocumentProperties.Profile.LOCAL) {
@@ -111,6 +114,7 @@ public class ApiInfoBeanPostProcessor implements BeanPostProcessor {
      * @param pomFile the pom.xml
      */
     private void defaultApiInfoBuild(File pomFile) {
+
         ApiDocumentProperties.ApiInfo apiInfo = apiDocumentProperties.getInfo();
         if (pomFile == null || !pomFile.exists()) {
             if (apiInfo.isBlank()) {

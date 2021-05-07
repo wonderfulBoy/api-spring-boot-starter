@@ -16,6 +16,9 @@ import java.io.IOException;
  */
 class GitRepositoryManager {
 
+    /**
+     * Logger
+     */
     private static final Logger logger = LoggerFactory.getLogger(GitRepositoryManager.class);
 
     /**

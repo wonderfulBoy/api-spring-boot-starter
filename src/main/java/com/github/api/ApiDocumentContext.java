@@ -1,5 +1,6 @@
 package com.github.api;
 
+import com.github.api.core.refer.Documentation;
 import com.sun.javadoc.RootDoc;
 
 /**
@@ -49,6 +50,9 @@ public class ApiDocumentContext {
 
 
     public static String pomDirectory;
+
+
+    public static Documentation documentation;
 
 
     public static final String SPRING_BOOT_TAG = "BOOT-INF";

@@ -37,7 +37,9 @@ import static com.google.common.collect.Lists.newArrayList;
 @Component
 public class DefaultModelProvider {
 
-
+    /**
+     * Logger
+     */
     private static final Logger logger = LoggerFactory.getLogger(DefaultModelProvider.class);
 
 

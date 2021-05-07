@@ -51,6 +51,7 @@
         <swagger.version>1.5.20</swagger.version>
         <spring.boot.version>2.3.4.RELEASE</spring.boot.version>
         <fasterxml.classmate.version>1.5.1</fasterxml.classmate.version>
+        <fasterxml.jackson.version>2.9.8</fasterxml.jackson.version>
     </properties>
 
     <dependencies>
@@ -111,6 +112,11 @@
             <groupId>com.fasterxml</groupId>
             <artifactId>classmate</artifactId>
             <version>${fasterxml.classmate.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${fasterxml.jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>io.swagger</groupId>

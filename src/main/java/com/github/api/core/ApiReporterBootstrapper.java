@@ -9,6 +9,7 @@ import com.github.api.utils.RootDocParseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
 
@@ -25,21 +26,30 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Component
 public class ApiReporterBootstrapper implements SmartLifecycle {
 
+    /**
+     * Logger
+     */
     private static final Logger logger = LoggerFactory.getLogger(ApiReporterBootstrapper.class);
+
 
     @Autowired
     private WebRequestHandlerProvider webRequestHandlerProvider;
 
+
     @Autowired
     private ApiDocumentArchives apiDocumentArchives;
+
 
     @Autowired
     private ApiDocumentationScanner apiDocumentationScanner;
 
+
     @Autowired
     private ApiDocumentProperties apiDocumentProperties;
 
+
     private AtomicBoolean initialized = new AtomicBoolean(false);
+
 
     @Override
     public void start() {

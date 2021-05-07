@@ -18,6 +18,9 @@ import java.util.List;
  */
 public class RootDocParseUtils {
 
+    /**
+     * Logger
+     */
     private static final Logger logger = LoggerFactory.getLogger(RootDocParseUtils.class);
 
     /**
@@ -25,6 +28,9 @@ public class RootDocParseUtils {
      */
     private static RootDoc rootDoc = null;
 
+    /**
+     * javadoc args
+     */
     private static List<String> javadocArgs;
 
     static {

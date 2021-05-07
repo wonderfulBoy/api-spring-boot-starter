@@ -26,6 +26,7 @@ public class CommonParseUtils {
      * @param projectFile the project file
      */
     public static List<File> listJavaSourceFiles(File projectFile) {
+
         return listFiles(projectFile, file -> file.getPath().endsWith(SUPPORT_PARSE_FILE_TYPE));
     }
 
@@ -37,6 +38,7 @@ public class CommonParseUtils {
      * @param predicate {@link Predicate}
      */
     public static List<File> listFiles(File file, Predicate<File> predicate) {
+
         if (file == null) {
             return Collections.emptyList();
         }
@@ -62,6 +64,7 @@ public class CommonParseUtils {
      * @param filePaths the path need to be concatenated
      */
     public static String fileSeparatorJoin(String... filePaths) {
+
         if (filePaths == null || filePaths.length == 0) {
             return null;
         }
@@ -95,11 +98,12 @@ public class CommonParseUtils {
 
 
     /**
-     * trim all blank
+     * Trim all blank
      *
      * @param source the value need be trim
      */
     public static String trimAll(String source) {
+
         if (StringUtils.isBlank(source)) {
             return source;
         }

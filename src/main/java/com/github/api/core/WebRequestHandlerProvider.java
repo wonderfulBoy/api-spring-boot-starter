@@ -30,7 +30,12 @@ public class WebRequestHandlerProvider {
         this.requestHandlerEjectors = requestHandlerEjectors;
     }
 
+
+    /**
+     * List the filtered requests
+     */
     Map<RequestMappingInfo, HandlerMethod> list() {
+
         Map<RequestMappingInfo, HandlerMethod> handlerMethodMap
                 = new HashMap<>(requestMappingHandlerMapping.getHandlerMethods());
         Set<RequestMappingInfo> requestMappingInfos = handlerMethodMap.keySet();
