@@ -49,6 +49,7 @@ public class ApiDocumentationScanner {
 
         Map<String, ClassDoc> classDocListMap = Stream.of(rootDoc.classes())
                 .collect(Collectors.toMap(ClassDoc::toString, classDoc -> classDoc));
+        Swagger apiBody = new Swagger();
         Map<String, Map<String, MethodDocImpl>> methodDocListMap = new HashMap<>();
 
         for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : requestMappingMap.entrySet()) {
@@ -108,7 +109,7 @@ public class ApiDocumentationScanner {
             apiListingReferences.add(apiListingReference);
 
         }
-        return new Documentation(new Swagger());
+        return new Documentation(apiBody);
     }
 
 }
