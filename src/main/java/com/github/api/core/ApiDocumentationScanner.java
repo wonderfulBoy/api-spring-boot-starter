@@ -1,5 +1,6 @@
 package com.github.api.core;
 
+import com.github.api.ApiDocumentProperties;
 import com.github.api.core.refer.*;
 import com.github.api.utils.CommonParseUtils;
 import com.github.api.utils.ControllerParseUtils;
@@ -7,7 +8,9 @@ import com.sun.javadoc.ClassDoc;
 import com.sun.javadoc.MethodDoc;
 import com.sun.javadoc.RootDoc;
 import com.sun.tools.javadoc.MethodDocImpl;
+import io.swagger.models.Info;
 import io.swagger.models.Swagger;
+import io.swagger.models.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +41,13 @@ public class ApiDocumentationScanner {
     @Autowired
     private DefaultModelProvider defaultModelProvider;
 
+    @Autowired
+    private ApiDocumentProperties apiDocumentProperties;
+
+
+    private Map<String, ClassDoc> classDocListMap;
+
+
     private Map<String, RequestMappingContext> mappingContextMap;
 
     public ApiDocumentationScanner() {
@@ -47,9 +57,13 @@ public class ApiDocumentationScanner {
 
     Documentation scan(Map<RequestMappingInfo, HandlerMethod> requestMappingMap, RootDoc rootDoc) {
 
-        Map<String, ClassDoc> classDocListMap = Stream.of(rootDoc.classes())
+        classDocListMap = Stream.of(rootDoc.classes())
                 .collect(Collectors.toMap(ClassDoc::toString, classDoc -> classDoc));
-        Swagger apiBody = new Swagger();
+
+        Swagger swagger = swaggerInit(requestMappingMap);
+        System.out.println(swagger);
+
+
         Map<String, Map<String, MethodDocImpl>> methodDocListMap = new HashMap<>();
 
         for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : requestMappingMap.entrySet()) {
@@ -109,7 +123,59 @@ public class ApiDocumentationScanner {
             apiListingReferences.add(apiListingReference);
 
         }
-        return new Documentation(apiBody);
+        return new Documentation(swagger);
+    }
+
+
+    /**
+     * Init the swagger
+     *
+     * @return {@link Swagger}
+     */
+    private Swagger swaggerInit(Map<RequestMappingInfo, HandlerMethod> requestMappingMap) {
+        Swagger swagger = new Swagger();
+        swagger.setInfo(apiInfo());
+        swagger.setTags(apiTags(requestMappingMap));
+        return swagger;
+    }
+
+
+    /**
+     * Wrapper the api tags
+     *
+     * @param requestMappingMap the map of request info
+     * @return {@link Tag}
+     */
+    private List<Tag> apiTags(Map<RequestMappingInfo, HandlerMethod> requestMappingMap) {
+        Map<String, Tag> tagMap = new HashMap<>();
+        for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : requestMappingMap.entrySet()) {
+            HandlerMethod handlerMethod = entry.getValue();
+            String className = handlerMethod.getBeanType().getName();
+            if (!tagMap.containsKey(className)) {
+                Tag tag = new Tag();
+                tag.name(ControllerParseUtils.controllerNameAsGroup(handlerMethod));
+                if (classDocListMap.containsKey(className)) {
+                    ClassDoc classDoc = classDocListMap.get(className);
+                    tag.description(classDoc.commentText());
+                }
+                tagMap.put(className, tag);
+            }
+        }
+        return new ArrayList<>(tagMap.values());
+    }
+
+
+    /**
+     * Wrapper the api info
+     *
+     * @return {@link Info}
+     */
+    private Info apiInfo() {
+        Info info = new Info();
+        ApiDocumentProperties.ApiInfo propertiesInfo = apiDocumentProperties.getInfo();
+        info.title(propertiesInfo.getTitle());
+        info.setVersion(propertiesInfo.getVersion());
+        return info;
     }
 
 }
