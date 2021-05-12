@@ -1,26 +1,26 @@
 package com.github.api.core;
 
 import com.github.api.ApiDocumentProperties;
-import com.github.api.core.refer.*;
+import com.github.api.core.refer.Documentation;
 import com.github.api.utils.CommonParseUtils;
 import com.github.api.utils.ControllerParseUtils;
 import com.sun.javadoc.ClassDoc;
 import com.sun.javadoc.MethodDoc;
 import com.sun.javadoc.RootDoc;
 import com.sun.tools.javadoc.MethodDocImpl;
-import io.swagger.models.Info;
-import io.swagger.models.Swagger;
-import io.swagger.models.Tag;
+import io.swagger.models.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.MimeType;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,113 +44,28 @@ public class ApiDocumentationScanner {
     @Autowired
     private ApiDocumentProperties apiDocumentProperties;
 
-
     private Map<String, ClassDoc> classDocListMap;
 
-
-    private Map<String, RequestMappingContext> mappingContextMap;
+    private Map<String, Map<String, MethodDocImpl>> classMethodDocMap;
 
     public ApiDocumentationScanner() {
-        mappingContextMap = new ConcurrentHashMap<>();
+        classDocListMap = new HashMap<>();
+        classMethodDocMap = new HashMap<>();
     }
-
 
     Documentation scan(Map<RequestMappingInfo, HandlerMethod> requestMappingMap, RootDoc rootDoc) {
 
+        Swagger body = swaggerInit();
         classDocListMap = Stream.of(rootDoc.classes())
                 .collect(Collectors.toMap(ClassDoc::toString, classDoc -> classDoc));
 
-        Swagger swagger = swaggerInit(requestMappingMap);
-        System.out.println(swagger);
-
-
-        Map<String, Map<String, MethodDocImpl>> methodDocListMap = new HashMap<>();
-
+        Map<String, Tag> tagMap = new HashMap<>();
+        Map<String, Path> pathMap = new HashMap<>();
         for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : requestMappingMap.entrySet()) {
             HandlerMethod handlerMethod = entry.getValue();
             RequestMappingInfo requestMappingInfo = entry.getKey();
             String className = handlerMethod.getBeanType().getName();
 
-            RequestMappingContext requestMappingContext = mappingContextMap.computeIfAbsent(className, clazz -> {
-                RequestMappingContext context = new RequestMappingContext();
-                context.setTagName(ControllerParseUtils.controllerNameAsGroup(handlerMethod));
-                if (classDocListMap.containsKey(clazz)) {
-                    logger.debug("Class {} matched", className);
-                    ClassDoc classDoc = classDocListMap.get(clazz);
-                    List<MethodDoc> methodDocs = Arrays.asList(classDoc.methods());
-                    Map<String, MethodDocImpl> methodDocMap = methodDocs.stream()
-                            .collect(Collectors.toMap(MethodDoc::toString, methodDoc -> (MethodDocImpl) methodDoc));
-                    methodDocListMap.put(className, methodDocMap);
-                    context.setDescription(classDoc.commentText());
-                }
-                return context;
-            });
-
-            ApiListingReference apiListingReference = new ApiListingReference();
-            apiListingReference.setConsumes(requestMappingInfo.getConsumesCondition().getConsumableMediaTypes());
-            apiListingReference.setProduces(requestMappingInfo.getProducesCondition().getProducibleMediaTypes());
-            apiListingReference.setDeprecated(ControllerParseUtils.isDeprecatedMethod(handlerMethod));
-
-            //Normally, there is only one request requestMethod
-            Iterator<RequestMethod> requestMethodIterator = requestMappingInfo.getMethodsCondition().getMethods().iterator();
-            RequestMethod requestMethod = requestMethodIterator.next();
-            apiListingReference.setRequestMethod(requestMethod);
-
-            //Normally, there is only one request requestMethod
-            Iterator<String> patternIterator = requestMappingInfo.getPatternsCondition().getPatterns().iterator();
-            apiListingReference.setPath(patternIterator.next());
-
-            String methodGeneralName = handlerMethod.getMethod().toString();
-            Map<String, MethodDocImpl> methodDocMap = methodDocListMap.get(className);
-
-            methodDocMap.forEach((methodName, methodDoc) -> {
-                if (methodGeneralName.contains(CommonParseUtils.trimAll(methodName))) {
-                    logger.debug("Class {} requestMethod {} matched", className, methodName);
-                    apiListingReference.setMethodName(methodDoc.name());
-                    apiListingReference.setDescription(methodDoc.commentText());
-
-                    ModelReference returnModel = defaultModelProvider.returnModelBuild(handlerMethod, classDocListMap, methodDoc);
-                    apiListingReference.setResponseModel(returnModel);
-
-                    List<ParameterReference> paramModels = defaultModelProvider.paramModelBuild(handlerMethod, classDocListMap, methodDoc);
-                    apiListingReference.setParameterReferences(paramModels);
-
-                    apiListingReference.setResponseMessages(DefaultReferContext.responses.get(requestMethod));
-                }
-            });
-
-            List<ApiListingReference> apiListingReferences = requestMappingContext.getApiListingReferences();
-            apiListingReferences.add(apiListingReference);
-
-        }
-        return new Documentation(swagger);
-    }
-
-
-    /**
-     * Init the swagger
-     *
-     * @return {@link Swagger}
-     */
-    private Swagger swaggerInit(Map<RequestMappingInfo, HandlerMethod> requestMappingMap) {
-        Swagger swagger = new Swagger();
-        swagger.setInfo(apiInfo());
-        swagger.setTags(apiTags(requestMappingMap));
-        return swagger;
-    }
-
-
-    /**
-     * Wrapper the api tags
-     *
-     * @param requestMappingMap the map of request info
-     * @return {@link Tag}
-     */
-    private List<Tag> apiTags(Map<RequestMappingInfo, HandlerMethod> requestMappingMap) {
-        Map<String, Tag> tagMap = new HashMap<>();
-        for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : requestMappingMap.entrySet()) {
-            HandlerMethod handlerMethod = entry.getValue();
-            String className = handlerMethod.getBeanType().getName();
             if (!tagMap.containsKey(className)) {
                 Tag tag = new Tag();
                 tag.name(ControllerParseUtils.controllerNameAsGroup(handlerMethod));
@@ -160,8 +75,51 @@ public class ApiDocumentationScanner {
                 }
                 tagMap.put(className, tag);
             }
+
+            Path path = pathBuild(getRequestMethod(requestMappingInfo),
+                    operationBuild(tagMap.get(className), requestMappingInfo, handlerMethod));
+            pathMap.put(getRequestPath(requestMappingInfo), path);
         }
-        return new ArrayList<>(tagMap.values());
+
+        body.paths(pathMap);
+        body.tags(new ArrayList<>(tagMap.values()));
+        return new Documentation(body);
+    }
+
+
+    /**
+     * Get request method
+     *
+     * @param requestMappingInfo {@link RequestMappingInfo}
+     * @return {@link RequestMethod}
+     */
+    private RequestMethod getRequestMethod(RequestMappingInfo requestMappingInfo) {
+        Iterator<RequestMethod> requestMethodIterator = requestMappingInfo.getMethodsCondition().getMethods().iterator();
+        return requestMethodIterator.next();
+    }
+
+
+    /**
+     * Get request path
+     *
+     * @param requestMappingInfo {@link RequestMappingInfo}
+     * @return the url path
+     */
+    private String getRequestPath(RequestMappingInfo requestMappingInfo) {
+        Iterator<String> iterator = requestMappingInfo.getPatternsCondition().getPatterns().iterator();
+        return iterator.next();
+    }
+
+
+    /**
+     * Init the swagger info
+     *
+     * @return {@link Swagger}
+     */
+    private Swagger swaggerInit() {
+        Swagger swagger = new Swagger();
+        swagger.setInfo(apiInfo());
+        return swagger;
     }
 
 
@@ -176,6 +134,126 @@ public class ApiDocumentationScanner {
         info.title(propertiesInfo.getTitle());
         info.setVersion(propertiesInfo.getVersion());
         return info;
+    }
+
+    /**
+     * Build the swagger path
+     *
+     * @param requestMethod {@link RequestMethod}
+     * @param operation     {@link Operation}
+     * @return {@link Path}
+     */
+    private Path pathBuild(RequestMethod requestMethod, Operation operation) {
+        Path path = new Path();
+        switch (requestMethod) {
+            case GET:
+                path.get(operation);
+                break;
+            case DELETE:
+                path.delete(operation);
+                break;
+            case PUT:
+                path.put(operation);
+                break;
+            case POST:
+                path.post(operation);
+                break;
+        }
+        return path;
+    }
+
+
+    /**
+     * Build the swagger operation
+     *
+     * @param tag                {@link Tag}
+     * @param requestMappingInfo {@link RequestMappingInfo}
+     * @param handlerMethod      {@link HandlerMethod}
+     * @return {@link Operation}
+     */
+    private Operation operationBuild(Tag tag, RequestMappingInfo requestMappingInfo, HandlerMethod handlerMethod) {
+        Operation operation = new Operation();
+        operation.tag(tag.getName());
+        operation.operationId(uniqueOperationId(requestMappingInfo, handlerMethod));
+        operation.summary(summaryRequest(handlerMethod));
+        operation.consumes(parseConsumes(requestMappingInfo));
+        operation.produces(parseProduces(requestMappingInfo));
+        operation.deprecated(ControllerParseUtils.isDeprecatedMethod(handlerMethod));
+        //TODO
+        return operation;
+    }
+
+    /**
+     * Parse request consumes
+     *
+     * @param requestMappingInfo {@link RequestMappingInfo}
+     * @return The request consumes
+     */
+    private List<String> parseConsumes(RequestMappingInfo requestMappingInfo) {
+        Set<MediaType> consumes = requestMappingInfo.getConsumesCondition().getConsumableMediaTypes();
+        if (CollectionUtils.isEmpty(consumes)) {
+            return Collections.singletonList(MediaType.APPLICATION_JSON_VALUE);
+        }
+        return consumes.stream().map(MimeType::toString).collect(Collectors.toList());
+    }
+
+    /**
+     * Parse request produces
+     *
+     * @param requestMappingInfo {@link RequestMappingInfo}
+     * @return The request produces
+     */
+    private List<String> parseProduces(RequestMappingInfo requestMappingInfo) {
+        Set<MediaType> produces = requestMappingInfo.getConsumesCondition().getConsumableMediaTypes();
+        if (CollectionUtils.isEmpty(produces)) {
+            return Collections.singletonList(MediaType.ALL_VALUE);
+        }
+        return produces.stream().map(MimeType::toString).collect(Collectors.toList());
+    }
+
+    /**
+     * Parse the summary of the request method
+     *
+     * @param handlerMethod {@link HandlerMethod}
+     * @return The summary request of the method
+     */
+    private String summaryRequest(HandlerMethod handlerMethod) {
+
+        String summary = null;
+        String className = handlerMethod.getBeanType().getName();
+        if (classDocListMap.containsKey(className)) {
+            logger.debug("Class {} matched", className);
+            ClassDoc classDoc = classDocListMap.get(className);
+            List<MethodDoc> methodDocs = Arrays.asList(classDoc.methods());
+
+            Map<String, MethodDocImpl> methodDocMap = methodDocs.stream().collect(Collectors.toMap(
+                    methodDoc -> CommonParseUtils.trimAll(methodDoc.toString()),
+                    methodDoc -> (MethodDocImpl) methodDoc));
+            classMethodDocMap.put(className, methodDocMap);
+
+            String methodGeneralName = handlerMethod.getMethod().toString();
+            for (Map.Entry<String, MethodDocImpl> entry : methodDocMap.entrySet()) {
+                String methodName = entry.getKey();
+                MethodDocImpl value = entry.getValue();
+                if (methodGeneralName.contains(CommonParseUtils.trimAll(methodName))) {
+                    summary = value.commentText();
+                    break;
+                }
+            }
+        }
+        return summary;
+    }
+
+
+    /**
+     * Generate unique operation id of the request
+     *
+     * @param requestMappingInfo {@link RequestMappingInfo}
+     * @param handlerMethod      {@link HandlerMethod}
+     * @return Unique operation id
+     */
+    private String uniqueOperationId(RequestMappingInfo requestMappingInfo, HandlerMethod handlerMethod) {
+        return String.format("%sUsing%s", handlerMethod.getMethod().getName(), getRequestMethod(requestMappingInfo).name());
     }
 
 }
