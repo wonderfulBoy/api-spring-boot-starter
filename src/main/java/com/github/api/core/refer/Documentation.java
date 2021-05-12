@@ -2,9 +2,9 @@ package com.github.api.core.refer;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.models.Swagger;
+import io.swagger.util.Yaml;
 
 /**
  * Documentation
@@ -33,10 +33,7 @@ public class Documentation {
             return "";
         }
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-            objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-            return objectMapper.writer(new DefaultPrettyPrinter()).writeValueAsString(swagger);
+            return Yaml.pretty().writeValueAsString(swagger);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Could not write YAML", e);
         }

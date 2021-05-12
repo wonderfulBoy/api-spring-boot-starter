@@ -66,18 +66,18 @@ public class ApiDocumentationScanner {
             RequestMappingInfo requestMappingInfo = entry.getKey();
             String className = handlerMethod.getBeanType().getName();
 
-            if (!tagMap.containsKey(className)) {
+            Tag requestTag = tagMap.computeIfAbsent(className, cn -> {
                 Tag tag = new Tag();
                 tag.name(ControllerParseUtils.controllerNameAsGroup(handlerMethod));
-                if (classDocListMap.containsKey(className)) {
-                    ClassDoc classDoc = classDocListMap.get(className);
+                if (classDocListMap.containsKey(cn)) {
+                    ClassDoc classDoc = classDocListMap.get(cn);
                     tag.description(classDoc.commentText());
                 }
-                tagMap.put(className, tag);
-            }
+                return tag;
+            });
 
             Path path = pathBuild(getRequestMethod(requestMappingInfo),
-                    operationBuild(tagMap.get(className), requestMappingInfo, handlerMethod));
+                    operationBuild(requestTag, requestMappingInfo, handlerMethod));
             pathMap.put(getRequestPath(requestMappingInfo), path);
         }
 
