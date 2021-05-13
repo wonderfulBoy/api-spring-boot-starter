@@ -49,6 +49,7 @@
         <spring.version>5.2.9.RELEASE</spring.version>
         <lombok.version>1.18.12</lombok.version>
         <swagger.version>1.5.20</swagger.version>
+        <springfox.version>2.9.2</springfox.version>
         <spring.boot.version>2.3.4.RELEASE</spring.boot.version>
         <fasterxml.classmate.version>1.5.1</fasterxml.classmate.version>
         <fasterxml.jackson.version>2.9.8</fasterxml.jackson.version>
@@ -129,6 +130,11 @@
             </exclusions>
             <version>${swagger.version}</version>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.springfox</groupId>-->
+<!--            <artifactId>springfox-core</artifactId>-->
+<!--            <version>${springfox.version}</version>-->
+<!--        </dependency>-->
     </dependencies>
 
 </project>

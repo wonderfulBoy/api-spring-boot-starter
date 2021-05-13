@@ -1,6 +1,6 @@
 package com.github.api;
 
-import com.github.api.core.refer.Documentation;
+import com.github.api.core.Documentation;
 import com.sun.javadoc.RootDoc;
 
 /**
@@ -65,5 +65,8 @@ public class ApiDocumentContext {
 
 
     public static String DEFAULT_API_INFO_VERSION = "1.0-SNAPSHOT";
+
+
+    public static final String COMMENT_NEWLINE_SEPARATOR = "\n ";
 
 }

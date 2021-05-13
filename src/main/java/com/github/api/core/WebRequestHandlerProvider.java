@@ -23,6 +23,7 @@ public class WebRequestHandlerProvider {
     private List<IRequestHandlerEjector> requestHandlerEjectors;
     private RequestMappingHandlerMapping requestMappingHandlerMapping;
 
+
     @Autowired
     public WebRequestHandlerProvider(RequestMappingHandlerMapping requestMappingHandlerMapping,
                                      List<IRequestHandlerEjector> requestHandlerEjectors) {

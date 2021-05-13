@@ -2,14 +2,12 @@ package com.github.api.core;
 
 import com.github.api.ApiDocumentContext;
 import com.github.api.ApiDocumentProperties;
-import com.github.api.arch.ApiDocumentArchives;
-import com.github.api.core.refer.Documentation;
+import com.github.api.core.arch.ApiDocumentArchives;
 import com.github.api.utils.CommonParseUtils;
 import com.github.api.utils.RootDocParseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
 

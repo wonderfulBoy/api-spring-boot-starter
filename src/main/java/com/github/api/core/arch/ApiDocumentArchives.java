@@ -1,8 +1,8 @@
-package com.github.api.arch;
+package com.github.api.core.arch;
 
 import com.github.api.ApiDocumentContext;
 import com.github.api.ApiDocumentProperties;
-import com.github.api.core.refer.Documentation;
+import com.github.api.core.Documentation;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,7 +1,9 @@
 package com.github.api.core;
 
+import com.fasterxml.classmate.ResolvedType;
+import com.fasterxml.classmate.TypeResolver;
+import com.github.api.ApiDocumentContext;
 import com.github.api.ApiDocumentProperties;
-import com.github.api.core.refer.Documentation;
 import com.github.api.utils.CommonParseUtils;
 import com.github.api.utils.ControllerParseUtils;
 import com.sun.javadoc.ClassDoc;
@@ -9,9 +11,11 @@ import com.sun.javadoc.MethodDoc;
 import com.sun.javadoc.RootDoc;
 import com.sun.tools.javadoc.MethodDocImpl;
 import io.swagger.models.*;
+import io.swagger.models.properties.Property;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -20,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -39,7 +44,7 @@ public class ApiDocumentationScanner {
     private static final Logger logger = LoggerFactory.getLogger(ApiDocumentationScanner.class);
 
     @Autowired
-    private DefaultModelProvider defaultModelProvider;
+    private TypeResolver typeResolver;
 
     @Autowired
     private ApiDocumentProperties apiDocumentProperties;
@@ -174,13 +179,37 @@ public class ApiDocumentationScanner {
     private Operation operationBuild(Tag tag, RequestMappingInfo requestMappingInfo, HandlerMethod handlerMethod) {
         Operation operation = new Operation();
         operation.tag(tag.getName());
-        operation.operationId(uniqueOperationId(requestMappingInfo, handlerMethod));
         operation.summary(summaryRequest(handlerMethod));
+        operation.operationId(uniqueOperationId(requestMappingInfo, handlerMethod));
         operation.consumes(parseConsumes(requestMappingInfo));
         operation.produces(parseProduces(requestMappingInfo));
         operation.deprecated(ControllerParseUtils.isDeprecatedMethod(handlerMethod));
+        operation.response(HttpStatus.OK.value(), responseBuild(handlerMethod));
         //TODO
         return operation;
+    }
+
+    /**
+     * Build request response info
+     *
+     * @param handlerMethod {@link HandlerMethod}
+     * @return {@link Response}
+     */
+    private Response responseBuild(HandlerMethod handlerMethod) {
+        Response response = new Response().description(HttpStatus.OK.getReasonPhrase());
+        Property responseProperty = null;
+        Method handlerRequestMethod = handlerMethod.getMethod();
+
+
+
+        Class<?> returnClassType = handlerRequestMethod.getReturnType();
+        ResolvedType resolve = typeResolver.resolve(returnClassType);
+
+        DefaultReferContext.Types.typeNameFor(returnClassType);
+        System.out.println(handlerRequestMethod);
+
+
+        return response;
     }
 
     /**
@@ -237,6 +266,9 @@ public class ApiDocumentationScanner {
                 MethodDocImpl value = entry.getValue();
                 if (methodGeneralName.contains(CommonParseUtils.trimAll(methodName))) {
                     summary = value.commentText();
+                    if (summary.contains(ApiDocumentContext.COMMENT_NEWLINE_SEPARATOR)) {
+                        summary = summary.replaceAll(ApiDocumentContext.COMMENT_NEWLINE_SEPARATOR, "");
+                    }
                     break;
                 }
             }

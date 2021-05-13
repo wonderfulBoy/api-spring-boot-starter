@@ -1,4 +1,4 @@
-package com.github.api.arch;
+package com.github.api.core.arch;
 
 /**
  * PersistenceException
