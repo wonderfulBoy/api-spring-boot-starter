@@ -1,7 +1,10 @@
 package com.github.api.core;
 
-import com.fasterxml.classmate.ResolvedType;
-import com.fasterxml.classmate.TypeResolver;
+import com.fasterxml.classmate.*;
+import com.fasterxml.classmate.members.ResolvedMethod;
+import com.fasterxml.classmate.types.ResolvedArrayType;
+import com.fasterxml.classmate.types.ResolvedObjectType;
+import com.fasterxml.classmate.types.ResolvedPrimitiveType;
 import com.github.api.ApiDocumentContext;
 import com.github.api.ApiDocumentProperties;
 import com.github.api.utils.CommonParseUtils;
@@ -12,6 +15,7 @@ import com.sun.javadoc.RootDoc;
 import com.sun.tools.javadoc.MethodDocImpl;
 import io.swagger.models.*;
 import io.swagger.models.properties.Property;
+import io.swagger.models.properties.RefProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +29,15 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static com.github.api.core.DefaultReferContext.*;
+import static com.github.api.core.DefaultReferContext.Types.typeNameFor;
+import static com.google.common.collect.Lists.newArrayList;
 
 /**
  * ApiDocumentationScanner
@@ -52,6 +62,8 @@ public class ApiDocumentationScanner {
     private Map<String, ClassDoc> classDocListMap;
 
     private Map<String, Map<String, MethodDocImpl>> classMethodDocMap;
+
+    private Map<Class, List<ResolvedMethod>> methodsResolvedForHostClasses = new HashMap<>();
 
     public ApiDocumentationScanner() {
         classDocListMap = new HashMap<>();
@@ -196,17 +208,29 @@ public class ApiDocumentationScanner {
      * @return {@link Response}
      */
     private Response responseBuild(HandlerMethod handlerMethod) {
-        Response response = new Response().description(HttpStatus.OK.getReasonPhrase());
-        Property responseProperty = null;
-        Method handlerRequestMethod = handlerMethod.getMethod();
 
 
+        Class<?> controllerClass = handlerMethod.getBeanType();
+        Optional<ResolvedMethod> resolvedMethodOptional
+                = matchedMethod(handlerMethod.getMethod(), getMemberMethods(controllerClass));
+        ResolvedType returnType = resolvedMethodOptional.map(ResolvedMethod::getReturnType)
+                .orElse(typeResolver.resolve(Void.TYPE));
+        //RsData<Object>
+        String typeName = typeName(returnType);
+        System.out.println("=======================:"+typeName);
+        Property responseProperty;
+        if (Types.isBaseType(returnType)) {
+            System.out.println(returnType);
+            responseProperty = new RefProperty(typeName);
+        } else {
+            responseProperty = new RefProperty(typeName);
+        }
 
-        Class<?> returnClassType = handlerRequestMethod.getReturnType();
-        ResolvedType resolve = typeResolver.resolve(returnClassType);
+        Response response = new Response().description(HttpStatus.OK.getReasonPhrase()).schema(responseProperty);
 
-        DefaultReferContext.Types.typeNameFor(returnClassType);
-        System.out.println(handlerRequestMethod);
+        TypeBindings typeBindings = returnType.getTypeBindings();
+
+        System.out.println(typeBindings);
 
 
         return response;
@@ -288,6 +312,135 @@ public class ApiDocumentationScanner {
         return String.format("%sUsing%s", handlerMethod.getMethod().getName(), getRequestMethod(requestMappingInfo).name());
     }
 
+
+    /**
+     * Get all member methods in the class
+     *
+     * @param hostClass
+     */
+    private List<ResolvedMethod> getMemberMethods(Class hostClass) {
+        if (!methodsResolvedForHostClasses.containsKey(hostClass)) {
+            ResolvedType beanType = typeResolver.resolve(hostClass);
+            MemberResolver resolver = new MemberResolver(typeResolver);
+            resolver.setIncludeLangObject(false);
+            ResolvedTypeWithMembers typeWithMembers = resolver.resolve(beanType, null, null);
+            methodsResolvedForHostClasses.put(hostClass, newArrayList(typeWithMembers.getMemberMethods()));
+        }
+        return methodsResolvedForHostClasses.get(hostClass);
+    }
+
+
+    /**
+     * Matched the method with all member methods in class.
+     * The method cannot be matched by URL, so it can only be matched according to the overload mechanism
+     */
+    private Optional<ResolvedMethod> matchedMethod(Method method, List<ResolvedMethod> filteredMethod) {
+        for (ResolvedMethod resolvedMethod : filteredMethod) {
+            //same method name
+            if (resolvedMethod.getName().equals(method.getName())) {
+                //same argument length of method
+                if (resolvedMethod.getArgumentCount() == method.getParameterTypes().length) {
+                    boolean same = true;
+                    //the parameter type of the parameter at the same index position is the same
+                    for (int index = 0; index < resolvedMethod.getArgumentCount(); index++) {
+                        ResolvedType resolvedArgumentType = resolvedMethod.getArgumentType(index);
+                        Type genericParameterType = method.getGenericParameterTypes()[index];
+                        if (!((genericParameterType instanceof Class && ((Class<?>) genericParameterType)
+                                .isAssignableFrom(resolvedArgumentType.getErasedType()))
+                                || (genericParameterType instanceof ParameterizedType && resolvedArgumentType.getErasedType()
+                                .isAssignableFrom((Class<?>) ((ParameterizedType) genericParameterType).getRawType())))) {
+                            same = false;
+                            break;
+                        }
+                    }
+                    if (same) return Optional.of(resolvedMethod);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private String typeName(ResolvedType type) {
+        if (isContainerType(type)) {
+            return containerType(type);
+        }
+        return innerTypeName(type);
+    }
+
+    private String innerTypeName(ResolvedType type) {
+        if (type.getTypeParameters().size() > 0 && type.getErasedType().getTypeParameters().length > 0) {
+            return genericTypeName(type);
+        }
+        return simpleTypeName(type);
+    }
+
+    private String simpleTypeName(ResolvedType type) {
+        Class<?> erasedType = type.getErasedType();
+        if (type instanceof ResolvedPrimitiveType) {
+            return typeNameFor(erasedType);
+        } else if (erasedType.isEnum()) {
+            return "string";
+        } else if (type instanceof ResolvedArrayType) {
+            return String.format("Array%s%s%s", OPEN,
+                    simpleTypeName(type.getArrayElementType()), CLOSE);
+        } else if (type instanceof ResolvedObjectType) {
+            String typeName = typeNameFor(erasedType);
+            if (typeName != null) {
+                return typeName;
+            }
+        }
+        return erasedType.getSimpleName();
+    }
+
+    private String genericTypeName(ResolvedType resolvedType) {
+        Class<?> erasedType = resolvedType.getErasedType();
+        String simpleName = Optional.ofNullable(typeNameFor(erasedType)).orElse(erasedType.getSimpleName());
+        StringBuilder sb = new StringBuilder(String.format("%s%s", simpleName, OPEN));
+        boolean first = true;
+        for (int index = 0; index < erasedType.getTypeParameters().length; index++) {
+            ResolvedType typeParam = resolvedType.getTypeParameters().get(index);
+            if (first) {
+                sb.append(innerTypeName(typeParam));
+                first = false;
+            } else {
+                sb.append(String.format("%s%s", DELIMITER, innerTypeName(typeParam)));
+            }
+        }
+        sb.append(CLOSE);
+        return sb.toString();
+    }
+
+    /**
+     * Determine whether it is a container type
+     *
+     * @param type
+     */
+    private boolean isContainerType(ResolvedType type) {
+        return List.class.isAssignableFrom(type.getErasedType()) ||
+                Set.class.isAssignableFrom(type.getErasedType()) ||
+                (Collection.class.isAssignableFrom(type.getErasedType())
+                        && !Map.class.isAssignableFrom(type.getErasedType()) ||
+                        type.isArray());
+    }
+
+    /**
+     * Determine  container type
+     *
+     * @param type
+     */
+    private String containerType(ResolvedType type) {
+        if (List.class.isAssignableFrom(type.getErasedType())) {
+            return "List";
+        } else if (Set.class.isAssignableFrom(type.getErasedType())) {
+            return "Set";
+        } else if (type.isArray()) {
+            return "Array";
+        } else if (Collection.class.isAssignableFrom(type.getErasedType()) && !Map.class.isAssignableFrom(type.getErasedType())) {
+            return "List";
+        } else {
+            throw new UnsupportedOperationException(String.format("Type is not collection type %s", type));
+        }
+    }
 }
 
 

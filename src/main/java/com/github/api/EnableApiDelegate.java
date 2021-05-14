@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Import;
 import java.lang.annotation.*;
 
 /**
- * EnableApiReporterDelegate
+ * EnableApiDelegate
  * Decorate the startup class with this annotation to enable automatic hosting of API documents
  *
  * @author echils
@@ -15,6 +15,6 @@ import java.lang.annotation.*;
 @Documented
 @Retention(value = RetentionPolicy.RUNTIME)
 @Import(ApiDocumentConfiguration.class)
-public @interface EnableApiReporterDelegate {
+public @interface EnableApiDelegate {
 
 }
