@@ -1,10 +1,10 @@
 package com.github.api.core;
 
-import com.fasterxml.classmate.*;
+import com.fasterxml.classmate.MemberResolver;
+import com.fasterxml.classmate.ResolvedType;
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
+import com.fasterxml.classmate.TypeResolver;
 import com.fasterxml.classmate.members.ResolvedMethod;
-import com.fasterxml.classmate.types.ResolvedArrayType;
-import com.fasterxml.classmate.types.ResolvedObjectType;
-import com.fasterxml.classmate.types.ResolvedPrimitiveType;
 import com.github.api.ApiDocumentContext;
 import com.github.api.ApiDocumentProperties;
 import com.github.api.utils.CommonParseUtils;
@@ -14,8 +14,9 @@ import com.sun.javadoc.MethodDoc;
 import com.sun.javadoc.RootDoc;
 import com.sun.tools.javadoc.MethodDocImpl;
 import io.swagger.models.*;
-import io.swagger.models.properties.Property;
-import io.swagger.models.properties.RefProperty;
+import io.swagger.models.parameters.Parameter;
+import io.swagger.models.parameters.QueryParameter;
+import io.swagger.models.properties.UntypedProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +36,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.github.api.core.DefaultReferContext.*;
-import static com.github.api.core.DefaultReferContext.Types.typeNameFor;
 import static com.google.common.collect.Lists.newArrayList;
 
 /**
@@ -75,14 +74,14 @@ public class ApiDocumentationScanner {
         Swagger body = swaggerInit();
         classDocListMap = Stream.of(rootDoc.classes())
                 .collect(Collectors.toMap(ClassDoc::toString, classDoc -> classDoc));
-
         Map<String, Tag> tagMap = new HashMap<>();
         Map<String, Path> pathMap = new HashMap<>();
+        Map<String, Model> definitions = new HashMap<>();
         for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : requestMappingMap.entrySet()) {
+
             HandlerMethod handlerMethod = entry.getValue();
             RequestMappingInfo requestMappingInfo = entry.getKey();
             String className = handlerMethod.getBeanType().getName();
-
             Tag requestTag = tagMap.computeIfAbsent(className, cn -> {
                 Tag tag = new Tag();
                 tag.name(ControllerParseUtils.controllerNameAsGroup(handlerMethod));
@@ -92,13 +91,12 @@ public class ApiDocumentationScanner {
                 }
                 return tag;
             });
-
             Path path = pathBuild(getRequestMethod(requestMappingInfo),
                     operationBuild(requestTag, requestMappingInfo, handlerMethod));
             pathMap.put(getRequestPath(requestMappingInfo), path);
         }
-
         body.paths(pathMap);
+        body.setDefinitions(definitions);
         body.tags(new ArrayList<>(tagMap.values()));
         return new Documentation(body);
     }
@@ -195,11 +193,29 @@ public class ApiDocumentationScanner {
         operation.operationId(uniqueOperationId(requestMappingInfo, handlerMethod));
         operation.consumes(parseConsumes(requestMappingInfo));
         operation.produces(parseProduces(requestMappingInfo));
-        operation.deprecated(ControllerParseUtils.isDeprecatedMethod(handlerMethod));
+        operation.setParameters(parametersBuild(handlerMethod));
         operation.response(HttpStatus.OK.value(), responseBuild(handlerMethod));
-        //TODO
+        operation.deprecated(ControllerParseUtils.isDeprecatedMethod(handlerMethod));
         return operation;
     }
+
+
+    /**
+     * Build request parameter info
+     *
+     * @param handlerMethod {@link HandlerMethod}
+     * @return {@link Parameter}
+     */
+    private List<Parameter> parametersBuild(HandlerMethod handlerMethod) {
+        //TODO
+        QueryParameter parameter = new QueryParameter();
+        parameter.setRequired(false);
+        parameter.setDescription("测试");
+        parameter.setName("test");
+        parameter.setType("string");
+        return Collections.singletonList(parameter);
+    }
+
 
     /**
      * Build request response info
@@ -208,33 +224,17 @@ public class ApiDocumentationScanner {
      * @return {@link Response}
      */
     private Response responseBuild(HandlerMethod handlerMethod) {
-
-
         Class<?> controllerClass = handlerMethod.getBeanType();
         Optional<ResolvedMethod> resolvedMethodOptional
                 = matchedMethod(handlerMethod.getMethod(), getMemberMethods(controllerClass));
         ResolvedType returnType = resolvedMethodOptional.map(ResolvedMethod::getReturnType)
                 .orElse(typeResolver.resolve(Void.TYPE));
-        //RsData<Object>
-        String typeName = typeName(returnType);
-        System.out.println("=======================:"+typeName);
-        Property responseProperty;
-        if (Types.isBaseType(returnType)) {
-            System.out.println(returnType);
-            responseProperty = new RefProperty(typeName);
-        } else {
-            responseProperty = new RefProperty(typeName);
-        }
-
-        Response response = new Response().description(HttpStatus.OK.getReasonPhrase()).schema(responseProperty);
-
-        TypeBindings typeBindings = returnType.getTypeBindings();
-
-        System.out.println(typeBindings);
-
-
+        Response response = new Response().description(HttpStatus.OK.getReasonPhrase());
+        response.schema(DefaultReferContext.getProperty(returnType, new UntypedProperty()));
         return response;
+
     }
+
 
     /**
      * Parse request consumes
@@ -250,6 +250,7 @@ public class ApiDocumentationScanner {
         return consumes.stream().map(MimeType::toString).collect(Collectors.toList());
     }
 
+
     /**
      * Parse request produces
      *
@@ -263,6 +264,7 @@ public class ApiDocumentationScanner {
         }
         return produces.stream().map(MimeType::toString).collect(Collectors.toList());
     }
+
 
     /**
      * Parse the summary of the request method
@@ -309,14 +311,17 @@ public class ApiDocumentationScanner {
      * @return Unique operation id
      */
     private String uniqueOperationId(RequestMappingInfo requestMappingInfo, HandlerMethod handlerMethod) {
-        return String.format("%sUsing%s", handlerMethod.getMethod().getName(), getRequestMethod(requestMappingInfo).name());
+        String controllerClass = handlerMethod.getBeanType().getSimpleName();
+        String uuid = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 10);
+        return String.format("%s#%sUsing%s@%s", controllerClass, handlerMethod.getMethod().getName(),
+                getRequestMethod(requestMappingInfo).name(), uuid);
     }
 
 
     /**
      * Get all member methods in the class
      *
-     * @param hostClass
+     * @param hostClass the controller class
      */
     private List<ResolvedMethod> getMemberMethods(Class hostClass) {
         if (!methodsResolvedForHostClasses.containsKey(hostClass)) {
@@ -360,87 +365,6 @@ public class ApiDocumentationScanner {
         return Optional.empty();
     }
 
-    private String typeName(ResolvedType type) {
-        if (isContainerType(type)) {
-            return containerType(type);
-        }
-        return innerTypeName(type);
-    }
-
-    private String innerTypeName(ResolvedType type) {
-        if (type.getTypeParameters().size() > 0 && type.getErasedType().getTypeParameters().length > 0) {
-            return genericTypeName(type);
-        }
-        return simpleTypeName(type);
-    }
-
-    private String simpleTypeName(ResolvedType type) {
-        Class<?> erasedType = type.getErasedType();
-        if (type instanceof ResolvedPrimitiveType) {
-            return typeNameFor(erasedType);
-        } else if (erasedType.isEnum()) {
-            return "string";
-        } else if (type instanceof ResolvedArrayType) {
-            return String.format("Array%s%s%s", OPEN,
-                    simpleTypeName(type.getArrayElementType()), CLOSE);
-        } else if (type instanceof ResolvedObjectType) {
-            String typeName = typeNameFor(erasedType);
-            if (typeName != null) {
-                return typeName;
-            }
-        }
-        return erasedType.getSimpleName();
-    }
-
-    private String genericTypeName(ResolvedType resolvedType) {
-        Class<?> erasedType = resolvedType.getErasedType();
-        String simpleName = Optional.ofNullable(typeNameFor(erasedType)).orElse(erasedType.getSimpleName());
-        StringBuilder sb = new StringBuilder(String.format("%s%s", simpleName, OPEN));
-        boolean first = true;
-        for (int index = 0; index < erasedType.getTypeParameters().length; index++) {
-            ResolvedType typeParam = resolvedType.getTypeParameters().get(index);
-            if (first) {
-                sb.append(innerTypeName(typeParam));
-                first = false;
-            } else {
-                sb.append(String.format("%s%s", DELIMITER, innerTypeName(typeParam)));
-            }
-        }
-        sb.append(CLOSE);
-        return sb.toString();
-    }
-
-    /**
-     * Determine whether it is a container type
-     *
-     * @param type
-     */
-    private boolean isContainerType(ResolvedType type) {
-        return List.class.isAssignableFrom(type.getErasedType()) ||
-                Set.class.isAssignableFrom(type.getErasedType()) ||
-                (Collection.class.isAssignableFrom(type.getErasedType())
-                        && !Map.class.isAssignableFrom(type.getErasedType()) ||
-                        type.isArray());
-    }
-
-    /**
-     * Determine  container type
-     *
-     * @param type
-     */
-    private String containerType(ResolvedType type) {
-        if (List.class.isAssignableFrom(type.getErasedType())) {
-            return "List";
-        } else if (Set.class.isAssignableFrom(type.getErasedType())) {
-            return "Set";
-        } else if (type.isArray()) {
-            return "Array";
-        } else if (Collection.class.isAssignableFrom(type.getErasedType()) && !Map.class.isAssignableFrom(type.getErasedType())) {
-            return "List";
-        } else {
-            throw new UnsupportedOperationException(String.format("Type is not collection type %s", type));
-        }
-    }
 }
 
 

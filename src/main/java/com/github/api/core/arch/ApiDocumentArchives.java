@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.File;
 import java.io.FileOutputStream;
 
+import static com.github.api.ApiDocumentContext.MAVEN_DEFAULT_ARTIFACTID_SEPARATOR;
+
 /**
  * Api archives
  *
@@ -49,7 +51,7 @@ public class ApiDocumentArchives {
         ApiDocumentContext.documentation = documentation;
         String outputPath = ApiDocumentContext.resourceDirectory + File.separator +
                 ApiDocumentContext.DEFAULT_ARCHIVES_DIRECTORY + File.separator +
-                apiDocumentProperties.getInfo().getTitle() + ApiDocumentContext.SUPPORT_OUTPUT_DOCUMENT_TYPE;
+                filenameBuild() + ApiDocumentContext.SUPPORT_OUTPUT_DOCUMENT_TYPE;
         logger.info("Persistence path:{}", outputPath);
         if (StringUtils.isBlank(outputPath)) {
             logger.warn("Persistence path is blank,there is no need to start the persistence process");
@@ -72,6 +74,21 @@ public class ApiDocumentArchives {
         if (gitRepositoryManager.isGitProject()) {
             gitRepositoryManager.addFile(outputPath);
         }
+    }
+
+    /**
+     * Build the api document filename,if the api title contains {@link ApiDocumentContext#MAVEN_DEFAULT_ARTIFACTID_SEPARATOR},
+     * then will take the last part as the file name
+     *
+     * @return the api document filename
+     */
+    private String filenameBuild() {
+        String title = apiDocumentProperties.getInfo().getTitle();
+        if (title.contains(MAVEN_DEFAULT_ARTIFACTID_SEPARATOR)) {
+            String[] titleNameArray = title.split(MAVEN_DEFAULT_ARTIFACTID_SEPARATOR);
+            return titleNameArray[titleNameArray.length - 1];
+        }
+        return title;
     }
 
 }

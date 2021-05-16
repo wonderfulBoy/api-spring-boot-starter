@@ -69,4 +69,7 @@ public class ApiDocumentContext {
 
     public static final String COMMENT_NEWLINE_SEPARATOR = "\n ";
 
+
+    public static final String MAVEN_DEFAULT_ARTIFACTID_SEPARATOR = "-";
+
 }
