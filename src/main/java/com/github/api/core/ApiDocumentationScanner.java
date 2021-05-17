@@ -17,9 +17,12 @@ import io.swagger.models.*;
 import io.swagger.models.parameters.Parameter;
 import io.swagger.models.parameters.QueryParameter;
 import io.swagger.models.properties.UntypedProperty;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -29,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -207,15 +211,38 @@ public class ApiDocumentationScanner {
      * @return {@link Parameter}
      */
     private List<Parameter> parametersBuild(HandlerMethod handlerMethod) {
+
+        Class<?> controllerClass = handlerMethod.getBeanType();
+        Optional<ResolvedMethod> resolvedMethodOptional
+                = matchedMethod(handlerMethod.getMethod(), getMemberMethods(controllerClass));
+        MethodParameter[] methodParameters = handlerMethod.getMethodParameters();
+        if (!resolvedMethodOptional.isPresent() || ArrayUtils.isEmpty(methodParameters)) {
+            return Collections.emptyList();
+        }
+
+        ResolvedMethod resolvedMethod = resolvedMethodOptional.get();
+        List<Parameter> parameters = new ArrayList<>();
+        for (int i = 0; i < methodParameters.length; i++) {
+            MethodParameter methodParameter = methodParameters[i];
+            ResolvedType argumentType = resolvedMethod.getArgumentType(i);
+            Parameter parameter = DefaultReferContext.getParameter(methodParameter, argumentType);
+            if (parameter != null) {
+
+                java.lang.reflect.Parameter reflectParameter = DefaultReferContext.getReflectParameter(methodParameter);
+                parameter.setDescription(null);
+                parameters.add(parameter);
+            }
+        }
+
+
         //TODO
         QueryParameter parameter = new QueryParameter();
         parameter.setRequired(false);
         parameter.setDescription("测试");
         parameter.setName("test");
         parameter.setType("string");
-        return Collections.singletonList(parameter);
+        return parameters;
     }
-
 
     /**
      * Build request response info

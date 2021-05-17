@@ -86,7 +86,7 @@ public class ApiDocumentArchives {
         String title = apiDocumentProperties.getInfo().getTitle();
         if (title.contains(MAVEN_DEFAULT_ARTIFACTID_SEPARATOR)) {
             String[] titleNameArray = title.split(MAVEN_DEFAULT_ARTIFACTID_SEPARATOR);
-            return titleNameArray[titleNameArray.length - 1];
+            return titleNameArray[titleNameArray.length - 1].toLowerCase();
         }
         return title;
     }
