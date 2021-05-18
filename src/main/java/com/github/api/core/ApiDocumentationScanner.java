@@ -14,6 +14,7 @@ import com.sun.javadoc.MethodDoc;
 import com.sun.javadoc.RootDoc;
 import com.sun.tools.javadoc.MethodDocImpl;
 import io.swagger.models.*;
+import io.swagger.models.parameters.FormParameter;
 import io.swagger.models.parameters.Parameter;
 import io.swagger.models.parameters.QueryParameter;
 import io.swagger.models.properties.UntypedProperty;
@@ -27,12 +28,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.MimeType;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -195,9 +194,10 @@ public class ApiDocumentationScanner {
         operation.tag(tag.getName());
         operation.summary(summaryRequest(handlerMethod));
         operation.operationId(uniqueOperationId(requestMappingInfo, handlerMethod));
-        operation.consumes(parseConsumes(requestMappingInfo));
+        List<Parameter> parameters = parametersBuild(handlerMethod);
+        operation.setParameters(parameters);
         operation.produces(parseProduces(requestMappingInfo));
-        operation.setParameters(parametersBuild(handlerMethod));
+        operation.consumes(parseConsumes(requestMappingInfo, parameters));
         operation.response(HttpStatus.OK.value(), responseBuild(handlerMethod));
         operation.deprecated(ControllerParseUtils.isDeprecatedMethod(handlerMethod));
         return operation;
@@ -227,8 +227,10 @@ public class ApiDocumentationScanner {
             ResolvedType argumentType = resolvedMethod.getArgumentType(i);
             Parameter parameter = DefaultReferContext.getParameter(methodParameter, argumentType);
             if (parameter != null) {
-
                 java.lang.reflect.Parameter reflectParameter = DefaultReferContext.getReflectParameter(methodParameter);
+                if (StringUtils.isBlank(parameter.getName())) {
+                    parameter.setName(reflectParameter.getName());
+                }
                 parameter.setDescription(null);
                 parameters.add(parameter);
             }
@@ -269,12 +271,21 @@ public class ApiDocumentationScanner {
      * @param requestMappingInfo {@link RequestMappingInfo}
      * @return The request consumes
      */
-    private List<String> parseConsumes(RequestMappingInfo requestMappingInfo) {
+    private List<String> parseConsumes(RequestMappingInfo requestMappingInfo, List<Parameter> parameters) {
         Set<MediaType> consumes = requestMappingInfo.getConsumesCondition().getConsumableMediaTypes();
         if (CollectionUtils.isEmpty(consumes)) {
-            return Collections.singletonList(MediaType.APPLICATION_JSON_VALUE);
+            if (CollectionUtils.isEmpty(parameters)) {
+                return Collections.singletonList(MediaType.APPLICATION_JSON_VALUE);
+            }
+            List<Parameter> formParameters = parameters.stream().filter(parameter
+                    -> parameter instanceof FormParameter).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(formParameters)) {
+                return Collections.singletonList(MediaType.APPLICATION_JSON_VALUE);
+            } else {
+                return Collections.singletonList(MediaType.MULTIPART_FORM_DATA_VALUE);
+            }
         }
-        return consumes.stream().map(MimeType::toString).collect(Collectors.toList());
+        return consumes.stream().map(MediaType::toString).collect(Collectors.toList());
     }
 
 
@@ -289,7 +300,7 @@ public class ApiDocumentationScanner {
         if (CollectionUtils.isEmpty(produces)) {
             return Collections.singletonList(MediaType.ALL_VALUE);
         }
-        return produces.stream().map(MimeType::toString).collect(Collectors.toList());
+        return produces.stream().map(MediaType::toString).collect(Collectors.toList());
     }
 
 

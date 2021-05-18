@@ -64,7 +64,9 @@ class DefaultReferContext {
         java.lang.reflect.Parameter reflectParameter = getReflectParameter(methodParameter);
         for (Annotation parameterAnnotation : parameterAnnotations) {
             if (Types.isFileType(argumentType) || Types.isListOfFiles(argumentType)) {
-                return new FormParameter();
+                FormParameter formParameter = new FormParameter();
+                formParameter.type("file");
+                return formParameter;
             }
             Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
             if (annotationType.isAssignableFrom(PathVariable.class)) {
@@ -73,10 +75,11 @@ class DefaultReferContext {
                     PathVariable annotation = reflectParameter.getAnnotation(PathVariable.class);
                     String name = StringUtils.isEmpty(annotation.value()) ? annotation.name() : annotation.value();
                     pathParameter.name(name);
-                    pathParameter.type(Types.typeNameLookup.get(argumentType.getErasedType()));
+                    pathParameter.type(getParameterType(argumentType));
                 }
                 return pathParameter;
             } else if (annotationType.isAssignableFrom(RequestBody.class)) {
+
                 return new BodyParameter();
             } else if (annotationType.isAssignableFrom(RequestPart.class)) {
                 BodyParameter bodyParameter = new BodyParameter();
@@ -98,12 +101,8 @@ class DefaultReferContext {
                             queryParameter.setDefaultValue(annotation.defaultValue());
                         }
                         String name = StringUtils.isEmpty(annotation.value()) ? annotation.name() : annotation.value();
-                        if (Types.isBaseType(argumentType)) {
-                            queryParameter.type(Types.typeNameLookup.get(argumentType.getErasedType()));
-                        }else {
-
-                        }
                         queryParameter.setName(name);
+                        queryParameter.type(getParameterType(argumentType));
                     }
                 }
                 return queryParameter;
@@ -142,7 +141,6 @@ class DefaultReferContext {
                 responseProperty = getBaseProperty(typeName);
             } else if (Types.isContainerType(returnType)) {
                 ArrayProperty containerProperty = new ArrayProperty();
-
                 //Array Type: int[],object[]
                 if (returnType.isArray()) {
                     ResolvedType elementType = returnType.getArrayElementType();
@@ -178,14 +176,37 @@ class DefaultReferContext {
     }
 
     /**
+     * Get the parameter type
+     *
+     * @param argumentType {@link ResolvedType}
+     * @return the parameter type
+     */
+    static String getParameterType(ResolvedType argumentType) {
+        if (argumentType.isArray()) {
+            return "array";
+        }
+        String typeName = Types.typeName(argumentType);
+        if (Arrays.asList("float", "double", "bigdecimal").contains(typeName)) {
+            return "number";
+        } else if (Arrays.asList("byte", "int", "long", "biginteger").contains(typeName)) {
+            return "integer";
+        } else if ("boolean".equals(typeName)) {
+            return "boolean";
+        }
+        return "string";
+    }
+
+    /**
      * Get the base type corresponding property
      *
      * @param typeName the base type name
      * @return {@link Property}
      */
     private static Property getBaseProperty(String typeName) {
-        if (Arrays.asList("byte", "int", "long", "float", "double", "bigdecimal", "biginteger").contains(typeName)) {
+        if (Arrays.asList("float", "double", "bigdecimal").contains(typeName)) {
             return new DecimalProperty();
+        } else if (Arrays.asList("byte", "int", "long", "biginteger").contains(typeName)) {
+            return new IntegerProperty();
         } else if ("boolean".equals(typeName)) {
             return new BooleanProperty();
         } else if ("string".equals(typeName)) {
