@@ -7,6 +7,9 @@ import com.fasterxml.classmate.types.ResolvedArrayType;
 import com.fasterxml.classmate.types.ResolvedObjectType;
 import com.fasterxml.classmate.types.ResolvedPrimitiveType;
 import com.google.common.collect.ImmutableMap;
+import io.swagger.models.ArrayModel;
+import io.swagger.models.ModelImpl;
+import io.swagger.models.RefModel;
 import io.swagger.models.parameters.*;
 import io.swagger.models.properties.*;
 import org.apache.commons.lang3.ArrayUtils;
@@ -18,7 +21,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -27,11 +29,13 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static org.springframework.web.bind.annotation.ValueConstants.DEFAULT_NONE;
@@ -63,46 +67,115 @@ class DefaultReferContext {
         }
         java.lang.reflect.Parameter reflectParameter = getReflectParameter(methodParameter);
         for (Annotation parameterAnnotation : parameterAnnotations) {
-            if (Types.isFileType(argumentType) || Types.isListOfFiles(argumentType)) {
-                FormParameter formParameter = new FormParameter();
-                formParameter.type("file");
-                return formParameter;
-            }
             Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
             if (annotationType.isAssignableFrom(PathVariable.class)) {
                 PathParameter pathParameter = new PathParameter();
                 if (reflectParameter != null) {
                     PathVariable annotation = reflectParameter.getAnnotation(PathVariable.class);
                     String name = StringUtils.isEmpty(annotation.value()) ? annotation.name() : annotation.value();
-                    pathParameter.name(name);
-                    pathParameter.type(getParameterType(argumentType));
+                    pathParameter.setName(name);
+                    pathParameter.setRequired(annotation.required());
+                    String parameterType = getParameterType(argumentType);
+                    if (StringUtils.isEmpty(parameterType)) {
+                        pathParameter.setType("string");
+                    } else {
+                        pathParameter.setType(parameterType);
+                    }
+                    if ("array".equals(parameterType)) {
+                        pathParameter.setItems(new StringProperty());
+                    }
+                    if (argumentType.getErasedType().isEnum()) {
+                        Class<?> erasedType = argumentType.getErasedType();
+                        List<String> enumValues = Arrays.stream(erasedType.getFields())
+                                .map(Field::getName).collect(Collectors.toList());
+                        pathParameter._enum(enumValues);
+                    }
                 }
                 return pathParameter;
             } else if (annotationType.isAssignableFrom(RequestBody.class)) {
-
-                return new BodyParameter();
-            } else if (annotationType.isAssignableFrom(RequestPart.class)) {
+                if (Types.isFileType(argumentType) || Types.isListOfFiles(argumentType)) {
+                    FormParameter formParameter = new FormParameter();
+                    formParameter.type("file");
+                    if (reflectParameter != null) {
+                        RequestBody annotation = reflectParameter.getAnnotation(RequestBody.class);
+                        if (annotation != null) {
+                            formParameter.setRequired(annotation.required());
+                        }
+                    }
+                    return formParameter;
+                }
                 BodyParameter bodyParameter = new BodyParameter();
                 if (reflectParameter != null) {
-                    RequestPart annotation = reflectParameter.getAnnotation(RequestPart.class);
+                    RequestBody annotation = reflectParameter.getAnnotation(RequestBody.class);
                     if (annotation != null) {
-                        String name = StringUtils.isEmpty(annotation.value()) ? annotation.name() : annotation.value();
-                        bodyParameter.name(name);
+                        bodyParameter.setRequired(annotation.required());
+                    }
+                    String parameterType = getParameterType(argumentType);
+                    if (StringUtils.isEmpty(parameterType)) {
+                        RefModel refModel = new RefModel();
+                        refModel.set$ref(Types.typeName(argumentType));
+                        bodyParameter.schema(refModel);
+                    } else if (parameterType.equals("array")) {
+                        ArrayModel model = new ArrayModel();
+                        model.items(getProperty(argumentType, null));
+                        bodyParameter.schema(model);
+                    } else {
+                        ModelImpl model = new ModelImpl();
+                        model.setType(parameterType);
+                        bodyParameter.schema(model);
                     }
                 }
                 return bodyParameter;
             } else if (annotationType.isAssignableFrom(RequestParam.class)) {
+                if (Types.isFileType(argumentType) || Types.isListOfFiles(argumentType)) {
+                    FormParameter formParameter = new FormParameter();
+                    formParameter.type("file");
+                    if (reflectParameter != null) {
+                        RequestParam annotation = reflectParameter.getAnnotation(RequestParam.class);
+                        if (annotation != null) {
+                            formParameter.setRequired(annotation.required());
+                        }
+                    }
+                    return formParameter;
+                }
                 QueryParameter queryParameter = new QueryParameter();
                 if (reflectParameter != null) {
                     RequestParam annotation = reflectParameter.getAnnotation(RequestParam.class);
                     if (annotation != null) {
-                        queryParameter.required(annotation.required());
+                        queryParameter.setRequired(annotation.required());
                         if (!annotation.defaultValue().equals(DEFAULT_NONE)) {
                             queryParameter.setDefaultValue(annotation.defaultValue());
                         }
                         String name = StringUtils.isEmpty(annotation.value()) ? annotation.name() : annotation.value();
                         queryParameter.setName(name);
-                        queryParameter.type(getParameterType(argumentType));
+                        String parameterType = getParameterType(argumentType);
+                        if (StringUtils.isEmpty(parameterType)) {
+                            queryParameter.type("string");
+                        } else if (parameterType.equals("array")) {
+                            queryParameter.setType(parameterType);
+                            StringProperty stringProperty = new StringProperty();
+                            if (argumentType.isArray()) {
+                                Class<?> erasedType = argumentType.getArrayElementType().getErasedType();
+                                if (erasedType.isEnum()) {
+                                    stringProperty._enum(Arrays.stream(erasedType.getFields()).map(Field::getName).collect(Collectors.toList()));
+                                }
+                            }
+                            List<ResolvedType> typeParameters = argumentType.getTypeBindings().getTypeParameters();
+                            if (!CollectionUtils.isEmpty(typeParameters) && typeParameters.size() == 1) {
+                                Class<?> erasedType = typeParameters.get(0).getErasedType();
+                                if (erasedType.isEnum()) {
+                                    stringProperty._enum(Arrays.stream(erasedType.getFields()).map(Field::getName).collect(Collectors.toList()));
+                                }
+                            }
+                            queryParameter.setItems(stringProperty);
+                        } else {
+                            queryParameter.setType(parameterType);
+                        }
+                        if (argumentType.getErasedType().isEnum()) {
+                            Class<?> erasedType = argumentType.getErasedType();
+                            List<String> enumValues = Arrays.stream(erasedType.getFields()).map(Field::getName).collect(Collectors.toList());
+                            queryParameter._enum(enumValues);
+                        }
                     }
                 }
                 return queryParameter;
@@ -181,9 +254,12 @@ class DefaultReferContext {
      * @param argumentType {@link ResolvedType}
      * @return the parameter type
      */
-    static String getParameterType(ResolvedType argumentType) {
-        if (argumentType.isArray()) {
+    private static String getParameterType(ResolvedType argumentType) {
+        if (Types.isContainerType(argumentType)) {
             return "array";
+        }
+        if (argumentType.getErasedType().isEnum()) {
+            return "string";
         }
         String typeName = Types.typeName(argumentType);
         if (Arrays.asList("float", "double", "bigdecimal").contains(typeName)) {
@@ -192,8 +268,12 @@ class DefaultReferContext {
             return "integer";
         } else if ("boolean".equals(typeName)) {
             return "boolean";
+        } else if ("string".equals(typeName)) {
+            return "string";
+        } else if ("object".equals(typeName)) {
+            return "object";
         }
-        return "string";
+        return null;
     }
 
     /**

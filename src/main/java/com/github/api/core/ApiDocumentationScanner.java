@@ -9,11 +9,10 @@ import com.github.api.ApiDocumentContext;
 import com.github.api.ApiDocumentProperties;
 import com.github.api.utils.CommonParseUtils;
 import com.github.api.utils.ControllerParseUtils;
-import com.sun.javadoc.ClassDoc;
-import com.sun.javadoc.MethodDoc;
-import com.sun.javadoc.RootDoc;
+import com.sun.javadoc.*;
 import com.sun.tools.javadoc.MethodDocImpl;
 import io.swagger.models.*;
+import io.swagger.models.Tag;
 import io.swagger.models.parameters.FormParameter;
 import io.swagger.models.parameters.Parameter;
 import io.swagger.models.parameters.QueryParameter;
@@ -32,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -228,10 +228,30 @@ public class ApiDocumentationScanner {
             Parameter parameter = DefaultReferContext.getParameter(methodParameter, argumentType);
             if (parameter != null) {
                 java.lang.reflect.Parameter reflectParameter = DefaultReferContext.getReflectParameter(methodParameter);
-                if (StringUtils.isBlank(parameter.getName())) {
-                    parameter.setName(reflectParameter.getName());
+                if (reflectParameter != null) {
+                    if (StringUtils.isBlank(parameter.getName())) {
+                        parameter.setName(reflectParameter.getName());
+                    }
+                    String[] handlerMethodSplit = handlerMethod.toString().split(" ");
+                    String methodDesc = handlerMethodSplit[handlerMethodSplit.length - 1];
+                    handlerMethodSplit = methodDesc.split("\\(");
+                    Map<String, MethodDocImpl> methodDocMap = classMethodDocMap.get(controllerClass.getName());
+                    for (Map.Entry<String, MethodDocImpl> methodDocEntry : methodDocMap.entrySet()) {
+                        String methodDocEntryKey = methodDocEntry.getKey();
+                        String[] methodDocEntryKeySplit = methodDocEntryKey.split("\\(");
+                        if (methodDocEntryKeySplit[0].equals(handlerMethodSplit[0])) {
+                            if (methodDocEntryKeySplit[1].split(",").length == handlerMethodSplit[1].split(",").length) {
+                                MethodDocImpl methodDoc = methodDocEntry.getValue();
+                                for (ParamTag paramTag : methodDoc.paramTags()) {
+                                    if (paramTag.parameterName().equals(reflectParameter.getName())) {
+                                        parameter.setDescription(paramTag.parameterComment());
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
-                parameter.setDescription(null);
                 parameters.add(parameter);
             }
         }
@@ -274,16 +294,14 @@ public class ApiDocumentationScanner {
     private List<String> parseConsumes(RequestMappingInfo requestMappingInfo, List<Parameter> parameters) {
         Set<MediaType> consumes = requestMappingInfo.getConsumesCondition().getConsumableMediaTypes();
         if (CollectionUtils.isEmpty(consumes)) {
-            if (CollectionUtils.isEmpty(parameters)) {
-                return Collections.singletonList(MediaType.APPLICATION_JSON_VALUE);
+            if (!CollectionUtils.isEmpty(parameters)) {
+                List<Parameter> formParameters = parameters.stream().filter(parameter
+                        -> parameter instanceof FormParameter).collect(Collectors.toList());
+                if (!CollectionUtils.isEmpty(formParameters)) {
+                    return Collections.singletonList(MediaType.MULTIPART_FORM_DATA_VALUE);
+                }
             }
-            List<Parameter> formParameters = parameters.stream().filter(parameter
-                    -> parameter instanceof FormParameter).collect(Collectors.toList());
-            if (CollectionUtils.isEmpty(formParameters)) {
-                return Collections.singletonList(MediaType.APPLICATION_JSON_VALUE);
-            } else {
-                return Collections.singletonList(MediaType.MULTIPART_FORM_DATA_VALUE);
-            }
+            return Collections.singletonList(MediaType.APPLICATION_JSON_VALUE);
         }
         return consumes.stream().map(MediaType::toString).collect(Collectors.toList());
     }
@@ -328,6 +346,16 @@ public class ApiDocumentationScanner {
             for (Map.Entry<String, MethodDocImpl> entry : methodDocMap.entrySet()) {
                 String methodName = entry.getKey();
                 MethodDocImpl value = entry.getValue();
+                Annotation[] handlerMethodAnnotations = handlerMethod.getMethod().getAnnotations();
+                AnnotationDesc[] methodDocAnnotations = value.annotations();
+                if (handlerMethodAnnotations.length == methodDocAnnotations.length) {
+                    //TODO 根据注解匹配方法
+                    AnnotationDesc.ElementValuePair[] elementValuePairs = methodDocAnnotations[0].elementValues();
+                    if (Arrays.toString(handlerMethodAnnotations).equals(Arrays.toString(methodDocAnnotations))) {
+                        System.out.println();
+                    }
+                }
+
                 if (methodGeneralName.contains(CommonParseUtils.trimAll(methodName))) {
                     summary = value.commentText();
                     if (summary.contains(ApiDocumentContext.COMMENT_NEWLINE_SEPARATOR)) {
