@@ -48,8 +48,8 @@ import static org.springframework.web.bind.annotation.ValueConstants.DEFAULT_NON
  */
 class DefaultReferContext {
 
-    private static final String OPEN = "«";
-    private static final String CLOSE = "»";
+    private static final String OPEN = "5B";
+    private static final String CLOSE = "5D";
     private static final String DELIMITER = ",";
 
 

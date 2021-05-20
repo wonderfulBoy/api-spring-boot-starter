@@ -11,11 +11,10 @@ import com.github.api.utils.CommonParseUtils;
 import com.github.api.utils.ControllerParseUtils;
 import com.sun.javadoc.*;
 import com.sun.tools.javadoc.MethodDocImpl;
-import io.swagger.models.*;
 import io.swagger.models.Tag;
+import io.swagger.models.*;
 import io.swagger.models.parameters.FormParameter;
 import io.swagger.models.parameters.Parameter;
-import io.swagger.models.parameters.QueryParameter;
 import io.swagger.models.properties.UntypedProperty;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -27,7 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 
@@ -109,7 +108,7 @@ public class ApiDocumentationScanner {
      * Get request method
      *
      * @param requestMappingInfo {@link RequestMappingInfo}
-     * @return {@link RequestMethod}
+     * @return The request method
      */
     private RequestMethod getRequestMethod(RequestMappingInfo requestMappingInfo) {
         Iterator<RequestMethod> requestMethodIterator = requestMappingInfo.getMethodsCondition().getMethods().iterator();
@@ -157,7 +156,7 @@ public class ApiDocumentationScanner {
     /**
      * Build the swagger path
      *
-     * @param requestMethod {@link RequestMethod}
+     * @param requestMethod The request method
      * @param operation     {@link Operation}
      * @return {@link Path}
      */
@@ -232,37 +231,21 @@ public class ApiDocumentationScanner {
                     if (StringUtils.isBlank(parameter.getName())) {
                         parameter.setName(reflectParameter.getName());
                     }
-                    String[] handlerMethodSplit = handlerMethod.toString().split(" ");
-                    String methodDesc = handlerMethodSplit[handlerMethodSplit.length - 1];
-                    handlerMethodSplit = methodDesc.split("\\(");
                     Map<String, MethodDocImpl> methodDocMap = classMethodDocMap.get(controllerClass.getName());
-                    for (Map.Entry<String, MethodDocImpl> methodDocEntry : methodDocMap.entrySet()) {
-                        String methodDocEntryKey = methodDocEntry.getKey();
-                        String[] methodDocEntryKeySplit = methodDocEntryKey.split("\\(");
-                        if (methodDocEntryKeySplit[0].equals(handlerMethodSplit[0])) {
-                            if (methodDocEntryKeySplit[1].split(",").length == handlerMethodSplit[1].split(",").length) {
-                                MethodDocImpl methodDoc = methodDocEntry.getValue();
-                                for (ParamTag paramTag : methodDoc.paramTags()) {
-                                    if (paramTag.parameterName().equals(reflectParameter.getName())) {
-                                        parameter.setDescription(paramTag.parameterComment());
-                                        break;
-                                    }
+                    methodDocMap.values().forEach(methodDoc -> {
+                        if (isMatched(handlerMethod, methodDoc)) {
+                            for (ParamTag paramTag : methodDoc.paramTags()) {
+                                if (paramTag.parameterName().equals(reflectParameter.getName())) {
+                                    parameter.setDescription(paramTag.parameterComment());
+                                    return;
                                 }
                             }
                         }
-                    }
+                    });
                 }
                 parameters.add(parameter);
             }
         }
-
-
-        //TODO
-        QueryParameter parameter = new QueryParameter();
-        parameter.setRequired(false);
-        parameter.setDescription("测试");
-        parameter.setName("test");
-        parameter.setType("string");
         return parameters;
     }
 
@@ -341,23 +324,10 @@ public class ApiDocumentationScanner {
                     methodDoc -> CommonParseUtils.trimAll(methodDoc.toString()),
                     methodDoc -> (MethodDocImpl) methodDoc));
             classMethodDocMap.put(className, methodDocMap);
-
-            String methodGeneralName = handlerMethod.getMethod().toString();
             for (Map.Entry<String, MethodDocImpl> entry : methodDocMap.entrySet()) {
-                String methodName = entry.getKey();
-                MethodDocImpl value = entry.getValue();
-                Annotation[] handlerMethodAnnotations = handlerMethod.getMethod().getAnnotations();
-                AnnotationDesc[] methodDocAnnotations = value.annotations();
-                if (handlerMethodAnnotations.length == methodDocAnnotations.length) {
-                    //TODO 根据注解匹配方法
-                    AnnotationDesc.ElementValuePair[] elementValuePairs = methodDocAnnotations[0].elementValues();
-                    if (Arrays.toString(handlerMethodAnnotations).equals(Arrays.toString(methodDocAnnotations))) {
-                        System.out.println();
-                    }
-                }
-
-                if (methodGeneralName.contains(CommonParseUtils.trimAll(methodName))) {
-                    summary = value.commentText();
+                MethodDocImpl methodDoc = entry.getValue();
+                if (isMatched(handlerMethod, methodDoc)) {
+                    summary = methodDoc.commentText();
                     if (summary.contains(ApiDocumentContext.COMMENT_NEWLINE_SEPARATOR)) {
                         summary = summary.replaceAll(ApiDocumentContext.COMMENT_NEWLINE_SEPARATOR, "");
                     }
@@ -366,6 +336,55 @@ public class ApiDocumentationScanner {
             }
         }
         return summary;
+    }
+
+
+    /**
+     * Determine whether the two methods match
+     *
+     * @param handlerMethod {@link HandlerMethod}
+     * @param methodDoc     {@link MethodDocImpl}
+     * @return the result of match
+     */
+    private boolean isMatched(HandlerMethod handlerMethod, MethodDocImpl methodDoc) {
+        AnnotationDesc[] methodDocAnnotations = methodDoc.annotations();
+        Annotation[] handlerMethodAnnotations = handlerMethod.getMethod().getAnnotations();
+        if (handlerMethodAnnotations.length == methodDocAnnotations.length) {
+            for (int i = 0; i < methodDocAnnotations.length; i++) {
+                AnnotationDesc methodDocAnnotation = methodDocAnnotations[i];
+                Annotation handlerMethodAnnotation = handlerMethodAnnotations[i];
+                if (methodDocAnnotation.elementValues() == null || methodDocAnnotation.elementValues().length == 0) {
+                    continue;
+                }
+                String methodDocPath = methodDocAnnotation.elementValues()[0].value().toString();
+                if (methodDocPath.startsWith("\"") && methodDocPath.endsWith("\"")) {
+                    methodDocPath = methodDocPath.replaceAll("\"", "");
+                }
+                if (handlerMethodAnnotation instanceof GetMapping &&
+                        methodDocAnnotation.toString().contains(GetMapping.class.getName())) {
+                    return ((GetMapping) handlerMethodAnnotation).value()[0].equals(methodDocPath);
+                }
+                if (handlerMethodAnnotation instanceof PostMapping &&
+                        methodDocAnnotation.toString().contains(PostMapping.class.getName())) {
+                    return ((PostMapping) handlerMethodAnnotation).value()[0].equals(methodDocPath);
+                }
+                if (handlerMethodAnnotation instanceof PutMapping &&
+                        methodDocAnnotation.toString().contains(PutMapping.class.getName())) {
+                    return ((PutMapping) handlerMethodAnnotation).value()[0].equals(methodDocPath);
+                }
+                if (handlerMethodAnnotation instanceof DeleteMapping &&
+                        methodDocAnnotation.toString().contains(DeleteMapping.class.getName())) {
+                    return ((DeleteMapping) handlerMethodAnnotation).value()[0].equals(methodDocPath);
+                }
+                if (handlerMethodAnnotation instanceof RequestMapping &&
+                        methodDocAnnotation.toString().contains(RequestMapping.class.getName())) {
+                    RequestMapping requestMapping = (RequestMapping) handlerMethodAnnotation;
+                    return requestMapping.value()[0].equals(methodDocPath) &&
+                            methodDocAnnotation.toString().contains(requestMapping.method()[0].toString());
+                }
+            }
+        }
+        return false;
     }
 
 
