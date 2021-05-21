@@ -1,7 +1,12 @@
 package com.github.api;
 
 import com.github.api.core.Documentation;
+import com.sun.javadoc.ClassDoc;
 import com.sun.javadoc.RootDoc;
+import com.sun.tools.javadoc.MethodDocImpl;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * ApiDocumentContext apply the runtime context
@@ -70,6 +75,12 @@ public class ApiDocumentContext {
     public static final String COMMENT_NEWLINE_SEPARATOR = "\n ";
 
 
-    public static final String MAVEN_DEFAULT_ARTIFACTID_SEPARATOR = "-";
+    public static final String MAVEN_DEFAULT_ARTIFACT_ID_SEPARATOR = "-";
+
+
+    public static final Map<String, ClassDoc> CLASS_DOC_MAP = new HashMap<>();
+
+
+    public static final Map<String, Map<String, MethodDocImpl>> CLASS_METHOD_DOC_MAP = new HashMap<>();
 
 }

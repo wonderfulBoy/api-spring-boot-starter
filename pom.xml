@@ -130,11 +130,6 @@
             </exclusions>
             <version>${swagger.version}</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>io.springfox</groupId>-->
-<!--            <artifactId>springfox-core</artifactId>-->
-<!--            <version>${springfox.version}</version>-->
-<!--        </dependency>-->
     </dependencies>
 
 </project>

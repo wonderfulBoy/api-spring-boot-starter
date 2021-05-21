@@ -35,9 +35,13 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.github.api.ApiDocumentContext.CLASS_DOC_MAP;
+import static com.github.api.ApiDocumentContext.CLASS_METHOD_DOC_MAP;
+import static com.github.api.core.DefaultReferContext.definitionBuild;
 import static com.google.common.collect.Lists.newArrayList;
 
 /**
@@ -60,35 +64,25 @@ public class ApiDocumentationScanner {
     @Autowired
     private ApiDocumentProperties apiDocumentProperties;
 
-    private Map<String, ClassDoc> classDocListMap;
-
-    private Map<String, Map<String, MethodDocImpl>> classMethodDocMap;
-
     private Map<Class, List<ResolvedMethod>> methodsResolvedForHostClasses = new HashMap<>();
 
-    public ApiDocumentationScanner() {
-        classDocListMap = new HashMap<>();
-        classMethodDocMap = new HashMap<>();
-    }
 
     Documentation scan(Map<RequestMappingInfo, HandlerMethod> requestMappingMap, RootDoc rootDoc) {
 
         Swagger body = swaggerInit();
-        classDocListMap = Stream.of(rootDoc.classes())
-                .collect(Collectors.toMap(ClassDoc::toString, classDoc -> classDoc));
+        CLASS_DOC_MAP.putAll(Stream.of(rootDoc.classes())
+                .collect(Collectors.toMap(ClassDoc::toString, classDoc -> classDoc)));
         Map<String, Tag> tagMap = new HashMap<>();
         Map<String, Path> pathMap = new HashMap<>();
-        Map<String, Model> definitions = new HashMap<>();
         for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : requestMappingMap.entrySet()) {
-
             HandlerMethod handlerMethod = entry.getValue();
             RequestMappingInfo requestMappingInfo = entry.getKey();
             String className = handlerMethod.getBeanType().getName();
             Tag requestTag = tagMap.computeIfAbsent(className, cn -> {
                 Tag tag = new Tag();
                 tag.name(ControllerParseUtils.controllerNameAsGroup(handlerMethod));
-                if (classDocListMap.containsKey(cn)) {
-                    ClassDoc classDoc = classDocListMap.get(cn);
+                if (CLASS_DOC_MAP.containsKey(cn)) {
+                    ClassDoc classDoc = CLASS_DOC_MAP.get(cn);
                     tag.description(classDoc.commentText());
                 }
                 return tag;
@@ -98,7 +92,7 @@ public class ApiDocumentationScanner {
             pathMap.put(getRequestPath(requestMappingInfo), path);
         }
         body.paths(pathMap);
-        body.setDefinitions(definitions);
+        body.setDefinitions(definitionBuild());
         body.tags(new ArrayList<>(tagMap.values()));
         return new Documentation(body);
     }
@@ -231,7 +225,7 @@ public class ApiDocumentationScanner {
                     if (StringUtils.isBlank(parameter.getName())) {
                         parameter.setName(reflectParameter.getName());
                     }
-                    Map<String, MethodDocImpl> methodDocMap = classMethodDocMap.get(controllerClass.getName());
+                    Map<String, MethodDocImpl> methodDocMap = CLASS_METHOD_DOC_MAP.get(controllerClass.getName());
                     methodDocMap.values().forEach(methodDoc -> {
                         if (isMatched(handlerMethod, methodDoc)) {
                             for (ParamTag paramTag : methodDoc.paramTags()) {
@@ -315,15 +309,15 @@ public class ApiDocumentationScanner {
 
         String summary = null;
         String className = handlerMethod.getBeanType().getName();
-        if (classDocListMap.containsKey(className)) {
+        if (CLASS_DOC_MAP.containsKey(className)) {
             logger.debug("Class {} matched", className);
-            ClassDoc classDoc = classDocListMap.get(className);
+            ClassDoc classDoc = CLASS_DOC_MAP.get(className);
             List<MethodDoc> methodDocs = Arrays.asList(classDoc.methods());
 
             Map<String, MethodDocImpl> methodDocMap = methodDocs.stream().collect(Collectors.toMap(
                     methodDoc -> CommonParseUtils.trimAll(methodDoc.toString()),
                     methodDoc -> (MethodDocImpl) methodDoc));
-            classMethodDocMap.put(className, methodDocMap);
+            CLASS_METHOD_DOC_MAP.put(className, methodDocMap);
             for (Map.Entry<String, MethodDocImpl> entry : methodDocMap.entrySet()) {
                 MethodDocImpl methodDoc = entry.getValue();
                 if (isMatched(handlerMethod, methodDoc)) {

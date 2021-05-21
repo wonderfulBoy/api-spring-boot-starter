@@ -7,7 +7,10 @@ import com.fasterxml.classmate.types.ResolvedArrayType;
 import com.fasterxml.classmate.types.ResolvedObjectType;
 import com.fasterxml.classmate.types.ResolvedPrimitiveType;
 import com.google.common.collect.ImmutableMap;
+import com.sun.javadoc.ClassDoc;
+import com.sun.javadoc.FieldDoc;
 import io.swagger.models.ArrayModel;
+import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.RefModel;
 import io.swagger.models.parameters.*;
@@ -35,8 +38,10 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static com.github.api.ApiDocumentContext.CLASS_DOC_MAP;
 import static com.google.common.collect.Sets.newHashSet;
 import static org.springframework.web.bind.annotation.ValueConstants.DEFAULT_NONE;
 
@@ -48,10 +53,38 @@ import static org.springframework.web.bind.annotation.ValueConstants.DEFAULT_NON
  */
 class DefaultReferContext {
 
+    //The symbol represented before the transfer: "«";
     private static final String OPEN = "5B";
+    //The symbol represented before the transfer:  "»";
     private static final String CLOSE = "5D";
-    private static final String DELIMITER = ",";
+    //The symbol represented before the transfer:  ",";
+    private static final String DELIMITER = "%2C";
 
+    //Stores the association type name
+    private static final Map<String, ResolvedType> refTypeNameCache = new HashMap<>();
+
+    /**
+     * Build the class definitions of the method
+     *
+     * @return the related class definitions
+     */
+    static Map<String, Model> definitionBuild() {
+        Map<String, Model> definitionMap = new ConcurrentHashMap<>();
+        Map<String, ClassDoc> classDocMap = CLASS_DOC_MAP.values().parallelStream()
+                .collect(Collectors.toMap(ClassDoc::typeName, classDoc -> classDoc));
+        for (Map.Entry<String, ResolvedType> resolvedTypeEntry : refTypeNameCache.entrySet()) {
+            String typeName = resolvedTypeEntry.getKey();
+            ResolvedType resolvedType = resolvedTypeEntry.getValue();
+            ModelImpl model = new ModelImpl();
+            model.setName(typeName);
+            if (classDocMap.containsKey(typeName)) {
+                System.out.println(typeName);
+            }
+
+            definitionMap.put(typeName, model);
+        }
+        return definitionMap;
+    }
 
     /**
      * Get the request parameter
@@ -83,12 +116,11 @@ class DefaultReferContext {
                     }
                     if ("array".equals(parameterType)) {
                         pathParameter.setItems(new StringProperty());
+                        pathParameter.setCollectionFormat("");
                     }
                     if (argumentType.getErasedType().isEnum()) {
                         Class<?> erasedType = argumentType.getErasedType();
-                        List<String> enumValues = Arrays.stream(erasedType.getFields())
-                                .map(Field::getName).collect(Collectors.toList());
-                        pathParameter._enum(enumValues);
+                        pathParameter._enum(getEnumValue(erasedType));
                     }
                 }
                 return pathParameter;
@@ -173,8 +205,7 @@ class DefaultReferContext {
                         }
                         if (argumentType.getErasedType().isEnum()) {
                             Class<?> erasedType = argumentType.getErasedType();
-                            List<String> enumValues = Arrays.stream(erasedType.getFields()).map(Field::getName).collect(Collectors.toList());
-                            queryParameter._enum(enumValues);
+                            queryParameter._enum(getEnumValue(erasedType));
                         }
                     }
                 }
@@ -184,6 +215,32 @@ class DefaultReferContext {
         throw new RuntimeException("This version does not support this annotation at this time");
     }
 
+    /**
+     * Get the enum value
+     *
+     * @param enumClass the enum class
+     * @return the list of enum value
+     */
+    private static List<String> getEnumValue(Class<?> enumClass) {
+        ClassDoc classDoc = CLASS_DOC_MAP.get(enumClass.getName());
+        FieldDoc[] fieldDocs = classDoc.fields();
+        List<String> enumValues = new ArrayList<>();
+        for (Field field : enumClass.getFields()) {
+            String enumValue = field.getName();
+            if (fieldDocs != null && fieldDocs.length != 0) {
+                for (FieldDoc fieldDoc : fieldDocs) {
+                    if (enumValue.equals(fieldDoc.name())) {
+                        if (!StringUtils.isEmpty(fieldDoc.commentText())) {
+                            enumValue = String.format("%s (%s)", enumValue, fieldDoc.commentText());
+                        }
+                        break;
+                    }
+                }
+            }
+            enumValues.add(enumValue);
+        }
+        return enumValues;
+    }
 
     /**
      * Get the param name
@@ -221,12 +278,12 @@ class DefaultReferContext {
                     if (Types.isBaseType(elementType)) {
                         containerProperty.items(getBaseProperty(elementTypeName));
                     } else {
+                        refTypeNameCache.put(typeName,returnType);
                         containerProperty.items(new RefProperty(elementTypeName));
                     }
                 } else {
                     //Collection type: list,set
                     List<ResolvedType> typeParameters = typeBindings.getTypeParameters();
-
                     //Generics belong to the default type: List list=new ArrayList();
                     if (CollectionUtils.isEmpty(typeParameters)) {
                         containerProperty.items(new ObjectProperty());
@@ -242,6 +299,7 @@ class DefaultReferContext {
                 mapProperty.setAdditionalProperties(getProperty(valueResolvedType, new UntypedProperty()));
                 responseProperty = mapProperty;
             } else {
+                refTypeNameCache.put(typeName,returnType);
                 responseProperty = new RefProperty(typeName);
             }
         }
