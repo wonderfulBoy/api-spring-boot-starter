@@ -3,6 +3,7 @@ package com.github.api.core;
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeBindings;
 import com.fasterxml.classmate.TypeResolver;
+import com.fasterxml.classmate.members.RawField;
 import com.fasterxml.classmate.types.ResolvedArrayType;
 import com.fasterxml.classmate.types.ResolvedObjectType;
 import com.fasterxml.classmate.types.ResolvedPrimitiveType;
@@ -69,6 +70,7 @@ class DefaultReferContext {
      * @return the related class definitions
      */
     static Map<String, Model> definitionBuild() {
+        TypeResolver typeResolver = new TypeResolver();
         Map<String, Model> definitionMap = new ConcurrentHashMap<>();
         Map<String, ClassDoc> classDocMap = CLASS_DOC_MAP.values().parallelStream()
                 .collect(Collectors.toMap(ClassDoc::typeName, classDoc -> classDoc));
@@ -78,9 +80,25 @@ class DefaultReferContext {
             ModelImpl model = new ModelImpl();
             model.setName(typeName);
             if (classDocMap.containsKey(typeName)) {
-                System.out.println(typeName);
+                ClassDoc classDoc = classDocMap.get(typeName);
+                model.setType("object");
+                model.setDescription(classDoc.commentText());
+                List<RawField> memberFields = resolvedType.getMemberFields();
+                if (!CollectionUtils.isEmpty(memberFields)) {
+                    Map<String, String> fieldCommentMap = Arrays.stream(classDoc.fields(false))
+                            .collect(Collectors.toMap(FieldDoc::name, FieldDoc::commentText));
+                    for (RawField memberField : memberFields) {
+                        Class<?> fieldClass = memberField.getRawMember().getType();
+                        Property property=new UntypedProperty();
+                        if (Types.isBaseType(fieldClass)) {
+                            property = getProperty(typeResolver.resolve(fieldClass), null);
+                        }
+                        //TODO
+                        property.description(fieldCommentMap.get(memberField.getName()));
+                        model.addProperty(memberField.getName(), property);
+                    }
+                }
             }
-
             definitionMap.put(typeName, model);
         }
         return definitionMap;
@@ -453,22 +471,34 @@ class DefaultReferContext {
         }
 
         static boolean isBaseType(ResolvedType type) {
-            return baseTypes.contains(typeNameFor(type.getErasedType()));
+            return isBaseType(type.getErasedType());
+        }
+
+        static boolean isBaseType(Class<?> clazz) {
+            return baseTypes.contains(typeNameFor(clazz));
         }
 
         static boolean isIgnoredType(ResolvedType type) {
-            return ignored.contains(type.getErasedType());
+            return isIgnoredType(type.getErasedType());
         }
 
-        public static boolean isMapType(ResolvedType type) {
-            return Map.class.isAssignableFrom(type.getErasedType());
+        static boolean isIgnoredType(Class<?> clazz) {
+            return ignored.contains(clazz);
         }
 
-        private static boolean isListOfFiles(ResolvedType parameterType) {
+        static boolean isMapType(ResolvedType type) {
+            return isMapType(type.getErasedType());
+        }
+
+        static boolean isMapType(Class<?> clazz) {
+            return Map.class.isAssignableFrom(clazz);
+        }
+
+        static boolean isListOfFiles(ResolvedType parameterType) {
             return isContainerType(parameterType) && isFileType(collectionElementType(parameterType));
         }
 
-        private static boolean isFileType(ResolvedType parameterType) {
+        static boolean isFileType(ResolvedType parameterType) {
             if (parameterType == null) {
                 return false;
             }
@@ -545,7 +575,6 @@ class DefaultReferContext {
             sb.append(CLOSE);
             return sb.toString();
         }
-
 
         static ResolvedType collectionElementType(ResolvedType type) {
             if (List.class.isAssignableFrom(type.getErasedType())) {
