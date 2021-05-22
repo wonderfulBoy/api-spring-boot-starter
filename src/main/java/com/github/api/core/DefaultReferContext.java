@@ -89,9 +89,30 @@ class DefaultReferContext {
                             .collect(Collectors.toMap(FieldDoc::name, FieldDoc::commentText));
                     for (RawField memberField : memberFields) {
                         Class<?> fieldClass = memberField.getRawMember().getType();
-                        Property property=new UntypedProperty();
+                        Property property = new UntypedProperty();
                         if (Types.isBaseType(fieldClass)) {
-                            property = getProperty(typeResolver.resolve(fieldClass), null);
+                            property = getProperty(typeResolver.resolve(fieldClass), null, false);
+                        }
+                        ResolvedType memberFieldType = typeResolver.resolve(fieldClass);
+                        if (Types.isContainerType(memberFieldType)) {
+                            ArrayProperty arrayProperty = new ArrayProperty();
+                            if (memberFieldType.isArray()) {
+                                Class<?> erasedType = memberFieldType.getArrayElementType().getErasedType();
+                                if (erasedType.isEnum()) {
+                                    ClassDoc memberFieldClassDoc = CLASS_DOC_MAP.get(erasedType.getName());
+                                    List<String> enumValues = memberFieldClassDoc == null ? Arrays.stream(erasedType.getFields())
+                                            .map(Field::getName).collect(Collectors.toList()) : getEnumValue(erasedType, classDoc);
+                                    arrayProperty.items(new StringProperty()._enum(enumValues));
+                                } else if (Types.isBaseType(memberFieldType)) {
+                                    arrayProperty.items(getProperty(memberFieldType, null, false));
+                                }else {
+                                    //object
+                                }
+                            }else {
+
+                            }
+
+                            arrayProperty.items(new StringProperty());
                         }
                         //TODO
                         property.description(fieldCommentMap.get(memberField.getName()));
@@ -174,7 +195,7 @@ class DefaultReferContext {
                         bodyParameter.schema(refModel);
                     } else if (parameterType.equals("array")) {
                         ArrayModel model = new ArrayModel();
-                        model.items(getProperty(argumentType, null));
+                        model.items(getProperty(argumentType, null, true));
                         bodyParameter.schema(model);
                     } else {
                         ModelImpl model = new ModelImpl();
@@ -294,10 +315,12 @@ class DefaultReferContext {
     /**
      * Get the response corresponding property
      *
-     * @param returnType {@link Type}
+     * @param returnType       {@link Type}
+     * @param responseProperty the init property
+     * @param cacheRef         If the ref property is found to be added to the cache
      * @return {@link Property}
      */
-    static Property getProperty(ResolvedType returnType, Property responseProperty) {
+    static Property getProperty(ResolvedType returnType, Property responseProperty, boolean cacheRef) {
 
         if (returnType != null && !Types.isIgnoredType(returnType)) {
             String typeName = Types.typeName(returnType);
@@ -313,7 +336,9 @@ class DefaultReferContext {
                     if (Types.isBaseType(elementType)) {
                         containerProperty.items(getBaseProperty(elementTypeName));
                     } else {
-                        refTypeNameCache.put(typeName, returnType);
+                        if (cacheRef) {
+                            refTypeNameCache.put(typeName, returnType);
+                        }
                         containerProperty.items(new RefProperty(elementTypeName));
                     }
                 } else {
@@ -324,17 +349,19 @@ class DefaultReferContext {
                         containerProperty.items(new ObjectProperty());
                     } else {
                         ResolvedType resolvedType = typeParameters.get(0);
-                        containerProperty.items(getProperty(resolvedType, new UntypedProperty()));
+                        containerProperty.items(getProperty(resolvedType, new UntypedProperty(), true));
                     }
                 }
                 responseProperty = containerProperty;
             } else if (Types.isMapType(returnType)) {
                 MapProperty mapProperty = new MapProperty();
                 ResolvedType valueResolvedType = typeBindings.getTypeParameters().get(1);
-                mapProperty.setAdditionalProperties(getProperty(valueResolvedType, new UntypedProperty()));
+                mapProperty.setAdditionalProperties(getProperty(valueResolvedType, new UntypedProperty(), true));
                 responseProperty = mapProperty;
             } else {
-                refTypeNameCache.put(typeName, returnType);
+                if (cacheRef) {
+                    refTypeNameCache.put(typeName, returnType);
+                }
                 responseProperty = new RefProperty(typeName);
             }
         }
