@@ -54,11 +54,11 @@ import static org.springframework.web.bind.annotation.ValueConstants.DEFAULT_NON
 class DefaultReferContext {
 
     //The symbol represented before the transfer: "«";
-    private static final String OPEN = "5B";
+    private static final String OPEN = "Of";
     //The symbol represented before the transfer:  "»";
-    private static final String CLOSE = "5D";
+    private static final String CLOSE = "";
     //The symbol represented before the transfer:  ",";
-    private static final String DELIMITER = "%2C";
+    private static final String DELIMITER = "And";
 
     //Stores the association type name
     private static final Map<String, ResolvedType> refTypeNameCache = new HashMap<>();
@@ -120,7 +120,12 @@ class DefaultReferContext {
                     }
                     if (argumentType.getErasedType().isEnum()) {
                         Class<?> erasedType = argumentType.getErasedType();
-                        pathParameter._enum(getEnumValue(erasedType));
+                        ClassDoc classDoc = CLASS_DOC_MAP.get(erasedType.getName());
+                        if (classDoc == null) {
+                            pathParameter._enum(Arrays.stream(erasedType.getFields()).map(Field::getName).collect(Collectors.toList()));
+                        } else {
+                            pathParameter._enum(getEnumValue(erasedType, classDoc));
+                        }
                     }
                 }
                 return pathParameter;
@@ -145,7 +150,9 @@ class DefaultReferContext {
                     String parameterType = getParameterType(argumentType);
                     if (StringUtils.isEmpty(parameterType)) {
                         RefModel refModel = new RefModel();
-                        refModel.set$ref(Types.typeName(argumentType));
+                        String refTypeName = Types.typeName(argumentType);
+                        refModel.set$ref(refTypeName);
+                        refTypeNameCache.put(refTypeName, argumentType);
                         bodyParameter.schema(refModel);
                     } else if (parameterType.equals("array")) {
                         ArrayModel model = new ArrayModel();
@@ -189,14 +196,20 @@ class DefaultReferContext {
                             if (argumentType.isArray()) {
                                 Class<?> erasedType = argumentType.getArrayElementType().getErasedType();
                                 if (erasedType.isEnum()) {
-                                    stringProperty._enum(Arrays.stream(erasedType.getFields()).map(Field::getName).collect(Collectors.toList()));
+                                    ClassDoc classDoc = CLASS_DOC_MAP.get(erasedType.getName());
+                                    List<String> enumValues = classDoc == null ? Arrays.stream(erasedType.getFields())
+                                            .map(Field::getName).collect(Collectors.toList()) : getEnumValue(erasedType, classDoc);
+                                    stringProperty._enum(enumValues);
                                 }
                             }
                             List<ResolvedType> typeParameters = argumentType.getTypeBindings().getTypeParameters();
                             if (!CollectionUtils.isEmpty(typeParameters) && typeParameters.size() == 1) {
                                 Class<?> erasedType = typeParameters.get(0).getErasedType();
                                 if (erasedType.isEnum()) {
-                                    stringProperty._enum(Arrays.stream(erasedType.getFields()).map(Field::getName).collect(Collectors.toList()));
+                                    ClassDoc classDoc = CLASS_DOC_MAP.get(erasedType.getName());
+                                    List<String> enumValues = classDoc == null ? Arrays.stream(erasedType.getFields())
+                                            .map(Field::getName).collect(Collectors.toList()) : getEnumValue(erasedType, classDoc);
+                                    stringProperty._enum(enumValues);
                                 }
                             }
                             queryParameter.setItems(stringProperty);
@@ -205,7 +218,10 @@ class DefaultReferContext {
                         }
                         if (argumentType.getErasedType().isEnum()) {
                             Class<?> erasedType = argumentType.getErasedType();
-                            queryParameter._enum(getEnumValue(erasedType));
+                            ClassDoc classDoc = CLASS_DOC_MAP.get(erasedType.getName());
+                            List<String> enumValues = classDoc == null ? Arrays.stream(erasedType.getFields())
+                                    .map(Field::getName).collect(Collectors.toList()) : getEnumValue(erasedType, classDoc);
+                            queryParameter._enum(enumValues);
                         }
                     }
                 }
@@ -216,28 +232,29 @@ class DefaultReferContext {
     }
 
     /**
-     * Get the enum value
+     * Get the enum value,not support inner class
      *
      * @param enumClass the enum class
      * @return the list of enum value
      */
-    private static List<String> getEnumValue(Class<?> enumClass) {
-        ClassDoc classDoc = CLASS_DOC_MAP.get(enumClass.getName());
-        FieldDoc[] fieldDocs = classDoc.fields();
+    private static List<String> getEnumValue(Class<?> enumClass, ClassDoc classDoc) {
         List<String> enumValues = new ArrayList<>();
-        for (Field field : enumClass.getFields()) {
-            String enumValue = field.getName();
-            if (fieldDocs != null && fieldDocs.length != 0) {
-                for (FieldDoc fieldDoc : fieldDocs) {
-                    if (enumValue.equals(fieldDoc.name())) {
-                        if (!StringUtils.isEmpty(fieldDoc.commentText())) {
-                            enumValue = String.format("%s (%s)", enumValue, fieldDoc.commentText());
+        if (classDoc != null) {
+            FieldDoc[] fieldDocs = classDoc.fields();
+            for (Field field : enumClass.getFields()) {
+                String enumValue = field.getName();
+                if (fieldDocs != null && fieldDocs.length != 0) {
+                    for (FieldDoc fieldDoc : fieldDocs) {
+                        if (enumValue.equals(fieldDoc.name())) {
+                            if (!StringUtils.isEmpty(fieldDoc.commentText())) {
+                                enumValue = String.format("%s (%s)", enumValue, fieldDoc.commentText());
+                            }
+                            break;
                         }
-                        break;
                     }
                 }
+                enumValues.add(enumValue);
             }
-            enumValues.add(enumValue);
         }
         return enumValues;
     }
@@ -278,7 +295,7 @@ class DefaultReferContext {
                     if (Types.isBaseType(elementType)) {
                         containerProperty.items(getBaseProperty(elementTypeName));
                     } else {
-                        refTypeNameCache.put(typeName,returnType);
+                        refTypeNameCache.put(typeName, returnType);
                         containerProperty.items(new RefProperty(elementTypeName));
                     }
                 } else {
@@ -299,7 +316,7 @@ class DefaultReferContext {
                 mapProperty.setAdditionalProperties(getProperty(valueResolvedType, new UntypedProperty()));
                 responseProperty = mapProperty;
             } else {
-                refTypeNameCache.put(typeName,returnType);
+                refTypeNameCache.put(typeName, returnType);
                 responseProperty = new RefProperty(typeName);
             }
         }
