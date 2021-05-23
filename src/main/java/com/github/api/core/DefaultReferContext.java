@@ -79,7 +79,10 @@ class DefaultReferContext {
             ResolvedType resolvedType = resolvedTypeEntry.getValue();
             ModelImpl model = new ModelImpl();
             model.setName(typeName);
+            //javadoc 能扫到的类
             if (classDocMap.containsKey(typeName)) {
+
+                //判断父类是否是object，不是的话加入其属性
                 ClassDoc classDoc = classDocMap.get(typeName);
                 model.setType("object");
                 model.setDescription(classDoc.commentText());
@@ -155,7 +158,6 @@ class DefaultReferContext {
                     }
                     if ("array".equals(parameterType)) {
                         pathParameter.setItems(new StringProperty());
-                        pathParameter.setCollectionFormat("");
                     }
                     if (argumentType.getErasedType().isEnum()) {
                         Class<?> erasedType = argumentType.getErasedType();
