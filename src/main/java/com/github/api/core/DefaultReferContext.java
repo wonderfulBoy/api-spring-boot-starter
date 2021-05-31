@@ -81,7 +81,6 @@ class DefaultReferContext {
             model.setName(typeName);
             //javadoc 能扫到的类
             if (classDocMap.containsKey(typeName)) {
-
                 //判断父类是否是object，不是的话加入其属性
                 ClassDoc classDoc = classDocMap.get(typeName);
                 model.setType("object");
@@ -122,6 +121,12 @@ class DefaultReferContext {
                         model.addProperty(memberField.getName(), property);
                     }
                 }
+            }else {
+                //RstDataPage
+                TypeBindings typeBindings = resolvedType.getTypeBindings();
+                List<RawField> memberFields = resolvedType.getMemberFields();
+                System.out.println(typeBindings);
+
             }
             definitionMap.put(typeName, model);
         }
