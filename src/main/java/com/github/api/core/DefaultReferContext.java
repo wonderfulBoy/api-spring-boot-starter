@@ -18,6 +18,7 @@ import io.swagger.models.parameters.*;
 import io.swagger.models.properties.*;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.core.MethodParameter;
+import org.springframework.core.ResolvableType;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -80,50 +81,56 @@ class DefaultReferContext {
         Map<String, ClassDoc> classDocMap = CLASS_DOC_MAP.values().parallelStream()
                 .collect(Collectors.toMap(ClassDoc::typeName, classDoc -> classDoc));
 
-        for (Map.Entry<String, ResolvedType> resolvedTypeEntry : refTypeNameCache.entrySet()) {
-            String typeName = resolvedTypeEntry.getKey();
-            ModelImpl model = new ModelImpl();
-            model.setType(OBJECT);
-            model.setName(typeName);
-            ResolvedType resolvedType = resolvedTypeEntry.getValue();
-            Map<String, String> fieldCommentMap = new HashMap<>();
+        while (refTypeNameCache.size() != 0 && definitionMap.size() != refTypeNameCache.size()) {
+            refTypeNameCache.keySet().stream().filter(definitionMap::containsKey)
+                    .collect(Collectors.toSet()).forEach(refTypeNameCache::remove);
+            HashMap<String, ResolvedType> refTypeCacheCenter = new HashMap<>(refTypeNameCache);
+            for (Map.Entry<String, ResolvedType> resolvedTypeEntry : refTypeCacheCenter.entrySet()) {
+                String typeName = resolvedTypeEntry.getKey();
+                ModelImpl model = new ModelImpl();
+                model.setType(OBJECT);
+                model.setName(typeName);
+                ResolvedType resolvedType = resolvedTypeEntry.getValue();
+                Map<String, String> fieldCommentMap = new HashMap<>();
 
-            ResolvedType parentResolvedType = resolvedType.getParentClass();
-            while (parentResolvedType.getErasedType() != Object.class) {
-                Map<String, String> parentFieldCommentMap = new HashMap<>();
-                String parentTypeName = Types.typeName(parentResolvedType);
-                if (classDocMap.containsKey(parentTypeName)) {
-                    ClassDoc parentClassDoc = classDocMap.get(parentTypeName);
-                    parentFieldCommentMap.putAll(Arrays.stream(parentClassDoc.fields(false))
-                            .collect(Collectors.toMap(FieldDoc::name, FieldDoc::commentText)));
+                ResolvedType parentResolvedType = resolvedType.getParentClass();
+                while (parentResolvedType != null && parentResolvedType.getErasedType() != Object.class) {
+                    Map<String, String> parentFieldCommentMap = new HashMap<>();
+                    String parentTypeName = Types.typeName(parentResolvedType);
+                    if (classDocMap.containsKey(parentTypeName)) {
+                        ClassDoc parentClassDoc = classDocMap.get(parentTypeName);
+                        parentFieldCommentMap.putAll(Arrays.stream(parentClassDoc.fields(false))
+                                .collect(Collectors.toMap(FieldDoc::name, FieldDoc::commentText)));
+                    }
+                    List<RawField> parentMemberFields = parentResolvedType.getMemberFields();
+                    for (RawField parentMemberField : parentMemberFields) {
+                        Property property = convertProperty(parentMemberField, new UntypedProperty());
+                        property.description(parentFieldCommentMap.get(parentMemberField.getName()));
+                        model.addProperty(parentMemberField.getName(), property);
+                    }
+                    parentResolvedType = parentResolvedType.getParentClass();
                 }
-                List<RawField> parentMemberFields = parentResolvedType.getMemberFields();
-                for (RawField parentMemberField : parentMemberFields) {
-                    Property property = convertProperty(parentMemberField, new UntypedProperty());
-                    property.description(parentFieldCommentMap.get(parentMemberField.getName()));
-                    model.addProperty(parentMemberField.getName(), property);
-                }
-                parentResolvedType = parentResolvedType.getParentClass();
-            }
 
-            List<RawField> memberFields = resolvedType.getMemberFields();
-            if (!CollectionUtils.isEmpty(memberFields)) {
-                if (classDocMap.containsKey(typeName)) {
-                    ClassDoc classDoc = classDocMap.get(typeName);
-                    model.setDescription(classDoc.commentText());
-                    fieldCommentMap.putAll(Arrays.stream(classDoc.fields(false))
-                            .collect(Collectors.toMap(FieldDoc::name, FieldDoc::commentText)));
+                List<RawField> memberFields = resolvedType.getMemberFields();
+                if (!CollectionUtils.isEmpty(memberFields)) {
+                    if (classDocMap.containsKey(typeName)) {
+                        ClassDoc classDoc = classDocMap.get(typeName);
+                        model.setDescription(classDoc.commentText());
+                        fieldCommentMap.putAll(Arrays.stream(classDoc.fields(false))
+                                .collect(Collectors.toMap(FieldDoc::name, FieldDoc::commentText)));
+                    }
+                    for (RawField memberField : memberFields) {
+                        Property property = convertProperty(memberField, new UntypedProperty());
+                        property.description(fieldCommentMap.get(memberField.getName()));
+                        model.addProperty(memberField.getName(), property);
+                    }
                 }
-                for (RawField memberField : memberFields) {
-                    Property property = convertProperty(memberField, new UntypedProperty());
-                    property.description(fieldCommentMap.get(memberField.getName()));
-                    model.addProperty(memberField.getName(), property);
-                }
+                definitionMap.put(typeName, model);
             }
-            definitionMap.put(typeName, model);
         }
         return definitionMap;
     }
+
 
     /**
      * Parse field to property
@@ -132,8 +139,9 @@ class DefaultReferContext {
      * @param property {@link Property}
      */
     private static Property convertProperty(RawField rawField, Property property) {
-        Class<?> fieldClass = rawField.getRawMember().getType();
-        ResolvedType memberResolvedType = typeResolver.resolve(fieldClass);
+
+        ResolvableType resolvableType = ResolvableType.forField(rawField.getRawMember());
+        ResolvedType memberResolvedType = typeResolver.resolve(resolvableType.getType());
 
         //Whether to refer to an internal class of the project
         String memberResolvedTypeName = Types.typeName(memberResolvedType);
@@ -141,34 +149,22 @@ class DefaultReferContext {
             return new RefProperty(memberResolvedTypeName);
         }
 
-        ResolvedType declaringType = rawField.getDeclaringType();
-        Type genericType = rawField.getRawMember().getGenericType();
-        if (genericType instanceof ParameterizedType) {
-            Type[] actualTypeArguments = ((ParameterizedType) genericType).getActualTypeArguments();
-            System.out.println(genericType);
-        }
-        if (Types.isBaseType(memberResolvedType)) {
-            property = getProperty(memberResolvedType, null, false);
-        } else if (Types.isContainerType(memberResolvedType)) {
-            ArrayProperty arrayProperty = new ArrayProperty();
-            if (memberResolvedType.isArray()) {
-                Class<?> erasedType = memberResolvedType.getArrayElementType().getErasedType();
-                if (erasedType.isEnum()) {
-                    ClassDoc memberFieldClassDoc = CLASS_DOC_MAP.get(erasedType.getName());
-                    List<String> enumValues = Arrays.stream(erasedType.getFields()).map(Field::getName).collect(Collectors.toList());
-                    arrayProperty.items(new StringProperty()._enum(enumValues));
-                } else if (Types.isBaseType(memberResolvedType)) {
-                    arrayProperty.items(getProperty(memberResolvedType, null, false));
-                } else {
-                    //object
+        //Maybe generic type
+        ResolvableType[] generics = resolvableType.getGenerics();
+        if (generics.length == 0) {
+            Type genericType = rawField.getRawMember().getGenericType();
+            if (!genericType.toString().contains("class")) {
+                TypeBindings typeBindings = rawField.getDeclaringType().getTypeBindings();
+                List<ResolvedType> typeParameters = typeBindings.getTypeParameters();
+                if (!CollectionUtils.isEmpty(typeParameters)) {
+                    memberResolvedType = typeParameters.get(0);
                 }
-            } else {
             }
-
-            arrayProperty.items(new StringProperty());
-        } else {
-
+        } else if (generics.length == 1) {
+            memberResolvedType = typeResolver.resolve(generics[0].getType());
         }
+
+        property = getProperty(memberResolvedType, property, true);
         return property;
     }
 
@@ -293,8 +289,8 @@ class DefaultReferContext {
                                 Class<?> erasedType = typeParameters.get(0).getErasedType();
                                 if (erasedType.isEnum()) {
                                     ClassDoc classDoc = CLASS_DOC_MAP.get(erasedType.getName());
-                                    List<String> enumValues = classDoc == null ? Arrays.stream(erasedType.getFields())
-                                            .map(Field::getName).collect(Collectors.toList()) : getEnumValue(erasedType, classDoc);
+                                    List<String> enumValues = classDoc != null ? getEnumValue(erasedType, classDoc) :
+                                            Arrays.stream(erasedType.getFields()).map(Field::getName).collect(Collectors.toList());
                                     stringProperty._enum(enumValues);
                                 }
                             }
@@ -402,14 +398,21 @@ class DefaultReferContext {
                 responseProperty = containerProperty;
             } else if (Types.isMapType(returnType)) {
                 MapProperty mapProperty = new MapProperty();
-                ResolvedType valueResolvedType = typeBindings.getTypeParameters().get(1);
-                mapProperty.setAdditionalProperties(getProperty(valueResolvedType, new UntypedProperty(), true));
+                if (!CollectionUtils.isEmpty(typeBindings.getTypeParameters())) {
+                    ResolvedType valueResolvedType = typeBindings.getTypeParameters().get(1);
+                    mapProperty.setAdditionalProperties(getProperty(valueResolvedType, new UntypedProperty(), true));
+                }
                 responseProperty = mapProperty;
             } else {
-                if (cacheRef) {
-                    refTypeNameCache.put(typeName, returnType);
+                if (typeName.equals("string")) {
+                    responseProperty = new StringProperty();
+                } else {
+                    if (cacheRef) {
+                        refTypeNameCache.put(typeName, returnType);
+                    }
+                    responseProperty = new RefProperty(typeName);
                 }
-                responseProperty = new RefProperty(typeName);
+
             }
         }
         return responseProperty;
