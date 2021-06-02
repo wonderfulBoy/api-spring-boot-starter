@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -73,73 +74,79 @@ class DefaultReferContext {
      *
      * @return the related class definitions
      */
-    static Map<String, Model> definitionBuild() {
+    static Map<String, Model> definitions() {
 
         Map<String, Model> definitionMap = new ConcurrentHashMap<>();
         Map<String, ClassDoc> classDocMap = CLASS_DOC_MAP.values().parallelStream()
                 .collect(Collectors.toMap(ClassDoc::typeName, classDoc -> classDoc));
+
         for (Map.Entry<String, ResolvedType> resolvedTypeEntry : refTypeNameCache.entrySet()) {
             String typeName = resolvedTypeEntry.getKey();
             ModelImpl model = new ModelImpl();
             model.setType(OBJECT);
             model.setName(typeName);
             ResolvedType resolvedType = resolvedTypeEntry.getValue();
+            Map<String, String> fieldCommentMap = new HashMap<>();
+
             ResolvedType parentResolvedType = resolvedType.getParentClass();
-
-            if (classDocMap.containsKey(typeName)) {
-                ClassDoc classDoc = classDocMap.get(typeName);
-                model.setDescription(classDoc.commentText());
-                while (parentResolvedType.getErasedType() != Object.class) {
-                    Map<String, String> parentFieldCommentMap = new HashMap<>();
-                    String parentTypeName = Types.typeName(parentResolvedType);
-                    if (classDocMap.containsKey(parentTypeName)) {
-                        ClassDoc parentClassDoc = classDocMap.get(parentTypeName);
-                        parentFieldCommentMap.putAll(Arrays.stream(parentClassDoc.fields(false))
-                                .collect(Collectors.toMap(FieldDoc::name, FieldDoc::commentText)));
-                    }
-                    List<RawField> parentMemberFields = parentResolvedType.getMemberFields();
-                    for (RawField parentMemberField : parentMemberFields) {
-                        Property property = convertProperty(parentMemberField, null);
-                        property.description(parentFieldCommentMap.get(parentMemberField.getName()));
-                        model.addProperty(parentMemberField.getName(), property);
-                    }
+            while (parentResolvedType.getErasedType() != Object.class) {
+                Map<String, String> parentFieldCommentMap = new HashMap<>();
+                String parentTypeName = Types.typeName(parentResolvedType);
+                if (classDocMap.containsKey(parentTypeName)) {
+                    ClassDoc parentClassDoc = classDocMap.get(parentTypeName);
+                    parentFieldCommentMap.putAll(Arrays.stream(parentClassDoc.fields(false))
+                            .collect(Collectors.toMap(FieldDoc::name, FieldDoc::commentText)));
                 }
-                List<RawField> memberFields = resolvedType.getMemberFields();
-                if (!CollectionUtils.isEmpty(memberFields)) {
-                    Map<String, String> fieldCommentMap = Arrays.stream(classDoc.fields(false))
-                            .collect(Collectors.toMap(FieldDoc::name, FieldDoc::commentText));
-                    for (RawField memberField : memberFields) {
-                        Property property = convertProperty(memberField, null);
-                        property.description(fieldCommentMap.get(memberField.getName()));
-                        model.addProperty(memberField.getName(), property);
-                    }
+                List<RawField> parentMemberFields = parentResolvedType.getMemberFields();
+                for (RawField parentMemberField : parentMemberFields) {
+                    Property property = convertProperty(parentMemberField, new UntypedProperty());
+                    property.description(parentFieldCommentMap.get(parentMemberField.getName()));
+                    model.addProperty(parentMemberField.getName(), property);
                 }
-            } else {
-                if (parentResolvedType.getErasedType() != Object.class) {
-                    List<RawField> parentMemberFields = parentResolvedType.getMemberFields();
-                    for (RawField parentMemberField : parentMemberFields) {
-                        Property property = convertProperty(parentMemberField, null);
-                        model.addProperty(parentMemberField.getName(), property);
-                    }
+                parentResolvedType = parentResolvedType.getParentClass();
+            }
 
+            List<RawField> memberFields = resolvedType.getMemberFields();
+            if (!CollectionUtils.isEmpty(memberFields)) {
+                if (classDocMap.containsKey(typeName)) {
+                    ClassDoc classDoc = classDocMap.get(typeName);
+                    model.setDescription(classDoc.commentText());
+                    fieldCommentMap.putAll(Arrays.stream(classDoc.fields(false))
+                            .collect(Collectors.toMap(FieldDoc::name, FieldDoc::commentText)));
                 }
-                //RstDataPage
-                TypeBindings typeBindings = resolvedType.getTypeBindings();
-                List<RawField> memberFields = resolvedType.getMemberFields();
-                System.out.println(typeBindings);
-
+                for (RawField memberField : memberFields) {
+                    Property property = convertProperty(memberField, new UntypedProperty());
+                    property.description(fieldCommentMap.get(memberField.getName()));
+                    model.addProperty(memberField.getName(), property);
+                }
             }
             definitionMap.put(typeName, model);
         }
         return definitionMap;
     }
 
+    /**
+     * Parse field to property
+     *
+     * @param rawField {@link RawField}
+     * @param property {@link Property}
+     */
     private static Property convertProperty(RawField rawField, Property property) {
-        if (property == null) {
-            property = new UntypedProperty();
-        }
         Class<?> fieldClass = rawField.getRawMember().getType();
         ResolvedType memberResolvedType = typeResolver.resolve(fieldClass);
+
+        //Whether to refer to an internal class of the project
+        String memberResolvedTypeName = Types.typeName(memberResolvedType);
+        if (refTypeNameCache.containsKey(memberResolvedTypeName)) {
+            return new RefProperty(memberResolvedTypeName);
+        }
+
+        ResolvedType declaringType = rawField.getDeclaringType();
+        Type genericType = rawField.getRawMember().getGenericType();
+        if (genericType instanceof ParameterizedType) {
+            Type[] actualTypeArguments = ((ParameterizedType) genericType).getActualTypeArguments();
+            System.out.println(genericType);
+        }
         if (Types.isBaseType(memberResolvedType)) {
             property = getProperty(memberResolvedType, null, false);
         } else if (Types.isContainerType(memberResolvedType)) {
@@ -482,7 +489,6 @@ class DefaultReferContext {
             add(UriComponentsBuilder.class);
         }};
 
-
         private static final Set<String> baseTypes = newHashSet(
                 "byte",
                 "int",
@@ -527,7 +533,6 @@ class DefaultReferContext {
                 .put(UUID.class, "uuid")
                 .put(MultipartFile.class, "__file")
                 .build();
-
 
         private Types() {
             throw new UnsupportedOperationException();

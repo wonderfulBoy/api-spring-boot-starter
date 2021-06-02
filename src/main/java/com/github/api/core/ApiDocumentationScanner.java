@@ -40,7 +40,7 @@ import java.util.stream.Stream;
 
 import static com.github.api.ApiDocumentContext.CLASS_DOC_MAP;
 import static com.github.api.ApiDocumentContext.CLASS_METHOD_DOC_MAP;
-import static com.github.api.core.DefaultReferContext.definitionBuild;
+import static com.github.api.core.DefaultReferContext.definitions;
 import static com.google.common.collect.Lists.newArrayList;
 
 /**
@@ -63,7 +63,7 @@ public class ApiDocumentationScanner {
     @Autowired
     private ApiDocumentProperties apiDocumentProperties;
 
-    private Map<Class, List<ResolvedMethod>> methodsResolvedForHostClasses = new HashMap<>();
+    private Map<Class<?>, List<ResolvedMethod>> methodsResolvedForHostClasses = new HashMap<>();
 
 
     Documentation scan(Map<RequestMappingInfo, HandlerMethod> requestMappingMap, RootDoc rootDoc) {
@@ -91,7 +91,7 @@ public class ApiDocumentationScanner {
             pathMap.put(getRequestPath(requestMappingInfo), path);
         }
         body.paths(pathMap);
-        body.setDefinitions(definitionBuild());
+        body.setDefinitions(definitions());
         body.tags(new ArrayList<>(tagMap.values()));
         return new Documentation(body);
     }
@@ -401,7 +401,7 @@ public class ApiDocumentationScanner {
      *
      * @param hostClass the controller class
      */
-    private List<ResolvedMethod> getMemberMethods(Class hostClass) {
+    private List<ResolvedMethod> getMemberMethods(Class<?> hostClass) {
         if (!methodsResolvedForHostClasses.containsKey(hostClass)) {
             ResolvedType beanType = typeResolver.resolve(hostClass);
             MemberResolver resolver = new MemberResolver(typeResolver);
