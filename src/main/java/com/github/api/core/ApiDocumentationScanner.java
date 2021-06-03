@@ -15,7 +15,6 @@ import io.swagger.models.Tag;
 import io.swagger.models.*;
 import io.swagger.models.parameters.FormParameter;
 import io.swagger.models.parameters.Parameter;
-import io.swagger.models.properties.UntypedProperty;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -38,8 +37,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.github.api.ApiDocumentContext.CLASS_DOC_MAP;
-import static com.github.api.ApiDocumentContext.CLASS_METHOD_DOC_MAP;
+import static com.github.api.ApiDocumentContext.*;
 import static com.github.api.core.DefaultReferContext.definitions;
 import static com.google.common.collect.Lists.newArrayList;
 
@@ -86,9 +84,10 @@ public class ApiDocumentationScanner {
                 }
                 return tag;
             });
-            Path path = pathBuild(getRequestMethod(requestMappingInfo),
-                    operationBuild(requestTag, requestMappingInfo, handlerMethod));
-            pathMap.put(getRequestPath(requestMappingInfo), path);
+            String requestPath = getRequestPath(requestMappingInfo);
+            Path path = Optional.ofNullable(pathMap.get(requestPath)).orElse(new Path());
+            pathMap.put(requestPath, pathBuild(path, getRequestMethod(requestMappingInfo),
+                    operationBuild(requestTag, requestMappingInfo, handlerMethod)));
         }
         body.paths(pathMap);
         body.setDefinitions(definitions());
@@ -105,7 +104,7 @@ public class ApiDocumentationScanner {
      */
     private RequestMethod getRequestMethod(RequestMappingInfo requestMappingInfo) {
         Iterator<RequestMethod> requestMethodIterator = requestMappingInfo.getMethodsCondition().getMethods().iterator();
-        return requestMethodIterator.next();
+        return requestMethodIterator.hasNext() ? requestMethodIterator.next() : RequestMethod.GET;
     }
 
 
@@ -117,7 +116,12 @@ public class ApiDocumentationScanner {
      */
     private String getRequestPath(RequestMappingInfo requestMappingInfo) {
         Iterator<String> iterator = requestMappingInfo.getPatternsCondition().getPatterns().iterator();
-        return iterator.next();
+        String requestPath = iterator.next();
+        if (requestPath.contains(REQUEST_PATH_REGULAR_1)) {
+            requestPath = requestPath.replaceAll("\\+", "");
+            requestPath = requestPath.replaceAll(REQUEST_PATH_REGULAR_2, "");
+        }
+        return requestPath;
     }
 
 
@@ -149,12 +153,12 @@ public class ApiDocumentationScanner {
     /**
      * Build the swagger path
      *
+     * @param path          {@link Path}
      * @param requestMethod The request method
      * @param operation     {@link Operation}
      * @return {@link Path}
      */
-    private Path pathBuild(RequestMethod requestMethod, Operation operation) {
-        Path path = new Path();
+    private Path pathBuild(Path path, RequestMethod requestMethod, Operation operation) {
         switch (requestMethod) {
             case GET:
                 path.get(operation);
@@ -255,7 +259,7 @@ public class ApiDocumentationScanner {
         ResolvedType returnType = resolvedMethodOptional.map(ResolvedMethod::getReturnType)
                 .orElse(typeResolver.resolve(Void.TYPE));
         Response response = new Response().description(HttpStatus.OK.getReasonPhrase());
-        response.schema(DefaultReferContext.getProperty(returnType, new UntypedProperty(), true));
+        response.schema(DefaultReferContext.getProperty(returnType));
         return response;
 
     }

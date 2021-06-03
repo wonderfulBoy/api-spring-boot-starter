@@ -36,7 +36,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -104,7 +103,7 @@ class DefaultReferContext {
                     }
                     List<RawField> parentMemberFields = parentResolvedType.getMemberFields();
                     for (RawField parentMemberField : parentMemberFields) {
-                        Property property = convertProperty(parentMemberField, new UntypedProperty());
+                        Property property = convertFieldProperty(parentMemberField);
                         property.description(parentFieldCommentMap.get(parentMemberField.getName()));
                         model.addProperty(parentMemberField.getName(), property);
                     }
@@ -120,7 +119,7 @@ class DefaultReferContext {
                                 .collect(Collectors.toMap(FieldDoc::name, FieldDoc::commentText)));
                     }
                     for (RawField memberField : memberFields) {
-                        Property property = convertProperty(memberField, new UntypedProperty());
+                        Property property = convertFieldProperty(memberField);
                         property.description(fieldCommentMap.get(memberField.getName()));
                         model.addProperty(memberField.getName(), property);
                     }
@@ -136,10 +135,9 @@ class DefaultReferContext {
      * Parse field to property
      *
      * @param rawField {@link RawField}
-     * @param property {@link Property}
      */
-    private static Property convertProperty(RawField rawField, Property property) {
-
+    private static Property convertFieldProperty(RawField rawField) {
+        Property property;
         ResolvableType resolvableType = ResolvableType.forField(rawField.getRawMember());
         ResolvedType memberResolvedType = typeResolver.resolve(resolvableType.getType());
 
@@ -151,7 +149,7 @@ class DefaultReferContext {
 
         //Maybe generic type
         ResolvableType[] generics = resolvableType.getGenerics();
-        if (generics.length == 0) {
+        if (Types.isContainerType(memberResolvedType) || generics.length == 0) {
             Type genericType = rawField.getRawMember().getGenericType();
             if (!genericType.toString().contains("class")) {
                 TypeBindings typeBindings = rawField.getDeclaringType().getTypeBindings();
@@ -164,7 +162,19 @@ class DefaultReferContext {
             memberResolvedType = typeResolver.resolve(generics[0].getType());
         }
 
-        property = getProperty(memberResolvedType, property, true);
+        Property fieldProperty = getProperty(memberResolvedType);
+        if (fieldProperty instanceof StringProperty) {
+            Class<?> erasedType = memberResolvedType.getErasedType();
+            if (erasedType.isEnum()) {
+                ClassDoc classDoc = CLASS_DOC_MAP.get(erasedType.getName());
+                if (classDoc == null) {
+                    ((StringProperty) fieldProperty)._enum(Arrays.stream(erasedType.getFields()).map(Field::getName).collect(Collectors.toList()));
+                } else {
+                    ((StringProperty) fieldProperty)._enum(getEnumValue(erasedType, classDoc));
+                }
+            }
+        }
+        property = fieldProperty;
         return property;
     }
 
@@ -238,7 +248,16 @@ class DefaultReferContext {
                         bodyParameter.schema(refModel);
                     } else if (parameterType.equals("array")) {
                         ArrayModel model = new ArrayModel();
-                        model.items(getProperty(argumentType, null, true));
+                        ResolvedType arrayElementType = argumentType.getArrayElementType();
+                        if (arrayElementType == null) {
+                            List<ResolvedType> typeParameters = argumentType.getTypeBindings().getTypeParameters();
+                            if (!CollectionUtils.isEmpty(typeParameters)) {
+                                ResolvedType resolvedType = typeParameters.get(0);
+                                model.items(getProperty(resolvedType));
+                            }
+                        } else {
+                            model.items(getProperty(arrayElementType));
+                        }
                         bodyParameter.schema(model);
                     } else {
                         ModelImpl model = new ModelImpl();
@@ -358,13 +377,11 @@ class DefaultReferContext {
     /**
      * Get the response corresponding property
      *
-     * @param returnType       {@link Type}
-     * @param responseProperty the init property
-     * @param cacheRef         If the ref property is found to be added to the cache
+     * @param returnType {@link Type}
      * @return {@link Property}
      */
-    static Property getProperty(ResolvedType returnType, Property responseProperty, boolean cacheRef) {
-
+    static Property getProperty(ResolvedType returnType) {
+        Property responseProperty = new UntypedProperty();
         if (returnType != null && !Types.isIgnoredType(returnType)) {
             String typeName = Types.typeName(returnType);
             TypeBindings typeBindings = returnType.getTypeBindings();
@@ -379,9 +396,7 @@ class DefaultReferContext {
                     if (Types.isBaseType(elementType)) {
                         containerProperty.items(getBaseProperty(elementTypeName));
                     } else {
-                        if (cacheRef) {
-                            refTypeNameCache.put(typeName, returnType);
-                        }
+                        refTypeNameCache.put(typeName, returnType);
                         containerProperty.items(new RefProperty(elementTypeName));
                     }
                 } else {
@@ -392,7 +407,7 @@ class DefaultReferContext {
                         containerProperty.items(new ObjectProperty());
                     } else {
                         ResolvedType resolvedType = typeParameters.get(0);
-                        containerProperty.items(getProperty(resolvedType, new UntypedProperty(), true));
+                        containerProperty.items(getProperty(resolvedType));
                     }
                 }
                 responseProperty = containerProperty;
@@ -400,16 +415,14 @@ class DefaultReferContext {
                 MapProperty mapProperty = new MapProperty();
                 if (!CollectionUtils.isEmpty(typeBindings.getTypeParameters())) {
                     ResolvedType valueResolvedType = typeBindings.getTypeParameters().get(1);
-                    mapProperty.setAdditionalProperties(getProperty(valueResolvedType, new UntypedProperty(), true));
+                    mapProperty.setAdditionalProperties(getProperty(valueResolvedType));
                 }
                 responseProperty = mapProperty;
             } else {
                 if (typeName.equals("string")) {
                     responseProperty = new StringProperty();
                 } else {
-                    if (cacheRef) {
-                        refTypeNameCache.put(typeName, returnType);
-                    }
+                    refTypeNameCache.put(typeName, returnType);
                     responseProperty = new RefProperty(typeName);
                 }
 
@@ -479,7 +492,7 @@ class DefaultReferContext {
      */
     static class Types {
 
-        private static final HashSet<Class> ignored = new HashSet<Class>() {{
+        private static final HashSet<Class<?>> ignored = new HashSet<Class<?>>() {{
             add(ServletRequest.class);
             add(Class.class);
             add(Void.class);
@@ -665,7 +678,7 @@ class DefaultReferContext {
             }
         }
 
-        private static <T extends Collection> ResolvedType elementType(ResolvedType container, Class<T> collectionType) {
+        private static <T extends Collection<?>> ResolvedType elementType(ResolvedType container, Class<T> collectionType) {
             List<ResolvedType> resolvedTypes = container.typeParametersFor(collectionType);
             if (resolvedTypes.size() == 1) {
                 return resolvedTypes.get(0);

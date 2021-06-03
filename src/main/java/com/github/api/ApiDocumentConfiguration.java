@@ -1,6 +1,8 @@
 package com.github.api;
 
+import com.fasterxml.classmate.TypeResolver;
 import com.github.api.core.ApiReporterBootstrapper;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,5 +32,10 @@ public class ApiDocumentConfiguration {
         return new ApiReporterBootstrapper();
     }
 
+    @Bean
+    @ConditionalOnMissingBean(name = "typeResolver")
+    public TypeResolver typeResolver(){
+        return new TypeResolver();
+    }
 
 }

@@ -78,6 +78,11 @@ public class ApiDocumentContext {
     public static final String MAVEN_DEFAULT_ARTIFACT_ID_SEPARATOR = "-";
 
 
+    public static final String REQUEST_PATH_REGULAR_1 = ":.+";
+
+    public static final String REQUEST_PATH_REGULAR_2 = ":.";
+
+
     public static final Map<String, ClassDoc> CLASS_DOC_MAP = new HashMap<>();
 
 
