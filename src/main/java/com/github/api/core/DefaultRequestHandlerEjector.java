@@ -9,7 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static com.github.api.ApiDocumentContext.*;
+import static com.github.api.ApiDocumentContext.DEFAULT_API_QUERY_REQUEST;
+import static com.github.api.ApiDocumentContext.DEFAULT_INNER_ERROR_REQUEST;
 
 /**
  * DefaultRequestHandlerEjector
@@ -31,7 +32,6 @@ public class DefaultRequestHandlerEjector implements IRequestHandlerEjector {
         excludePatternList = new ArrayList<>();
         excludePatternList.add(DEFAULT_INNER_ERROR_REQUEST);
         excludePatternList.add(DEFAULT_API_QUERY_REQUEST);
-        excludePatternList.add(DEFAULT_API_DOWNLOAD_REQUEST);
     }
 
     @Override

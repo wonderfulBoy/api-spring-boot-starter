@@ -33,6 +33,11 @@ public class ApiDocumentConfiguration {
     }
 
     @Bean
+    public ApiDocumentFileProvider apiDocumentFileProvider(){
+        return new ApiDocumentFileProvider();
+    }
+
+    @Bean
     @ConditionalOnMissingBean(name = "typeResolver")
     public TypeResolver typeResolver(){
         return new TypeResolver();

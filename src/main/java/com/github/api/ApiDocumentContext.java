@@ -21,9 +21,6 @@ public class ApiDocumentContext {
     public static final String DEFAULT_API_QUERY_REQUEST = "/api/show";
 
 
-    public static final String DEFAULT_API_DOWNLOAD_REQUEST = "/api/download";
-
-
     public static final String DEFAULT_INNER_ERROR_REQUEST = "/error";
 
 
@@ -79,6 +76,7 @@ public class ApiDocumentContext {
 
 
     public static final String REQUEST_PATH_REGULAR_1 = ":.+";
+
 
     public static final String REQUEST_PATH_REGULAR_2 = ":.";
 
