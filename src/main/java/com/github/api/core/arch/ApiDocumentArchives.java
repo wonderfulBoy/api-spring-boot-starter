@@ -26,12 +26,8 @@ public class ApiDocumentArchives {
      */
     private static final Logger logger = LoggerFactory.getLogger(ApiDocumentArchives.class);
 
-    private ApiDocumentProperties apiDocumentProperties;
-
     @Autowired
-    public ApiDocumentArchives(ApiDocumentProperties apiDocumentProperties) {
-        this.apiDocumentProperties = apiDocumentProperties;
-    }
+    private ApiDocumentProperties apiDocumentProperties;
 
     /**
      * Convert the document into a general yaml file

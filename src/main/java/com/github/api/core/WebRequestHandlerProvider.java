@@ -20,17 +20,11 @@ import java.util.Set;
  */
 public class WebRequestHandlerProvider {
 
+    @Autowired
     private List<IRequestHandlerEjector> requestHandlerEjectors;
-    private RequestMappingHandlerMapping requestMappingHandlerMapping;
-
 
     @Autowired
-    public WebRequestHandlerProvider(RequestMappingHandlerMapping requestMappingHandlerMapping,
-                                     List<IRequestHandlerEjector> requestHandlerEjectors) {
-        this.requestMappingHandlerMapping = requestMappingHandlerMapping;
-        this.requestHandlerEjectors = requestHandlerEjectors;
-    }
-
+    private RequestMappingHandlerMapping requestMappingHandlerMapping;
 
     /**
      * List the filtered requests

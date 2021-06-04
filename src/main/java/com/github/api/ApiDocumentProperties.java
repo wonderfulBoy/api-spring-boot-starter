@@ -4,7 +4,7 @@ import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import static com.github.api.ApiDocumentProperties.Profile.LOCAL;
+import static com.github.api.ApiDocumentProperties.Profile.CLOUD;
 
 /**
  * This properties file is used to configure the project custom directory structure path
@@ -34,9 +34,9 @@ public class ApiDocumentProperties {
 
 
     /**
-     * Specifies the runtime environment for API document parsing,default local
+     * Specifies the runtime environment for API document parsing,default cloud
      */
-    private Profile profile = LOCAL;
+    private Profile profile = CLOUD;
 
 
     /**

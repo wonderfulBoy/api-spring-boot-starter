@@ -33,13 +33,16 @@ public class ApiInfoBeanPostProcessor implements BeanPostProcessor {
     @Autowired
     private ApiDocumentProperties apiDocumentProperties;
 
-
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) {
 
         Class<?> beanClass = bean.getClass();
         SpringBootApplication springBootApplication = beanClass.getAnnotation(SpringBootApplication.class);
-        if (springBootApplication != null && apiDocumentProperties.getProfile() == ApiDocumentProperties.Profile.LOCAL) {
+        if (springBootApplication != null ) {
+
+            if (apiDocumentProperties.getProfile() == ApiDocumentProperties.Profile.CLOUD) {
+                return bean;
+            }
 
             String classPath = beanClass.getResource("/").getPath();
             if (classPath.contains(SPRING_BOOT_TAG)) {
@@ -48,6 +51,7 @@ public class ApiInfoBeanPostProcessor implements BeanPostProcessor {
                 return bean;
             }
 
+            apiDocumentProperties.setProfile(ApiDocumentProperties.Profile.LOCAL);
             String projectPath = obtainProjectRoot(new File(classPath));
             if (StringUtils.isBlank(projectPath)) {
                 String excludePath = apiDocumentProperties.getStruct().getExclude();

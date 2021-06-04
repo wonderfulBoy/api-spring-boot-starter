@@ -29,13 +29,13 @@ public class ApiReporterBootstrapper implements SmartLifecycle {
      */
     private static final Logger logger = LoggerFactory.getLogger(ApiReporterBootstrapper.class);
 
-    @Autowired
+    @Autowired(required = false)
     private WebRequestHandlerProvider webRequestHandlerProvider;
 
-    @Autowired
+    @Autowired(required = false)
     private ApiDocumentArchives apiDocumentArchives;
 
-    @Autowired
+    @Autowired(required = false)
     private ApiDocumentationScanner apiDocumentationScanner;
 
     @Autowired

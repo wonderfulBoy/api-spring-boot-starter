@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Import;
  */
 @Configuration
 @EnableConfigurationProperties(ApiDocumentProperties.class)
-@Import(ApiDocumentImportSelector.class)
+//@Import(ApiDocumentImportSelector.class)
 public class ApiDocumentConfiguration {
 
 
