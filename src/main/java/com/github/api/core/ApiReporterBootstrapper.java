@@ -7,7 +7,10 @@ import com.github.api.utils.CommonParseUtils;
 import com.github.api.utils.RootDocParseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
 
@@ -22,24 +25,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @since 2020-12-01 20:41
  */
 @Component
-public class ApiReporterBootstrapper implements SmartLifecycle {
+public class ApiReporterBootstrapper implements SmartLifecycle, ApplicationContextAware {
 
     /**
      * Logger
      */
     private static final Logger logger = LoggerFactory.getLogger(ApiReporterBootstrapper.class);
 
-    @Autowired(required = false)
-    private WebRequestHandlerProvider webRequestHandlerProvider;
-
-    @Autowired(required = false)
-    private ApiDocumentArchives apiDocumentArchives;
-
-    @Autowired(required = false)
-    private ApiDocumentationScanner apiDocumentationScanner;
-
     @Autowired
     private ApiDocumentProperties apiDocumentProperties;
+
+    private ApplicationContext applicationContext;
+
+    private WebRequestHandlerProvider webRequestHandlerProvider;
+
+    private ApiDocumentArchives apiDocumentArchives;
+
+    private ApiDocumentationScanner apiDocumentationScanner;
 
     private AtomicBoolean initialized = new AtomicBoolean(false);
 
@@ -48,6 +50,8 @@ public class ApiReporterBootstrapper implements SmartLifecycle {
         if (initialized.compareAndSet(false, true)) {
             logger.info("Context refreshed,start the api document parsing process");
             try {
+                //Load the required dependencies when the actual execution begins
+                dependenceLoad();
                 List<File> javaSourceFiles = CommonParseUtils
                         .listJavaSourceFiles(new File(ApiDocumentContext.sourceDirectory));
                 ApiDocumentContext.rootDoc = RootDocParseUtils.parse(javaSourceFiles);
@@ -85,4 +89,22 @@ public class ApiReporterBootstrapper implements SmartLifecycle {
         return Integer.MAX_VALUE;
     }
 
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
+
+    /**
+     * Assembly all dependence bean
+     */
+    private void dependenceLoad() {
+        if (applicationContext != null) {
+            this.apiDocumentationScanner = (ApiDocumentationScanner)
+                    this.applicationContext.getBean(ApiDocumentationScanner.class.getName());
+            this.apiDocumentArchives = (ApiDocumentArchives)
+                    this.applicationContext.getBean(ApiDocumentArchives.class.getName());
+            this.webRequestHandlerProvider = (WebRequestHandlerProvider)
+                    applicationContext.getBean(WebRequestHandlerProvider.class.getName());
+        }
+    }
 }

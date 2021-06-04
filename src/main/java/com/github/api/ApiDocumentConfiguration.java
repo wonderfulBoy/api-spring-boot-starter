@@ -17,15 +17,13 @@ import org.springframework.context.annotation.Import;
  */
 @Configuration
 @EnableConfigurationProperties(ApiDocumentProperties.class)
-//@Import(ApiDocumentImportSelector.class)
+@Import(ApiBeanDefinitionRegistrar.class)
 public class ApiDocumentConfiguration {
-
 
     @Bean
     public ApiInfoBeanPostProcessor apiBeanPostProcessor() {
         return new ApiInfoBeanPostProcessor();
     }
-
 
     @Bean
     public ApiReporterBootstrapper apiReporterBootstrapper() {
@@ -33,13 +31,13 @@ public class ApiDocumentConfiguration {
     }
 
     @Bean
-    public ApiDocumentFileProvider apiDocumentFileProvider(){
+    public ApiDocumentFileProvider apiDocumentFileProvider() {
         return new ApiDocumentFileProvider();
     }
 
     @Bean
     @ConditionalOnMissingBean(name = "typeResolver")
-    public TypeResolver typeResolver(){
+    public TypeResolver typeResolver() {
         return new TypeResolver();
     }
 
