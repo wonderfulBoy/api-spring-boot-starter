@@ -12,6 +12,7 @@ import org.springframework.core.type.AnnotationMetadata;
 
 /**
  * ApiBeanDefinitionRegistrar
+ * Add the API to parse the required bean definitions and assemble them as needed
  *
  * @author echils
  * @since 2021-03-11 23:08:19
@@ -19,27 +20,36 @@ import org.springframework.core.type.AnnotationMetadata;
 public class ApiBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
 
     @Override
-    public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+    public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata,
+                                        BeanDefinitionRegistry registry) {
 
-        RootBeanDefinition webRequestHandlerProviderBeanDefinition = new RootBeanDefinition(WebRequestHandlerProvider.class);
+        RootBeanDefinition webRequestHandlerProviderBeanDefinition
+                = new RootBeanDefinition(WebRequestHandlerProvider.class);
         webRequestHandlerProviderBeanDefinition.setLazyInit(true);
         webRequestHandlerProviderBeanDefinition.setSynthetic(true);
-        registry.registerBeanDefinition(WebRequestHandlerProvider.class.getName(), webRequestHandlerProviderBeanDefinition);
+        registry.registerBeanDefinition(WebRequestHandlerProvider.class.getName(),
+                webRequestHandlerProviderBeanDefinition);
 
-        RootBeanDefinition apiDocumentArchivesBeanDefinition = new RootBeanDefinition(ApiDocumentArchives.class);
+        RootBeanDefinition apiDocumentArchivesBeanDefinition
+                = new RootBeanDefinition(ApiDocumentArchives.class);
         apiDocumentArchivesBeanDefinition.setLazyInit(true);
         apiDocumentArchivesBeanDefinition.setSynthetic(true);
-        registry.registerBeanDefinition(ApiDocumentArchives.class.getName(), apiDocumentArchivesBeanDefinition);
+        registry.registerBeanDefinition(ApiDocumentArchives.class.getName(),
+                apiDocumentArchivesBeanDefinition);
 
-        RootBeanDefinition defaultRequestHandlerEjectorBeanDefinition = new RootBeanDefinition(DefaultRequestHandlerEjector.class);
+        RootBeanDefinition defaultRequestHandlerEjectorBeanDefinition
+                = new RootBeanDefinition(DefaultRequestHandlerEjector.class);
         defaultRequestHandlerEjectorBeanDefinition.setLazyInit(true);
         defaultRequestHandlerEjectorBeanDefinition.setSynthetic(true);
-        registry.registerBeanDefinition(IRequestHandlerEjector.class.getName(), defaultRequestHandlerEjectorBeanDefinition);
+        registry.registerBeanDefinition(IRequestHandlerEjector.class.getName(),
+                defaultRequestHandlerEjectorBeanDefinition);
 
-        RootBeanDefinition apiDocumentationScannerBeanDefinition = new RootBeanDefinition(ApiDocumentationScanner.class);
+        RootBeanDefinition apiDocumentationScannerBeanDefinition
+                = new RootBeanDefinition(ApiDocumentationScanner.class);
         apiDocumentationScannerBeanDefinition.setLazyInit(true);
         apiDocumentationScannerBeanDefinition.setSynthetic(true);
-        registry.registerBeanDefinition(ApiDocumentationScanner.class.getName(), apiDocumentationScannerBeanDefinition);
+        registry.registerBeanDefinition(ApiDocumentationScanner.class.getName(),
+                apiDocumentationScannerBeanDefinition);
     }
 
 }
