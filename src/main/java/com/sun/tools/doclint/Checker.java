@@ -1,136 +1,40 @@
-/*
- * Copyright (c) 2012, 2013, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package com.sun.tools.doclint;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Deque;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Name;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic.Kind;
-import javax.tools.JavaFileObject;
-
-import com.sun.source.doctree.AttributeTree;
-import com.sun.source.doctree.AuthorTree;
-import com.sun.source.doctree.DocCommentTree;
-import com.sun.source.doctree.DocRootTree;
-import com.sun.source.doctree.DocTree;
-import com.sun.source.doctree.EndElementTree;
-import com.sun.source.doctree.EntityTree;
-import com.sun.source.doctree.ErroneousTree;
-import com.sun.source.doctree.IdentifierTree;
-import com.sun.source.doctree.InheritDocTree;
-import com.sun.source.doctree.LinkTree;
-import com.sun.source.doctree.LiteralTree;
-import com.sun.source.doctree.ParamTree;
-import com.sun.source.doctree.ReferenceTree;
-import com.sun.source.doctree.ReturnTree;
-import com.sun.source.doctree.SerialDataTree;
-import com.sun.source.doctree.SerialFieldTree;
-import com.sun.source.doctree.SinceTree;
-import com.sun.source.doctree.StartElementTree;
-import com.sun.source.doctree.TextTree;
-import com.sun.source.doctree.ThrowsTree;
-import com.sun.source.doctree.UnknownBlockTagTree;
-import com.sun.source.doctree.UnknownInlineTagTree;
-import com.sun.source.doctree.ValueTree;
-import com.sun.source.doctree.VersionTree;
+import com.sun.source.doctree.*;
 import com.sun.source.util.DocTreePath;
 import com.sun.source.util.DocTreePathScanner;
 import com.sun.source.util.TreePath;
 import com.sun.tools.doclint.HtmlTag.AttrKind;
 import com.sun.tools.javac.tree.DocPretty;
+
+import javax.lang.model.element.*;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic.Kind;
+import javax.tools.JavaFileObject;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import static com.sun.tools.doclint.Messages.Group.*;
 
-
-/**
- * Validate a doc comment.
- *
- * <p><b>This is NOT part of any supported API.
- * If you write code that depends on this, you do so at your own
- * risk.  This code and its internal interfaces are subject to change
- * or deletion without notice.</b></p>
- */
 public class Checker extends DocTreePathScanner<Void, Void> {
+    private static final Pattern validName = Pattern.compile("[A-Za-z][A-Za-z0-9-_:.]*");
+    private static final Pattern validNumber = Pattern.compile("-?[0-9]+");
+    private static final Pattern docRoot = Pattern.compile("(?i)(\\{@docRoot *\\}/?)?(.*)");
     final Env env;
-
+    private final int implicitHeaderLevel;
     Set<Element> foundParams = new HashSet<>();
     Set<TypeMirror> foundThrows = new HashSet<>();
     Map<Element, Set<String>> foundAnchors = new HashMap<>();
     boolean foundInheritDoc = false;
     boolean foundReturn = false;
-
-    public enum Flag {
-        TABLE_HAS_CAPTION,
-        HAS_ELEMENT,
-        HAS_INLINE_TAG,
-        HAS_TEXT,
-        REPORTED_BAD_INLINE
-    }
-
-    static class TagStackItem {
-        final DocTree tree; // typically, but not always, StartElementTree
-        final HtmlTag tag;
-        final Set<HtmlTag.Attr> attrs;
-        final Set<Flag> flags;
-        TagStackItem(DocTree tree, HtmlTag tag) {
-            this.tree = tree;
-            this.tag = tag;
-            attrs = EnumSet.noneOf(HtmlTag.Attr.class);
-            flags = EnumSet.noneOf(Flag.class);
-        }
-        @Override
-        public String toString() {
-            return String.valueOf(tag);
-        }
-    }
-
-    private Deque<TagStackItem> tagStack; // TODO: maybe want to record starting tree as well
+    private Deque<TagStackItem> tagStack;
     private HtmlTag currHeaderTag;
-
-    private final int implicitHeaderLevel;
-
-    // <editor-fold defaultstate="collapsed" desc="Top level">
 
     Checker(Env env) {
         env.getClass();
@@ -145,10 +49,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
         boolean isOverridingMethod = !env.currOverriddenMethods.isEmpty();
 
         if (p.getLeaf() == p.getCompilationUnit()) {
-            // If p points to a compilation unit, the implied declaration is the
-            // package declaration (if any) for the compilation unit.
-            // Handle this case specially, because doc comments are only
-            // expected in package-info files.
             JavaFileObject fo = p.getCompilationUnit().getSourceFile();
             boolean isPkgInfo = fo.isNameCompatible("package-info", JavaFileObject.Kind.SOURCE);
             if (tree == null) {
@@ -214,7 +114,7 @@ public class Checker extends DocTreePathScanner<Void, Void> {
     @Override
     public Void visitDocComment(DocCommentTree tree, Void ignore) {
         super.visitDocComment(tree, ignore);
-        for (TagStackItem tsi: tagStack) {
+        for (TagStackItem tsi : tagStack) {
             warnIfEmpty(tsi, null);
             if (tsi.tree.getKind() == DocTree.Kind.START_ELEMENT
                     && tsi.tag.endKind == HtmlTag.EndKind.REQUIRED) {
@@ -224,9 +124,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
         }
         return null;
     }
-    // </editor-fold>
-
-    // <editor-fold defaultstate="collapsed" desc="Text and entities.">
 
     @Override
     public Void visitText(TextTree tree, Void ignore) {
@@ -267,10 +164,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
         }
     }
 
-    // </editor-fold>
-
-    // <editor-fold defaultstate="collapsed" desc="HTML elements">
-
     @Override
     public Void visitStartElement(StartElementTree tree, Void ignore) {
         final Name treeName = tree.getName();
@@ -279,7 +172,7 @@ public class Checker extends DocTreePathScanner<Void, Void> {
             env.messages.error(HTML, tree, "dc.tag.unknown", treeName);
         } else {
             boolean done = false;
-            for (TagStackItem tsi: tagStack) {
+            for (TagStackItem tsi : tagStack) {
                 if (tsi.tag.accepts(t)) {
                     while (tagStack.peek() != tsi) {
                         warnIfEmpty(tagStack.peek(), null);
@@ -302,16 +195,19 @@ public class Checker extends DocTreePathScanner<Void, Void> {
             markEnclosingTag(Flag.HAS_ELEMENT);
             checkStructure(tree, t);
 
-            // tag specific checks
             switch (t) {
-                // check for out of sequence headers, such as <h1>...</h1>  <h3>...</h3>
-                case H1: case H2: case H3: case H4: case H5: case H6:
+                case H1:
+                case H2:
+                case H3:
+                case H4:
+                case H5:
+                case H6:
                     checkHeader(tree, t);
                     break;
             }
 
             if (t.flags.contains(HtmlTag.Flag.NO_NEST)) {
-                for (TagStackItem i: tagStack) {
+                for (TagStackItem i : tagStack) {
                     if (t == i.tag) {
                         env.messages.warning(HTML, tree, "dc.tag.nested.not.allowed", treeName);
                         break;
@@ -320,7 +216,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
             }
         }
 
-        // check for self closing tags, such as <a id="name"/>
         if (tree.isSelfClosing()) {
             env.messages.error(HTML, tree, "dc.tag.self.closing", treeName);
         }
@@ -332,7 +227,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
 
             super.visitStartElement(tree, ignore);
 
-            // handle attributes that may or may not have been found in start element
             if (t != null) {
                 switch (t) {
                     case CAPTION:
@@ -408,13 +302,12 @@ public class Checker extends DocTreePathScanner<Void, Void> {
     }
 
     private void checkHeader(StartElementTree tree, HtmlTag tag) {
-        // verify the new tag
         if (getHeaderLevel(tag) > getHeaderLevel(currHeaderTag) + 1) {
             if (currHeaderTag == null) {
                 env.messages.error(ACCESSIBILITY, tree, "dc.tag.header.sequence.1", tag);
             } else {
                 env.messages.error(ACCESSIBILITY, tree, "dc.tag.header.sequence.2",
-                    tag, currHeaderTag);
+                        tag, currHeaderTag);
             }
         }
 
@@ -425,13 +318,20 @@ public class Checker extends DocTreePathScanner<Void, Void> {
         if (tag == null)
             return implicitHeaderLevel;
         switch (tag) {
-            case H1: return 1;
-            case H2: return 2;
-            case H3: return 3;
-            case H4: return 4;
-            case H5: return 5;
-            case H6: return 6;
-            default: throw new IllegalArgumentException();
+            case H1:
+                return 1;
+            case H2:
+                return 2;
+            case H3:
+                return 3;
+            case H4:
+                return 4;
+            case H5:
+                return 5;
+            case H6:
+                return 6;
+            default:
+                throw new IllegalArgumentException();
         }
     }
 
@@ -464,7 +364,7 @@ public class Checker extends DocTreePathScanner<Void, Void> {
                     tagStack.pop();
                 } else {
                     boolean found = false;
-                    for (TagStackItem si: tagStack) {
+                    for (TagStackItem si : tagStack) {
                         if (si.tag == t) {
                             found = true;
                             break;
@@ -503,11 +403,8 @@ public class Checker extends DocTreePathScanner<Void, Void> {
         }
     }
 
-    // </editor-fold>
-
-    // <editor-fold defaultstate="collapsed" desc="HTML attributes">
-
-    @Override @SuppressWarnings("fallthrough")
+    @Override
+    @SuppressWarnings("fallthrough")
     public Void visitAttribute(AttributeTree tree, Void ignore) {
         HtmlTag currTag = tagStack.peek().tag;
         if (currTag != null) {
@@ -542,7 +439,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
                         if (currTag != HtmlTag.A) {
                             break;
                         }
-                        // fallthrough
                     case ID:
                         String value = getAttrValue(tree);
                         if (value == null) {
@@ -589,8 +485,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
             }
         }
 
-        // TODO: basic check on value
-
         return super.visitAttribute(tree, ignore);
     }
 
@@ -619,14 +513,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
         return e;
     }
 
-    // http://www.w3.org/TR/html401/types.html#type-name
-    private static final Pattern validName = Pattern.compile("[A-Za-z][A-Za-z0-9-_:.]*");
-
-    private static final Pattern validNumber = Pattern.compile("-?[0-9]+");
-
-    // pattern to remove leading {@docRoot}/?
-    private static final Pattern docRoot = Pattern.compile("(?i)(\\{@docRoot *\\}/?)?(.*)");
-
     private String getAttrValue(AttributeTree tree) {
         if (tree.getValue() == null)
             return null;
@@ -635,9 +521,7 @@ public class Checker extends DocTreePathScanner<Void, Void> {
         try {
             new DocPretty(sw).print(tree.getValue());
         } catch (IOException e) {
-            // cannot happen
         }
-        // ignore potential use of entities for now
         return sw.toString();
     }
 
@@ -648,9 +532,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
             env.messages.error(HTML, tree, "dc.invalid.uri", uri);
         }
     }
-    // </editor-fold>
-
-    // <editor-fold defaultstate="collapsed" desc="javadoc tags">
 
     @Override
     public Void visitAuthor(AuthorTree tree, Void ignore) {
@@ -667,7 +548,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
     @Override
     public Void visitInheritDoc(InheritDocTree tree, Void ignore) {
         markEnclosingTag(Flag.HAS_INLINE_TAG);
-        // TODO: verify on overridden method
         foundInheritDoc = true;
         return super.visitInheritDoc(tree, ignore);
     }
@@ -675,7 +555,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
     @Override
     public Void visitLink(LinkTree tree, Void ignore) {
         markEnclosingTag(Flag.HAS_INLINE_TAG);
-        // simulate inline context on tag stack
         HtmlTag t = (tree.getKind() == DocTree.Kind.LINK)
                 ? HtmlTag.CODE : HtmlTag.SPAN;
         tagStack.push(new TagStackItem(tree, t));
@@ -690,7 +569,7 @@ public class Checker extends DocTreePathScanner<Void, Void> {
     public Void visitLiteral(LiteralTree tree, Void ignore) {
         markEnclosingTag(Flag.HAS_INLINE_TAG);
         if (tree.getKind() == DocTree.Kind.CODE) {
-            for (TagStackItem tsi: tagStack) {
+            for (TagStackItem tsi : tagStack) {
                 if (tsi.tag == HtmlTag.CODE) {
                     env.messages.warning(HTML, tree, "dc.tag.code.within.code");
                     break;
@@ -709,13 +588,15 @@ public class Checker extends DocTreePathScanner<Void, Void> {
 
         if (paramElement == null) {
             switch (env.currElement.getKind()) {
-                case CLASS: case INTERFACE: {
+                case CLASS:
+                case INTERFACE: {
                     if (!typaram) {
                         env.messages.error(REFERENCE, tree, "dc.invalid.param");
                         break;
                     }
                 }
-                case METHOD: case CONSTRUCTOR: {
+                case METHOD:
+                case CONSTRUCTOR: {
                     env.messages.error(REFERENCE, nameTree, "dc.param.name.not.found");
                     break;
                 }
@@ -736,7 +617,7 @@ public class Checker extends DocTreePathScanner<Void, Void> {
         if (foundInheritDoc)
             return;
 
-        for (Element e: list) {
+        for (Element e : list) {
             if (!foundParams.contains(e)) {
                 CharSequence paramName = (e.getKind() == ElementKind.TYPE_PARAMETER)
                         ? "<" + e.getSimpleName() + ">"
@@ -837,7 +718,7 @@ public class Checker extends DocTreePathScanner<Void, Void> {
         if (foundInheritDoc)
             return;
 
-        for (TypeMirror tl: list) {
+        for (TypeMirror tl : list) {
             if (isCheckedException(tl) && !foundThrows.contains(tl))
                 reportMissing("dc.missing.throws", tl);
         }
@@ -883,7 +764,7 @@ public class Checker extends DocTreePathScanner<Void, Void> {
         switch (e.getKind()) {
             case FIELD:
                 Object value = ((VariableElement) e).getConstantValue();
-                return (value != null); // can't distinguish "not a constant" from "constant is null"
+                return (value != null);
             default:
                 return false;
         }
@@ -900,9 +781,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
         env.messages.error(SYNTAX, tree, null, tree.getDiagnostic().getMessage(null));
         return null;
     }
-    // </editor-fold>
-
-    // <editor-fold defaultstate="collapsed" desc="Utility methods">
 
     private boolean isCheckedException(TypeMirror t) {
         return !(env.types.isAssignable(t, env.java_lang_Error)
@@ -912,8 +790,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
     private boolean isSynthetic() {
         switch (env.currElement.getKind()) {
             case CONSTRUCTOR:
-                // A synthetic default constructor has the same pos as the
-                // enclosing class
                 TreePath p = env.currPath;
                 return env.getPos(p) == env.getPos(p.getParentPath());
         }
@@ -939,11 +815,11 @@ public class Checker extends DocTreePathScanner<Void, Void> {
             toString(parent, sb);
             sb.append(",");
         }
-       sb.append(p.getLeaf().getKind()).append(":").append(env.getPos(p)).append(":S").append(env.getStartPos(p));
+        sb.append(p.getLeaf().getKind()).append(":").append(env.getPos(p)).append(":S").append(env.getStartPos(p));
     }
 
     void warnIfEmpty(DocTree tree, List<? extends DocTree> list) {
-        for (DocTree d: list) {
+        for (DocTree d : list) {
             switch (d.getKind()) {
                 case TEXT:
                     if (hasNonWhitespace((TextTree) d))
@@ -965,6 +841,31 @@ public class Checker extends DocTreePathScanner<Void, Void> {
         return false;
     }
 
-    // </editor-fold>
+    public enum Flag {
+        TABLE_HAS_CAPTION,
+        HAS_ELEMENT,
+        HAS_INLINE_TAG,
+        HAS_TEXT,
+        REPORTED_BAD_INLINE
+    }
+
+    static class TagStackItem {
+        final DocTree tree;
+        final HtmlTag tag;
+        final Set<HtmlTag.Attr> attrs;
+        final Set<Flag> flags;
+
+        TagStackItem(DocTree tree, HtmlTag tag) {
+            this.tree = tree;
+            this.tag = tag;
+            attrs = EnumSet.noneOf(HtmlTag.Attr.class);
+            flags = EnumSet.noneOf(Flag.class);
+        }
+
+        @Override
+        public String toString() {
+            return String.valueOf(tag);
+        }
+    }
 
 }

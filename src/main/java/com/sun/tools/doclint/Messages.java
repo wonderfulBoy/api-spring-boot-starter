@@ -1,85 +1,20 @@
-/*
- * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package com.sun.tools.doclint;
-
-import java.io.PrintWriter;
-import java.text.MessageFormat;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
-import javax.tools.Diagnostic;
 
 import com.sun.source.doctree.DocTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.doclint.Env.AccessKind;
 
-/**
- * Message reporting for DocLint.
- *
- * Options are used to filter out messages based on group and access level.
- * Support can be enabled for accumulating statistics of different kinds of
- * messages.
- *
- * <p><b>This is NOT part of any supported API.
- * If you write code that depends on this, you do so at your own
- * risk.  This code and its internal interfaces are subject to change
- * or deletion without notice.</b></p>
- */
+import javax.tools.Diagnostic;
+import java.io.PrintWriter;
+import java.text.MessageFormat;
+import java.util.*;
+
 public class Messages {
-    /**
-     * Groups used to categorize messages, so that messages in each group
-     * can be enabled or disabled via options.
-     */
-    public enum Group {
-        ACCESSIBILITY,
-        HTML,
-        MISSING,
-        SYNTAX,
-        REFERENCE;
-
-        String optName() { return name().toLowerCase(); }
-        String notOptName() { return "-" + optName(); }
-
-        static boolean accepts(String opt) {
-            for (Group g: values())
-                if (opt.equals(g.optName())) return true;
-            return false;
-        }
-    };
 
     private final Options options;
-    private final Stats stats;
 
+    ;
+    private final Stats stats;
     ResourceBundle bundle;
     Env env;
 
@@ -147,17 +82,39 @@ public class Messages {
         return MessageFormat.format(msg, args);
     }
 
-    // <editor-fold defaultstate="collapsed" desc="Options">
+    public enum Group {
+        ACCESSIBILITY,
+        HTML,
+        MISSING,
+        SYNTAX,
+        REFERENCE;
 
-    /**
-     * Handler for (sub)options specific to message handling.
-     */
+        static boolean accepts(String opt) {
+            for (Group g : values())
+                if (opt.equals(g.optName())) return true;
+            return false;
+        }
+
+        String optName() {
+            return name().toLowerCase();
+        }
+
+        String notOptName() {
+            return "-" + optName();
+        }
+    }
+
     static class Options {
-        Map<String, AccessKind> map = new HashMap<String, AccessKind>();
+        private static final String ALL = "all";
         private final Stats stats;
+        Map<String, AccessKind> map = new HashMap<String, AccessKind>();
+
+        Options(Stats stats) {
+            this.stats = stats;
+        }
 
         static boolean isValidOptions(String opts) {
-            for (String opt: opts.split(",")) {
+            for (String opt : opts.split(",")) {
                 if (!isValidOption(opt.trim().toLowerCase()))
                     return false;
             }
@@ -175,11 +132,6 @@ public class Messages {
                     && ((sep == -1) || AccessKind.accepts(opt.substring(sep + 1)));
         }
 
-        Options(Stats stats) {
-            this.stats = stats;
-        }
-
-        /** Determine if a message group is enabled for a particular access level. */
         boolean isEnabled(Group g, AccessKind access) {
             if (map.isEmpty())
                 map.put("all", AccessKind.PROTECTED);
@@ -191,7 +143,7 @@ public class Messages {
             ak = map.get(ALL);
             if (ak != null && access.compareTo(ak) >= 0) {
                 ak = map.get(g.notOptName());
-                if (ak == null || access.compareTo(ak) > 0) // note >, not >=
+                if (ak == null || access.compareTo(ak) > 0)
                     return true;
             }
 
@@ -202,7 +154,7 @@ public class Messages {
             if (opts == null)
                 setOption(ALL, AccessKind.PRIVATE);
             else {
-                for (String opt: opts.split(","))
+                for (String opt : opts.split(","))
                     setOption(opt.trim().toLowerCase());
             }
         }
@@ -226,23 +178,12 @@ public class Messages {
             map.put(opt, (ak != null) ? ak
                     : opt.startsWith("-") ? AccessKind.PUBLIC : AccessKind.PRIVATE);
         }
-
-        private static final String ALL = "all";
     }
 
-    // </editor-fold>
-
-    // <editor-fold defaultstate="collapsed" desc="Statistics">
-
-    /**
-     * Optionally record statistics of different kinds of message.
-     */
     static class Stats {
         public static final String OPT = "stats";
         public static final String NO_CODE = "";
         final ResourceBundle bundle;
-
-        // tables only initialized if enabled
         int[] groupCounts;
         int[] dkindCounts;
         Map<String, Integer> codeCounts;
@@ -309,9 +250,6 @@ public class Messages {
             codeTable.print(out);
         }
 
-        /**
-         * A table of (int, String) sorted by decreasing int.
-         */
         private static class Table {
 
             private static final Comparator<Integer> DECREASING = new Comparator<Integer>() {
@@ -344,5 +282,4 @@ public class Messages {
             }
         }
     }
-    // </editor-fold>
 }
