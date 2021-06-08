@@ -1,9 +1,9 @@
 package com.github.api;
 
 import com.github.api.core.Documentation;
-import com.sun.javadoc.ClassDoc;
-import com.sun.javadoc.RootDoc;
-import com.sun.tools.javadoc.MethodDocImpl;
+import com.github.api.sun.javadoc.ClassDoc;
+import com.github.api.sun.javadoc.RootDoc;
+import com.github.api.sun.tools.javadoc.MethodDocImpl;
 
 import java.util.HashMap;
 import java.util.Map;

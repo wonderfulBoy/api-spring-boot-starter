@@ -7,9 +7,9 @@ import com.fasterxml.classmate.members.RawField;
 import com.fasterxml.classmate.types.ResolvedArrayType;
 import com.fasterxml.classmate.types.ResolvedObjectType;
 import com.fasterxml.classmate.types.ResolvedPrimitiveType;
+import com.github.api.sun.javadoc.ClassDoc;
+import com.github.api.sun.javadoc.FieldDoc;
 import com.google.common.collect.ImmutableMap;
-import com.sun.javadoc.ClassDoc;
-import com.sun.javadoc.FieldDoc;
 import io.swagger.models.ArrayModel;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
@@ -62,6 +62,8 @@ class DefaultReferContext {
     private static final String CLOSE = "";
     //The symbol represented before the transfer:  ",";
     private static final String DELIMITER = "And";
+    //The class tag
+    private static final String JAVA_CLASS = "class";
 
     //Stores the association type name
     private static final Map<String, ResolvedType> refTypeNameCache = new HashMap<>();
@@ -151,7 +153,7 @@ class DefaultReferContext {
         ResolvableType[] generics = resolvableType.getGenerics();
         if (Types.isContainerType(memberResolvedType) || generics.length == 0) {
             Type genericType = rawField.getRawMember().getGenericType();
-            if (!genericType.toString().contains("class")) {
+            if (!genericType.toString().contains(JAVA_CLASS)) {
                 TypeBindings typeBindings = rawField.getDeclaringType().getTypeBindings();
                 List<ResolvedType> typeParameters = typeBindings.getTypeParameters();
                 if (!CollectionUtils.isEmpty(typeParameters)) {
@@ -203,11 +205,11 @@ class DefaultReferContext {
                     pathParameter.setRequired(annotation.required());
                     String parameterType = getParameterType(argumentType);
                     if (StringUtils.isEmpty(parameterType)) {
-                        pathParameter.setType("string");
+                        pathParameter.setType(Types.Common.STRING.getValue());
                     } else {
                         pathParameter.setType(parameterType);
                     }
-                    if ("array".equals(parameterType)) {
+                    if (Types.Common.ARRAY.getValue().equals(parameterType)) {
                         pathParameter.setItems(new StringProperty());
                     }
                     if (argumentType.getErasedType().isEnum()) {
@@ -224,7 +226,7 @@ class DefaultReferContext {
             } else if (annotationType.isAssignableFrom(RequestBody.class)) {
                 if (Types.isFileType(argumentType) || Types.isListOfFiles(argumentType)) {
                     FormParameter formParameter = new FormParameter();
-                    formParameter.type("file");
+                    formParameter.type(Types.Common.FILE.getValue());
                     if (reflectParameter != null) {
                         RequestBody annotation = reflectParameter.getAnnotation(RequestBody.class);
                         if (annotation != null) {
@@ -246,7 +248,7 @@ class DefaultReferContext {
                         refModel.set$ref(refTypeName);
                         refTypeNameCache.put(refTypeName, argumentType);
                         bodyParameter.schema(refModel);
-                    } else if (parameterType.equals("array")) {
+                    } else if (parameterType.equals(Types.Common.ARRAY.getValue())) {
                         ArrayModel model = new ArrayModel();
                         ResolvedType arrayElementType = argumentType.getArrayElementType();
                         if (arrayElementType == null) {
@@ -269,7 +271,7 @@ class DefaultReferContext {
             } else if (annotationType.isAssignableFrom(RequestParam.class)) {
                 if (Types.isFileType(argumentType) || Types.isListOfFiles(argumentType)) {
                     FormParameter formParameter = new FormParameter();
-                    formParameter.type("file");
+                    formParameter.type(Types.Common.FILE.getValue());
                     if (reflectParameter != null) {
                         RequestParam annotation = reflectParameter.getAnnotation(RequestParam.class);
                         if (annotation != null) {
@@ -290,8 +292,8 @@ class DefaultReferContext {
                         queryParameter.setName(name);
                         String parameterType = getParameterType(argumentType);
                         if (StringUtils.isEmpty(parameterType)) {
-                            queryParameter.type("string");
-                        } else if (parameterType.equals("array")) {
+                            queryParameter.type(Types.Common.STRING.getValue());
+                        } else if (parameterType.equals(Types.Common.ARRAY.getValue())) {
                             queryParameter.setType(parameterType);
                             StringProperty stringProperty = new StringProperty();
                             if (argumentType.isArray()) {
@@ -419,7 +421,7 @@ class DefaultReferContext {
                 }
                 responseProperty = mapProperty;
             } else {
-                if (typeName.equals("string")) {
+                if (typeName.equals(Types.Common.STRING.getValue())) {
                     responseProperty = new StringProperty();
                 } else {
                     refTypeNameCache.put(typeName, returnType);
@@ -504,7 +506,6 @@ class DefaultReferContext {
             add(ServletContext.class);
             add(UriComponentsBuilder.class);
         }};
-
         private static final Set<String> baseTypes = newHashSet(
                 "byte",
                 "int",
@@ -519,7 +520,6 @@ class DefaultReferContext {
                 "biginteger",
                 "bigdecimal",
                 "uuid");
-
         private static final Map<Type, String> typeNameLookup = ImmutableMap.<Type, String>builder()
                 .put(Byte.TYPE, "byte")
                 .put(Short.TYPE, "int")
@@ -684,6 +684,22 @@ class DefaultReferContext {
                 return resolvedTypes.get(0);
             }
             return new TypeResolver().resolve(Object.class);
+        }
+
+        enum Common {
+            STRING("string"),
+            ARRAY("array"),
+            FILE("file");
+
+            private String value;
+
+            Common(String value) {
+                this.value = value;
+            }
+
+            public String getValue() {
+                return value;
+            }
         }
 
     }

@@ -32,7 +32,6 @@ public class ApiDocumentFileProvider {
     @Autowired
     private ApiDocumentProperties apiDocumentProperties;
 
-
     /**
      * Show the api document
      */
@@ -47,12 +46,10 @@ public class ApiDocumentFileProvider {
                 Resource[] resources = (new PathMatchingResourcePatternResolver())
                         .getResources("classpath:" + ApiDocumentContext.DEFAULT_MATCHING_PATH);
                 if (resources.length > 0) {
-                    Gson gson = new Gson();
-                    String s = gson.toJson(new Yaml().load(resources[0].getInputStream()));
-                    return new ResponseEntity<>(s, HttpStatus.OK);
+                    return new ResponseEntity<>(new Gson().toJson(new Yaml()
+                            .load(resources[0].getInputStream())), HttpStatus.OK);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
                 logger.error("Load local api file failed:{}", e.getMessage());
             }
         }

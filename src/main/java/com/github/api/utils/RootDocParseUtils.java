@@ -1,7 +1,8 @@
 package com.github.api.utils;
 
 
-import com.sun.javadoc.RootDoc;
+import com.github.api.sun.javadoc.RootDoc;
+import com.github.api.sun.tools.javadoc.Main;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
@@ -53,8 +54,7 @@ public class RootDocParseUtils {
             int size = javadocArgs.size();
             logger.info("The total number of files to parse is {}", size);
             logger.info("Begin parsing the source files api infos...");
-            com.sun.tools.javadoc.Main.execute(javadocArgs
-                    .toArray(new String[size]));
+            Main.execute(javadocArgs.toArray(new String[size]));
         }
         return rootDoc;
     }
