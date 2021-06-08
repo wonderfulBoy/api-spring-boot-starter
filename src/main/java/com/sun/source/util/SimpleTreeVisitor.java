@@ -1,8 +1,9 @@
 package com.sun.source.util;
 
 import com.sun.source.tree.*;
+
 @jdk.Exported
-public class SimpleTreeVisitor <R,P> implements TreeVisitor<R,P> {
+public class SimpleTreeVisitor<R, P> implements TreeVisitor<R, P> {
     protected final R DEFAULT_VALUE;
 
     protected SimpleTreeVisitor() {

@@ -3,7 +3,6 @@ package com.sun.tools.javadoc;
 import static com.sun.tools.javac.code.Flags.*;
 
 public class ModifierFilter {
-
     public static final long PACKAGE = 0x8000000000000000L;
     public static final long ALL_ACCESS = PRIVATE | PROTECTED | PUBLIC | PACKAGE;
     private static final int ACCESS_BITS = PRIVATE | PROTECTED | PUBLIC;
@@ -29,5 +28,4 @@ public class ModifierFilter {
                 ((must & fmod) == must) &&
                 ((cannot & fmod) == 0);
     }
-
 }

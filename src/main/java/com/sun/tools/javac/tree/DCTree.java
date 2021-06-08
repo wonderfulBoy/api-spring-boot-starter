@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 public abstract class DCTree implements DocTree {
-
     public int pos;
 
     public long getSourcePosition(DCDocComment dc) {
@@ -34,7 +33,6 @@ public abstract class DCTree implements DocTree {
     }
 
     public static abstract class DCEndPosTree<T extends DCEndPosTree<T>> extends DCTree {
-
         private int endPos = Position.NOPOS;
 
         public int getEndPos(DCDocComment dc) {
@@ -46,12 +44,10 @@ public abstract class DCTree implements DocTree {
             this.endPos = endPos;
             return (T) this;
         }
-
     }
 
     public static class DCDocComment extends DCTree implements DocCommentTree {
         public final Comment comment;
-
         public final List<DCTree> firstSentence;
         public final List<DCTree> body;
         public final List<DCTree> tags;
@@ -83,7 +79,6 @@ public abstract class DCTree implements DocTree {
         public List<? extends DocTree> getBlockTags() {
             return tags;
         }
-
     }
 
     public static abstract class DCBlockTag extends DCTree implements BlockTagTree {
@@ -104,7 +99,7 @@ public abstract class DCTree implements DocTree {
         public final List<DCTree> value;
 
         DCAttribute(Name name, ValueKind vkind, List<DCTree> value) {
-            Assert.check((vkind == ValueKind.EMPTY) ? (value == null) : (value != null));
+            Assert.check((vkind == ValueKind.EMPTY) == (value == null));
             this.name = name;
             this.vkind = vkind;
             this.value = value;
@@ -206,7 +201,6 @@ public abstract class DCTree implements DocTree {
     }
 
     public static class DCDocRoot extends DCInlineTag implements DocRootTree {
-
         @Override
         public Kind getKind() {
             return Kind.DOC_ROOT;
@@ -312,7 +306,6 @@ public abstract class DCTree implements DocTree {
         public int getEndPosition(EndPosTable endPosTable) {
             return pos + body.length();
         }
-
     }
 
     public static class DCIdentifier extends DCTree implements IdentifierTree {
@@ -451,7 +444,6 @@ public abstract class DCTree implements DocTree {
         public final JCTree qualifierExpression;
         public final Name memberName;
         public final List<JCTree> paramTypes;
-
 
         DCReference(String signature, JCTree qualExpr, Name member, List<JCTree> paramTypes) {
             this.signature = signature;
@@ -826,5 +818,4 @@ public abstract class DCTree implements DocTree {
             return body;
         }
     }
-
 }

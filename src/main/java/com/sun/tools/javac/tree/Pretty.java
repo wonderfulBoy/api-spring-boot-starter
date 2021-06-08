@@ -1,140 +1,37 @@
-/*
- * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package com.sun.tools.javac.tree;
 
-import java.io.*;
-
 import com.sun.source.tree.MemberReferenceTree.ReferenceMode;
-import com.sun.tools.javac.code.*;
+import com.sun.tools.javac.code.BoundKind;
+import com.sun.tools.javac.code.Flags;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.JCTree.*;
-import com.sun.tools.javac.util.*;
+import com.sun.tools.javac.util.Convert;
 import com.sun.tools.javac.util.List;
-import static com.sun.tools.javac.code.Flags.*;
+import com.sun.tools.javac.util.Name;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
+
 import static com.sun.tools.javac.code.Flags.ANNOTATION;
+import static com.sun.tools.javac.code.Flags.*;
 import static com.sun.tools.javac.tree.JCTree.Tag.*;
 
-/** Prints out a tree as an indented Java source program.
- *
- *  <p><b>This is NOT part of any supported API.
- *  If you write code that depends on this, you do so at your own risk.
- *  This code and its internal interfaces are subject to change or
- *  deletion without notice.</b>
- */
 public class Pretty extends Visitor {
+    private final static String trimSequence = "[...]";
+    private final static int PREFERRED_LENGTH = 20;
+    private final boolean sourceOutput;
+    public int width = 4;
+    Writer out;
+    int lmargin = 0;
+    Name enclClassName;
+    DocCommentTable docComments = null;
+    String lineSep = System.getProperty("line.separator");
+    int prec;
 
     public Pretty(Writer out, boolean sourceOutput) {
         this.out = out;
         this.sourceOutput = sourceOutput;
-    }
-
-    /** Set when we are producing source output.  If we're not
-     *  producing source output, we can sometimes give more detail in
-     *  the output even though that detail would not be valid java
-     *  source.
-     */
-    private final boolean sourceOutput;
-
-    /** The output stream on which trees are printed.
-     */
-    Writer out;
-
-    /** Indentation width (can be reassigned from outside).
-     */
-    public int width = 4;
-
-    /** The current left margin.
-     */
-    int lmargin = 0;
-
-    /** The enclosing class name.
-     */
-    Name enclClassName;
-
-    /** A table mapping trees to their documentation comments
-     *  (can be null)
-     */
-    DocCommentTable docComments = null;
-
-    /**
-     * A string sequence to be used when Pretty output should be constrained
-     * to fit into a given size
-     */
-    private final static String trimSequence = "[...]";
-
-    /**
-     * Max number of chars to be generated when output should fit into a single line
-     */
-    private final static int PREFERRED_LENGTH = 20;
-
-    /** Align code to be indented to left margin.
-     */
-    void align() throws IOException {
-        for (int i = 0; i < lmargin; i++) out.write(" ");
-    }
-
-    /** Increase left margin by indentation width.
-     */
-    void indent() {
-        lmargin = lmargin + width;
-    }
-
-    /** Decrease left margin by indentation width.
-     */
-    void undent() {
-        lmargin = lmargin - width;
-    }
-
-    /** Enter a new precedence level. Emit a `(' if new precedence level
-     *  is less than precedence level so far.
-     *  @param contextPrec    The precedence level in force so far.
-     *  @param ownPrec        The new precedence level.
-     */
-    void open(int contextPrec, int ownPrec) throws IOException {
-        if (ownPrec < contextPrec) out.write("(");
-    }
-
-    /** Leave precedence level. Emit a `(' if inner precedence level
-     *  is less than precedence level we revert to.
-     *  @param contextPrec    The precedence level we revert to.
-     *  @param ownPrec        The inner precedence level.
-     */
-    void close(int contextPrec, int ownPrec) throws IOException {
-        if (ownPrec < contextPrec) out.write(")");
-    }
-
-    /** Print string, replacing all non-ascii character with unicode escapes.
-     */
-    public void print(Object s) throws IOException {
-        out.write(Convert.escapeUnicode(s.toString()));
-    }
-
-    /** Print new line.
-     */
-    public void println() throws IOException {
-        out.write(lineSep);
     }
 
     public static String toSimpleString(JCTree tree) {
@@ -145,14 +42,13 @@ public class Pretty extends Visitor {
         StringWriter s = new StringWriter();
         try {
             new Pretty(s, false).printExpr(tree);
-        }
-        catch (IOException e) {
-            // should never happen, because StringWriter is defined
-            // never to throw any IOExceptions
+        } catch (IOException e) {
+
+
             throw new AssertionError(e);
         }
-        //we need to (i) replace all line terminators with a space and (ii) remove
-        //occurrences of 'missing' in the Pretty output (generated when types are missing)
+
+
         String res = s.toString().trim().replaceAll("\\s+", " ").replaceAll("/\\*missing\\*/", "");
         if (res.length() < maxLength) {
             return res;
@@ -163,27 +59,40 @@ public class Pretty extends Visitor {
         }
     }
 
-    String lineSep = System.getProperty("line.separator");
-
-    /**************************************************************************
-     * Traversal methods
-     *************************************************************************/
-
-    /** Exception to propogate IOException through visitXXX methods */
-    private static class UncheckedIOException extends Error {
-        static final long serialVersionUID = -4032692679158424751L;
-        UncheckedIOException(IOException e) {
-            super(e.getMessage(), e);
-        }
+    static int lineEndPos(String s, int start) {
+        int pos = s.indexOf('\n', start);
+        if (pos < 0) pos = s.length();
+        return pos;
     }
 
-    /** Visitor argument: the current precedence level.
-     */
-    int prec;
+    void align() throws IOException {
+        for (int i = 0; i < lmargin; i++) out.write(" ");
+    }
 
-    /** Visitor method: print expression tree.
-     *  @param prec  The current precedence level.
-     */
+    void indent() {
+        lmargin = lmargin + width;
+    }
+
+    void undent() {
+        lmargin = lmargin - width;
+    }
+
+    void open(int contextPrec, int ownPrec) throws IOException {
+        if (ownPrec < contextPrec) out.write("(");
+    }
+
+    void close(int contextPrec, int ownPrec) throws IOException {
+        if (ownPrec < contextPrec) out.write(")");
+    }
+
+    public void print(Object s) throws IOException {
+        out.write(Convert.escapeUnicode(s.toString()));
+    }
+
+    public void println() throws IOException {
+        out.write(lineSep);
+    }
+
     public void printExpr(JCTree tree, int prec) throws IOException {
         int prevPrec = this.prec;
         try {
@@ -193,30 +102,21 @@ public class Pretty extends Visitor {
                 tree.accept(this);
             }
         } catch (UncheckedIOException ex) {
-            IOException e = new IOException(ex.getMessage());
-            e.initCause(ex);
+            IOException e = new IOException(ex.getMessage(), ex);
             throw e;
         } finally {
             this.prec = prevPrec;
         }
     }
 
-    /** Derived visitor method: print expression tree at minimum precedence level
-     *  for expression.
-     */
     public void printExpr(JCTree tree) throws IOException {
         printExpr(tree, TreeInfo.noPrec);
     }
 
-    /** Derived visitor method: print statement tree.
-     */
     public void printStat(JCTree tree) throws IOException {
         printExpr(tree, TreeInfo.notExpression);
     }
 
-    /** Derived visitor method: print list of expression trees, separated by given string.
-     *  @param sep the separator string
-     */
     public <T extends JCTree> void printExprs(List<T> trees, String sep) throws IOException {
         if (trees.nonEmpty()) {
             printExpr(trees.head);
@@ -227,14 +127,10 @@ public class Pretty extends Visitor {
         }
     }
 
-    /** Derived visitor method: print list of expression trees, separated by commas.
-     */
     public <T extends JCTree> void printExprs(List<T> trees) throws IOException {
         printExprs(trees, ", ");
     }
 
-    /** Derived visitor method: print list of statements, each on a separate line.
-     */
     public void printStats(List<? extends JCTree> trees) throws IOException {
         for (List<? extends JCTree> l = trees; l.nonEmpty(); l = l.tail) {
             align();
@@ -243,8 +139,6 @@ public class Pretty extends Visitor {
         }
     }
 
-    /** Print a set of modifiers.
-     */
     public void printFlags(long flags) throws IOException {
         if ((flags & SYNTHETIC) != 0) print("/*synthetic*/ ");
         print(TreeInfo.flagNames(flags));
@@ -267,39 +161,31 @@ public class Pretty extends Visitor {
         }
     }
 
-    /** Print documentation comment, if it exists
-     *  @param tree    The tree for which a documentation comment should be printed.
-     */
     public void printDocComment(JCTree tree) throws IOException {
         if (docComments != null) {
             String dc = docComments.getCommentText(tree);
             if (dc != null) {
-                print("/**"); println();
+                print("/**");
+                println();
                 int pos = 0;
                 int endpos = lineEndPos(dc, pos);
                 while (pos < dc.length()) {
                     align();
                     print(" *");
                     if (pos < dc.length() && dc.charAt(pos) > ' ') print(" ");
-                    print(dc.substring(pos, endpos)); println();
+                    print(dc.substring(pos, endpos));
+                    println();
                     pos = endpos + 1;
                     endpos = lineEndPos(dc, pos);
                 }
-                align(); print(" */"); println();
+                align();
+                print(" */");
+                println();
                 align();
             }
         }
     }
-//where
-    static int lineEndPos(String s, int start) {
-        int pos = s.indexOf('\n', start);
-        if (pos < 0) pos = s.length();
-        return pos;
-    }
 
-    /** If type parameter list is non-empty, print it enclosed in
-     *  {@literal "<...>"} brackets.
-     */
     public void printTypeParameters(List<JCTypeParameter> trees) throws IOException {
         if (trees.nonEmpty()) {
             print("<");
@@ -308,8 +194,6 @@ public class Pretty extends Visitor {
         }
     }
 
-    /** Print a block.
-     */
     public void printBlock(List<? extends JCTree> stats) throws IOException {
         print("{");
         println();
@@ -320,8 +204,6 @@ public class Pretty extends Visitor {
         print("}");
     }
 
-    /** Print a block.
-     */
     public void printEnumBody(List<JCTree> stats) throws IOException {
         print("{");
         println();
@@ -352,18 +234,10 @@ public class Pretty extends Visitor {
         print("}");
     }
 
-    /** Is the given tree an enumerator definition? */
     boolean isEnumerator(JCTree t) {
         return t.hasTag(VARDEF) && (((JCVariableDecl) t).mods.flags & ENUM) != 0;
     }
 
-    /** Print unit consisting of package clause and import statements in toplevel,
-     *  followed by class definition. if class definition == null,
-     *  print all definitions in toplevel.
-     *  @param tree     The toplevel tree
-     *  @param cdef     The class definition, which is assumed to be part of the
-     *                  toplevel tree.
-     */
     public void printUnit(JCCompilationUnit tree, JCClassDecl cdef) throws IOException {
         docComments = tree.docComments;
         printDocComment(tree);
@@ -375,10 +249,10 @@ public class Pretty extends Visitor {
         }
         boolean firstImport = true;
         for (List<JCTree> l = tree.defs;
-        l.nonEmpty() && (cdef == null || l.head.hasTag(IMPORT));
-        l = l.tail) {
+             l.nonEmpty() && (cdef == null || l.head.hasTag(IMPORT));
+             l = l.tail) {
             if (l.head.hasTag(IMPORT)) {
-                JCImport imp = (JCImport)l.head;
+                JCImport imp = (JCImport) l.head;
                 Name name = TreeInfo.name(imp.qualid);
                 if (name == name.table.names.asterisk ||
                         cdef == null ||
@@ -398,13 +272,15 @@ public class Pretty extends Visitor {
             println();
         }
     }
-    // where
+
     boolean isUsed(final Symbol t, JCTree cdef) {
         class UsedVisitor extends TreeScanner {
-            public void scan(JCTree tree) {
-                if (tree!=null && !result) tree.accept(this);
-            }
             boolean result = false;
+
+            public void scan(JCTree tree) {
+                if (tree != null && !result) tree.accept(this);
+            }
+
             public void visitIdent(JCIdent tree) {
                 if (tree.sym == t) result = true;
             }
@@ -413,10 +289,6 @@ public class Pretty extends Visitor {
         v.scan(cdef);
         return v.result;
     }
-
-    /**************************************************************************
-     * Visitor methods
-     *************************************************************************/
 
     public void visitTopLevel(JCCompilationUnit tree) {
         try {
@@ -440,7 +312,8 @@ public class Pretty extends Visitor {
 
     public void visitClassDef(JCClassDecl tree) {
         try {
-            println(); align();
+            println();
+            align();
             printDocComment(tree);
             printAnnotations(tree.mods.annotations);
             printFlags(tree.mods.flags & ~INTERFACE);
@@ -482,11 +355,12 @@ public class Pretty extends Visitor {
 
     public void visitMethodDef(JCMethodDecl tree) {
         try {
-            // when producing source output, omit anonymous constructors
+
             if (tree.name == tree.name.table.names.init &&
                     enclClassName == null &&
                     sourceOutput) return;
-            println(); align();
+            println();
+            align();
             printDocComment(tree);
             printExpr(tree.mods);
             printTypeParameters(tree.typarams);
@@ -497,7 +371,7 @@ public class Pretty extends Visitor {
                 print(" " + tree.name);
             }
             print("(");
-            if (tree.recvparam!=null) {
+            if (tree.recvparam != null) {
                 printExpr(tree.recvparam);
                 if (tree.params.size() > 0) {
                     print(", ");
@@ -527,7 +401,8 @@ public class Pretty extends Visitor {
     public void visitVarDef(JCVariableDecl tree) {
         try {
             if (docComments != null && docComments.hasComment(tree)) {
-                println(); align();
+                println();
+                align();
             }
             printDocComment(tree);
             if ((tree.mods.flags & ENUM) != 0) {
@@ -558,8 +433,8 @@ public class Pretty extends Visitor {
                     JCTree vartype = tree.vartype;
                     List<JCAnnotation> tas = null;
                     if (vartype instanceof JCAnnotatedType) {
-                        tas = ((JCAnnotatedType)vartype).annotations;
-                        vartype = ((JCAnnotatedType)vartype).underlyingType;
+                        tas = ((JCAnnotatedType) vartype).annotations;
+                        vartype = ((JCAnnotatedType) vartype).underlyingType;
                     }
                     printExpr(((JCArrayTypeTree) vartype).elemtype);
                     if (tas != null) {
@@ -642,7 +517,7 @@ public class Pretty extends Visitor {
                 if (tree.init.head.hasTag(VARDEF)) {
                     printExpr(tree.init.head);
                     for (List<JCStatement> l = tree.init.tail; l.nonEmpty(); l = l.tail) {
-                        JCVariableDecl vdef = (JCVariableDecl)l.head;
+                        JCVariableDecl vdef = (JCVariableDecl) l.head;
                         print(", " + vdef.name + " = ");
                         printExpr(vdef.init);
                     }
@@ -884,7 +759,7 @@ public class Pretty extends Visitor {
         try {
             if (!tree.typeargs.isEmpty()) {
                 if (tree.meth.hasTag(SELECT)) {
-                    JCFieldAccess left = (JCFieldAccess)tree.meth;
+                    JCFieldAccess left = (JCFieldAccess) tree.meth;
                     printExpr(left.selected);
                     print(".<");
                     printExprs(tree.typeargs);
@@ -929,8 +804,8 @@ public class Pretty extends Visitor {
                 Name enclClassNamePrev = enclClassName;
                 enclClassName =
                         tree.def.name != null ? tree.def.name :
-                            tree.type != null && tree.type.tsym.name != tree.type.tsym.name.table.names.empty
-                                ? tree.type.tsym.name : null;
+                                tree.type != null && tree.type.tsym.name != tree.type.tsym.name.table.names.empty
+                                        ? tree.type.tsym.name : null;
                 if ((tree.def.mods.flags & Flags.ENUM) != 0) print("/*enum*/");
                 printBlock(tree.def.defs);
                 enclClassName = enclClassNamePrev;
@@ -946,7 +821,6 @@ public class Pretty extends Visitor {
                 print("new ");
                 JCTree elem = tree.elemtype;
                 printBaseElementType(elem);
-
                 if (!tree.annotations.isEmpty()) {
                     print(' ');
                     printTypeAnnotations(tree.annotations);
@@ -954,7 +828,6 @@ public class Pretty extends Visitor {
                 if (tree.elems != null) {
                     print("[]");
                 }
-
                 int i = 0;
                 List<List<JCAnnotation>> da = tree.dimAnnotations;
                 for (List<JCExpression> l = tree.dims; l.nonEmpty(); l = l.tail) {
@@ -1022,36 +895,65 @@ public class Pretty extends Visitor {
     }
 
     public String operatorName(Tag tag) {
-        switch(tag) {
-            case POS:     return "+";
-            case NEG:     return "-";
-            case NOT:     return "!";
-            case COMPL:   return "~";
-            case PREINC:  return "++";
-            case PREDEC:  return "--";
-            case POSTINC: return "++";
-            case POSTDEC: return "--";
-            case NULLCHK: return "<*nullchk*>";
-            case OR:      return "||";
-            case AND:     return "&&";
-            case EQ:      return "==";
-            case NE:      return "!=";
-            case LT:      return "<";
-            case GT:      return ">";
-            case LE:      return "<=";
-            case GE:      return ">=";
-            case BITOR:   return "|";
-            case BITXOR:  return "^";
-            case BITAND:  return "&";
-            case SL:      return "<<";
-            case SR:      return ">>";
-            case USR:     return ">>>";
-            case PLUS:    return "+";
-            case MINUS:   return "-";
-            case MUL:     return "*";
-            case DIV:     return "/";
-            case MOD:     return "%";
-            default: throw new Error();
+        switch (tag) {
+            case POS:
+                return "+";
+            case NEG:
+                return "-";
+            case NOT:
+                return "!";
+            case COMPL:
+                return "~";
+            case PREINC:
+                return "++";
+            case PREDEC:
+                return "--";
+            case POSTINC:
+                return "++";
+            case POSTDEC:
+                return "--";
+            case NULLCHK:
+                return "<*nullchk*>";
+            case OR:
+                return "||";
+            case AND:
+                return "&&";
+            case EQ:
+                return "==";
+            case NE:
+                return "!=";
+            case LT:
+                return "<";
+            case GT:
+                return ">";
+            case LE:
+                return "<=";
+            case GE:
+                return ">=";
+            case BITOR:
+                return "|";
+            case BITXOR:
+                return "^";
+            case BITAND:
+                return "&";
+            case SL:
+                return "<<";
+            case SR:
+                return ">>";
+            case USR:
+                return ">>>";
+            case PLUS:
+                return "+";
+            case MINUS:
+                return "-";
+            case MUL:
+                return "*";
+            case DIV:
+                return "/";
+            case MOD:
+                return "%";
+            default:
+                throw new Error();
         }
     }
 
@@ -1183,13 +1085,13 @@ public class Pretty extends Visitor {
                     print(tree.value.toString());
                     break;
                 case CHAR:
-                    print("\'" +
+                    print("'" +
                             Convert.quote(
-                            String.valueOf((char)((Number)tree.value).intValue())) +
-                            "\'");
+                                    String.valueOf((char) ((Number) tree.value).intValue())) +
+                            "'");
                     break;
                 case BOOLEAN:
-                    print(((Number)tree.value).intValue() == 1 ? "true" : "false");
+                    print(((Number) tree.value).intValue() == 1 ? "true" : "false");
                     break;
                 case BOT:
                     print("null");
@@ -1205,7 +1107,7 @@ public class Pretty extends Visitor {
 
     public void visitTypeIdent(JCPrimitiveTypeTree tree) {
         try {
-            switch(tree.typetag) {
+            switch (tree.typetag) {
                 case BYTE:
                     print("byte");
                     break;
@@ -1251,13 +1153,10 @@ public class Pretty extends Visitor {
         }
     }
 
-    // Prints the inner element type of a nested array
     private void printBaseElementType(JCTree tree) throws IOException {
         printExpr(TreeInfo.innermostType(tree));
     }
 
-    // prints the brackets of a nested array in reverse order
-    // tree is either JCArrayTypeTree or JCAnnotatedTypeTree
     private void printBrackets(JCTree tree) throws IOException {
         JCTree elem = tree;
         while (true) {
@@ -1271,7 +1170,7 @@ public class Pretty extends Visitor {
             }
             if (elem.hasTag(TYPEARRAY)) {
                 print("[]");
-                elem = ((JCArrayTypeTree)elem).elemtype;
+                elem = ((JCArrayTypeTree) elem).elemtype;
             } else {
                 break;
             }
@@ -1406,4 +1305,11 @@ public class Pretty extends Visitor {
         }
     }
 
+    private static class UncheckedIOException extends Error {
+        static final long serialVersionUID = -4032692679158424751L;
+
+        UncheckedIOException(IOException e) {
+            super(e.getMessage(), e);
+        }
+    }
 }

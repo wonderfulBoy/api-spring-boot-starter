@@ -14,7 +14,6 @@ import java.lang.reflect.Modifier;
 import static com.sun.tools.javac.code.TypeTag.BOOLEAN;
 
 public class FieldDocImpl extends MemberDocImpl implements FieldDoc {
-
     protected final VarSymbol sym;
     private String name;
     private String qualifiedName;
@@ -93,7 +92,7 @@ public class FieldDocImpl extends MemberDocImpl implements FieldDoc {
                 buf.append("\\\"");
                 return;
             case '\'':
-                buf.append("\\\'");
+                buf.append("\\'");
                 return;
             case '\\':
                 buf.append("\\\\");

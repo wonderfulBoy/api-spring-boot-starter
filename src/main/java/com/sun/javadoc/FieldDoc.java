@@ -1,7 +1,6 @@
 package com.sun.javadoc;
 
 public interface FieldDoc extends MemberDoc {
-
     Type type();
 
     boolean isTransient();
@@ -13,5 +12,4 @@ public interface FieldDoc extends MemberDoc {
     Object constantValue();
 
     String constantValueExpression();
-
 }

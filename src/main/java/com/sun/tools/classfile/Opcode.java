@@ -1,44 +1,9 @@
-/*
- * Copyright (c) 2009, 2012, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package com.sun.tools.classfile;
 
 import static com.sun.tools.classfile.Instruction.Kind.*;
-import static com.sun.tools.classfile.Opcode.Set.*;
+import static com.sun.tools.classfile.Opcode.Set.PICOJAVA;
+import static com.sun.tools.classfile.Opcode.Set.STANDARD;
 
-/**
- * See JVMS, chapter 6.
- *
- * <p>In addition to providing all the standard opcodes defined in JVMS,
- * this class also provides legacy support for the PicoJava extensions.
- *
- *  <p><b>This is NOT part of any supported API.
- *  If you write code that depends on this, you do so at your own risk.
- *  This code and its internal interfaces are subject to change or
- *  deletion without notice.</b>
- */
 public enum Opcode {
     NOP(0x0),
     ACONST_NULL(0x1),
@@ -236,16 +201,14 @@ public enum Opcode {
     INSTANCEOF(0xc1, CPREF_W),
     MONITORENTER(0xc2),
     MONITOREXIT(0xc3),
-    // wide 0xc4
+
     MULTIANEWARRAY(0xc5, CPREF_W_UBYTE),
     IFNULL(0xc6, BRANCH),
     IFNONNULL(0xc7, BRANCH),
     GOTO_W(0xc8, BRANCH_W),
     JSR_W(0xc9, BRANCH_W),
-    // impdep 0xfe: PicoJava nonpriv
-    // impdep 0xff: Picojava priv
 
-    // wide opcodes
+
     ILOAD_W(0xc415, WIDE_LOCAL),
     LLOAD_W(0xc416, WIDE_LOCAL),
     FLOAD_W(0xc417, WIDE_LOCAL),
@@ -259,7 +222,6 @@ public enum Opcode {
     IINC_W(0xc484, WIDE_LOCAL_SHORT),
     RET_W(0xc4a9, WIDE_LOCAL),
 
-    // PicoJava nonpriv instructions
     LOAD_UBYTE(PICOJAVA, 0xfe00),
     LOAD_BYTE(PICOJAVA, 0xfe01),
     LOAD_CHAR(PICOJAVA, 0xfe02),
@@ -291,7 +253,6 @@ public enum Opcode {
     ZERO_LINE(PICOJAVA, 0xfe3e),
     ENTER_SYNC_METHOD(PICOJAVA, 0xfe3f),
 
-    // PicoJava priv instructions
     PRIV_LOAD_UBYTE(PICOJAVA, 0xff00),
     PRIV_LOAD_BYTE(PICOJAVA, 0xff01),
     PRIV_LOAD_CHAR(PICOJAVA, 0xff02),
@@ -399,14 +360,28 @@ public enum Opcode {
     PRIV_WRITE_REG_30(PICOJAVA, 0xff7e),
     PRIV_WRITE_REG_31(PICOJAVA, 0xff7f);
 
+    public static final int WIDE = 0xc4;
+    public static final int NONPRIV = 0xfe;
+    public static final int PRIV = 0xff;
+    private static final Opcode[] stdOpcodes = new Opcode[256];
+    private static final Opcode[] wideOpcodes = new Opcode[256];
+    private static final Opcode[] nonPrivOpcodes = new Opcode[256];
+    private static final Opcode[] privOpcodes = new Opcode[256];
+
+    static {
+        for (Opcode o : values())
+            getOpcodeBlock(o.opcode >> 8)[o.opcode & 0xff] = o;
+    }
+
+    public final Set set;
+    public final int opcode;
+    public final Instruction.Kind kind;
     Opcode(int opcode) {
         this(STANDARD, opcode, NO_OPERANDS);
     }
-
     Opcode(int opcode, Instruction.Kind kind) {
         this(STANDARD, opcode, kind);
     }
-
     Opcode(Set set, int opcode) {
         this(set, opcode, (set == STANDARD ? NO_OPERANDS : WIDE_NO_OPERANDS));
     }
@@ -417,16 +392,10 @@ public enum Opcode {
         this.kind = kind;
     }
 
-    public final Set set;
-    public final int opcode;
-    public final Instruction.Kind kind;
-
-    /** Get the Opcode for a simple standard 1-byte opcode. */
     public static Opcode get(int opcode) {
         return stdOpcodes[opcode];
     }
 
-    /** Get the Opcode for 1- or 2-byte opcode. */
     public static Opcode get(int opcodePrefix, int opcode) {
         Opcode[] block = getOpcodeBlock(opcodePrefix);
         return (block == null ? null : block[opcode]);
@@ -445,28 +414,13 @@ public enum Opcode {
             default:
                 return null;
         }
-
     }
-
-    private static final Opcode[] stdOpcodes = new Opcode[256];
-    private static final Opcode[] wideOpcodes = new Opcode[256];
-    private static final Opcode[] nonPrivOpcodes = new Opcode[256];
-    private static final Opcode[] privOpcodes = new Opcode[256];
-    static {
-        for (Opcode o: values())
-            getOpcodeBlock(o.opcode >> 8)[o.opcode & 0xff] = o;
-    }
-
-    /** The byte prefix for the wide instructions. */
-    public static final int WIDE = 0xc4;
-    /** The byte prefix for the PicoJava nonpriv instructions. */
-    public static final int NONPRIV = 0xfe;
-    /** The byte prefix for the PicoJava priv instructions. */
-    public static final int PRIV = 0xff;
 
     public enum Set {
-        /** Standard opcodes. */
+
         STANDARD,
-        /** Legacy support for PicoJava opcodes. */
-        PICOJAVA  };
+
+        PICOJAVA
+    }
+
 }

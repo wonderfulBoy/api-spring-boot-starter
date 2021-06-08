@@ -5,7 +5,6 @@ import java.text.Collator;
 import java.util.Locale;
 
 class DocLocale {
-
     static final String[] sentenceTerminators =
             {
                     "<p>", "</p>", "<h1>", "<h2>",
@@ -19,7 +18,6 @@ class DocLocale {
     private final DocEnv docenv;
     private final BreakIterator sentenceBreaker;
     private boolean useBreakIterator = false;
-
 
     DocLocale(DocEnv docenv, String localeName, boolean useBreakIterator) {
         this.docenv = docenv;
@@ -98,7 +96,7 @@ class DocLocale {
         }
         int index = s.indexOf("-->");
         if (s.trim().startsWith("<!--") && index != -1) {
-            return localeSpecificFirstSentence(doc, s.substring(index + 3, s.length()));
+            return localeSpecificFirstSentence(doc, s.substring(index + 3));
         }
         if (useBreakIterator || !locale.getLanguage().equals("en")) {
             sentenceBreaker.setText(s.replace('\n', ' '));

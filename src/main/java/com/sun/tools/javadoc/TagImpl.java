@@ -5,7 +5,6 @@ import com.sun.javadoc.SourcePosition;
 import com.sun.javadoc.Tag;
 
 class TagImpl implements Tag {
-
     protected final String text;
     protected final String name;
     protected final DocImpl holder;

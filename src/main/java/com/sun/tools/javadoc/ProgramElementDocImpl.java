@@ -16,7 +16,6 @@ import java.lang.reflect.Modifier;
 import java.text.CollationKey;
 
 public abstract class ProgramElementDocImpl extends DocImpl implements ProgramElementDoc {
-
     private final Symbol sym;
     JCTree tree = null;
     Position.LineMap lineMap = null;
@@ -39,7 +38,6 @@ public abstract class ProgramElementDocImpl extends DocImpl implements ProgramEl
     }
 
     protected abstract ClassSymbol getContainingClass();
-
 
     abstract protected long getFlags();
 
@@ -79,7 +77,7 @@ public abstract class ProgramElementDocImpl extends DocImpl implements ProgramEl
     }
 
     public AnnotationDesc[] annotations() {
-        AnnotationDesc res[] = new AnnotationDesc[sym.getRawAttributes().length()];
+        AnnotationDesc[] res = new AnnotationDesc[sym.getRawAttributes().length()];
         int i = 0;
         for (Attribute.Compound a : sym.getRawAttributes()) {
             res[i++] = new AnnotationDescImpl(env, a);
@@ -106,7 +104,6 @@ public abstract class ProgramElementDocImpl extends DocImpl implements ProgramEl
         return !(isPublic() || isPrivate() || isProtected());
     }
 
-
     public boolean isStatic() {
         int modifiers = getModifiers();
         return Modifier.isStatic(modifiers);
@@ -121,5 +118,4 @@ public abstract class ProgramElementDocImpl extends DocImpl implements ProgramEl
         String k = name();
         return env.doclocale.collator.getCollationKey(k);
     }
-
 }

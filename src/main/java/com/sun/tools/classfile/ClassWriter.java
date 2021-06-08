@@ -1,61 +1,24 @@
-
-/*
- * Copyright (c) 2008, 2013, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package com.sun.tools.classfile;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 
 import static com.sun.tools.classfile.Annotation.*;
 import static com.sun.tools.classfile.ConstantPool.*;
 import static com.sun.tools.classfile.StackMapTable_attribute.*;
 import static com.sun.tools.classfile.StackMapTable_attribute.verification_type_info.*;
 
-/**
- * Write a ClassFile data structure to a file or stream.
- *
- *  <p><b>This is NOT part of any supported API.
- *  If you write code that depends on this, you do so at your own risk.
- *  This code and its internal interfaces are subject to change or
- *  deletion without notice.</b>
- */
 public class ClassWriter {
+    protected ClassFile classFile;
+    protected ClassOutputStream out;
+    protected AttributeWriter attributeWriter;
+    protected ConstantPoolWriter constantPoolWriter;
+
     public ClassWriter() {
         attributeWriter = new AttributeWriter();
         constantPoolWriter = new ConstantPoolWriter();
         out = new ClassOutputStream();
     }
 
-    /**
-     * Write a ClassFile data structure to a file.
-     */
     public void write(ClassFile classFile, File f) throws IOException {
         FileOutputStream f_out = new FileOutputStream(f);
         try {
@@ -65,9 +28,6 @@ public class ClassWriter {
         }
     }
 
-    /**
-     * Write a ClassFile data structure to a stream.
-     */
     public void write(ClassFile classFile, OutputStream s) throws IOException {
         this.classFile = classFile;
         out.reset();
@@ -98,7 +58,7 @@ public class ClassWriter {
     protected void writeAttributes(Attributes attributes) {
         int size = attributes.size();
         out.writeShort(size);
-        for (Attribute attr: attributes)
+        for (Attribute attr : attributes)
             attributeWriter.write(attr, out);
     }
 
@@ -107,7 +67,7 @@ public class ClassWriter {
         out.writeShort(classFile.super_class);
         int[] interfaces = classFile.interfaces;
         out.writeShort(interfaces.length);
-        for (int i: interfaces)
+        for (int i : interfaces)
             out.writeShort(i);
     }
 
@@ -119,14 +79,14 @@ public class ClassWriter {
         ConstantPool pool = classFile.constant_pool;
         int size = pool.size();
         out.writeShort(size);
-        for (CPInfo cpInfo: pool.entries())
+        for (CPInfo cpInfo : pool.entries())
             constantPoolWriter.write(cpInfo, out);
     }
 
     protected void writeFields() throws IOException {
         Field[] fields = classFile.fields;
         out.writeShort(fields.length);
-        for (Field f: fields)
+        for (Field f : fields)
             writeField(f);
     }
 
@@ -140,7 +100,7 @@ public class ClassWriter {
     protected void writeMethods() throws IOException {
         Method[] methods = classFile.methods;
         out.writeShort(methods.length);
-        for (Method m: methods) {
+        for (Method m : methods) {
             writeMethod(m);
         }
     }
@@ -152,18 +112,9 @@ public class ClassWriter {
         writeAttributes(m.attributes);
     }
 
-    protected ClassFile classFile;
-    protected ClassOutputStream out;
-    protected AttributeWriter attributeWriter;
-    protected ConstantPoolWriter constantPoolWriter;
-
-    /**
-     * Subtype of ByteArrayOutputStream with the convenience methods of
-     * a DataOutputStream. Since ByteArrayOutputStream does not throw
-     * IOException, there are no exceptions from the additional
-     * convenience methods either,
-     */
     protected static class ClassOutputStream extends ByteArrayOutputStream {
+        private DataOutputStream d;
+
         public ClassOutputStream() {
             d = new DataOutputStream(this);
         }
@@ -223,15 +174,10 @@ public class ClassWriter {
             } catch (IOException ignore) {
             }
         }
-
-        private DataOutputStream d;
     }
 
-    /**
-     * Writer for the entries in the constant pool.
-     */
     protected static class ConstantPoolWriter
-           implements ConstantPool.Visitor<Integer,ClassOutputStream> {
+            implements ConstantPool.Visitor<Integer, ClassOutputStream> {
         protected int write(CPInfo info, ClassOutputStream out) {
             out.writeByte(info.getTag());
             return info.accept(this, out);
@@ -316,18 +262,18 @@ public class ClassWriter {
         }
     }
 
-    /**
-     * Writer for the different types of attribute.
-     */
-    protected static class AttributeWriter implements Attribute.Visitor<Void,ClassOutputStream> {
+    protected static class AttributeWriter implements Attribute.Visitor<Void, ClassOutputStream> {
+        protected ClassOutputStream sharedOut = new ClassOutputStream();
+        protected AnnotationWriter annotationWriter = new AnnotationWriter();
+        protected StackMapTableWriter stackMapWriter;
+
         public void write(Attributes attributes, ClassOutputStream out) {
             int size = attributes.size();
             out.writeShort(size);
-            for (Attribute a: attributes)
+            for (Attribute a : attributes)
                 write(a, out);
         }
 
-        // Note: due to the use of shared resources, this method is not reentrant.
         public void write(Attribute attr, ClassOutputStream out) {
             out.writeShort(attr.attribute_name_index);
             sharedOut.reset();
@@ -335,9 +281,6 @@ public class ClassWriter {
             out.writeInt(sharedOut.size());
             sharedOut.writeTo(out);
         }
-
-        protected ClassOutputStream sharedOut = new ClassOutputStream();
-        protected AnnotationWriter annotationWriter = new AnnotationWriter();
 
         public Void visitDefault(DefaultAttribute attr, ClassOutputStream out) {
             out.write(attr.info, 0, attr.info.length);
@@ -364,7 +307,7 @@ public class ClassWriter {
 
         public Void visitCharacterRangeTable(CharacterRangeTable_attribute attr, ClassOutputStream out) {
             out.writeShort(attr.character_range_table.length);
-            for (CharacterRangeTable_attribute.Entry e: attr.character_range_table)
+            for (CharacterRangeTable_attribute.Entry e : attr.character_range_table)
                 writeCharacterRangeTableEntry(e, out);
             return null;
         }
@@ -383,7 +326,7 @@ public class ClassWriter {
             out.writeInt(attr.code.length);
             out.write(attr.code, 0, attr.code.length);
             out.writeShort(attr.exception_table.length);
-            for (Code_attribute.Exception_data e: attr.exception_table)
+            for (Code_attribute.Exception_data e : attr.exception_table)
                 writeExceptionTableEntry(e, out);
             new AttributeWriter().write(attr.attributes, out);
             return null;
@@ -418,14 +361,14 @@ public class ClassWriter {
 
         public Void visitExceptions(Exceptions_attribute attr, ClassOutputStream out) {
             out.writeShort(attr.exception_index_table.length);
-            for (int i: attr.exception_index_table)
+            for (int i : attr.exception_index_table)
                 out.writeShort(i);
             return null;
         }
 
         public Void visitInnerClasses(InnerClasses_attribute attr, ClassOutputStream out) {
             out.writeShort(attr.classes.length);
-            for (InnerClasses_attribute.Info info: attr.classes)
+            for (InnerClasses_attribute.Info info : attr.classes)
                 writeInnerClassesInfo(info, out);
             return null;
         }
@@ -439,7 +382,7 @@ public class ClassWriter {
 
         public Void visitLineNumberTable(LineNumberTable_attribute attr, ClassOutputStream out) {
             out.writeShort(attr.line_number_table.length);
-            for (LineNumberTable_attribute.Entry e: attr.line_number_table)
+            for (LineNumberTable_attribute.Entry e : attr.line_number_table)
                 writeLineNumberTableEntry(e, out);
             return null;
         }
@@ -451,7 +394,7 @@ public class ClassWriter {
 
         public Void visitLocalVariableTable(LocalVariableTable_attribute attr, ClassOutputStream out) {
             out.writeShort(attr.local_variable_table.length);
-            for (LocalVariableTable_attribute.Entry e: attr.local_variable_table)
+            for (LocalVariableTable_attribute.Entry e : attr.local_variable_table)
                 writeLocalVariableTableEntry(e, out);
             return null;
         }
@@ -466,7 +409,7 @@ public class ClassWriter {
 
         public Void visitLocalVariableTypeTable(LocalVariableTypeTable_attribute attr, ClassOutputStream out) {
             out.writeShort(attr.local_variable_table.length);
-            for (LocalVariableTypeTable_attribute.Entry e: attr.local_variable_table)
+            for (LocalVariableTypeTable_attribute.Entry e : attr.local_variable_table)
                 writeLocalVariableTypeTableEntry(e, out);
             return null;
         }
@@ -510,14 +453,14 @@ public class ClassWriter {
 
         public Void visitRuntimeVisibleParameterAnnotations(RuntimeVisibleParameterAnnotations_attribute attr, ClassOutputStream out) {
             out.writeByte(attr.parameter_annotations.length);
-            for (Annotation[] annos: attr.parameter_annotations)
+            for (Annotation[] annos : attr.parameter_annotations)
                 annotationWriter.write(annos, out);
             return null;
         }
 
         public Void visitRuntimeInvisibleParameterAnnotations(RuntimeInvisibleParameterAnnotations_attribute attr, ClassOutputStream out) {
             out.writeByte(attr.parameter_annotations.length);
-            for (Annotation[] annos: attr.parameter_annotations)
+            for (Annotation[] annos : attr.parameter_annotations)
                 annotationWriter.write(annos, out);
             return null;
         }
@@ -545,9 +488,8 @@ public class ClassWriter {
         public Void visitStackMap(StackMap_attribute attr, ClassOutputStream out) {
             if (stackMapWriter == null)
                 stackMapWriter = new StackMapTableWriter();
-
             out.writeShort(attr.entries.length);
-            for (stack_map_frame f: attr.entries)
+            for (stack_map_frame f : attr.entries)
                 stackMapWriter.write(f, out);
             return null;
         }
@@ -555,9 +497,8 @@ public class ClassWriter {
         public Void visitStackMapTable(StackMapTable_attribute attr, ClassOutputStream out) {
             if (stackMapWriter == null)
                 stackMapWriter = new StackMapTableWriter();
-
             out.writeShort(attr.entries.length);
-            for (stack_map_frame f: attr.entries)
+            for (stack_map_frame f : attr.entries)
                 stackMapWriter.write(f, out);
             return null;
         }
@@ -569,16 +510,10 @@ public class ClassWriter {
         protected void writeAccessFlags(AccessFlags flags, ClassOutputStream p) {
             sharedOut.writeShort(flags.flags);
         }
-
-        protected StackMapTableWriter stackMapWriter;
     }
 
-    /**
-     * Writer for the frames of StackMap and StackMapTable attributes.
-     */
     protected static class StackMapTableWriter
-            implements stack_map_frame.Visitor<Void,ClassOutputStream> {
-
+            implements stack_map_frame.Visitor<Void, ClassOutputStream> {
         public void write(stack_map_frame frame, ClassOutputStream out) {
             out.write(frame.frame_type);
             frame.accept(this, out);
@@ -611,7 +546,7 @@ public class ClassWriter {
 
         public Void visit_append_frame(append_frame frame, ClassOutputStream out) {
             out.writeShort(frame.offset_delta);
-            for (verification_type_info l: frame.locals)
+            for (verification_type_info l : frame.locals)
                 writeVerificationTypeInfo(l, out);
             return null;
         }
@@ -619,64 +554,58 @@ public class ClassWriter {
         public Void visit_full_frame(full_frame frame, ClassOutputStream out) {
             out.writeShort(frame.offset_delta);
             out.writeShort(frame.locals.length);
-            for (verification_type_info l: frame.locals)
+            for (verification_type_info l : frame.locals)
                 writeVerificationTypeInfo(l, out);
             out.writeShort(frame.stack.length);
-            for (verification_type_info s: frame.stack)
+            for (verification_type_info s : frame.stack)
                 writeVerificationTypeInfo(s, out);
             return null;
         }
 
         protected void writeVerificationTypeInfo(verification_type_info info,
-                ClassOutputStream out)  {
+                                                 ClassOutputStream out) {
             out.write(info.tag);
             switch (info.tag) {
-            case ITEM_Top:
-            case ITEM_Integer:
-            case ITEM_Float:
-            case ITEM_Long:
-            case ITEM_Double:
-            case ITEM_Null:
-            case ITEM_UninitializedThis:
-                break;
-
-            case ITEM_Object:
-                Object_variable_info o = (Object_variable_info) info;
-                out.writeShort(o.cpool_index);
-                break;
-
-            case ITEM_Uninitialized:
-                Uninitialized_variable_info u = (Uninitialized_variable_info) info;
-                out.writeShort(u.offset);
-                break;
-
-            default:
-                throw new Error();
+                case ITEM_Top:
+                case ITEM_Integer:
+                case ITEM_Float:
+                case ITEM_Long:
+                case ITEM_Double:
+                case ITEM_Null:
+                case ITEM_UninitializedThis:
+                    break;
+                case ITEM_Object:
+                    Object_variable_info o = (Object_variable_info) info;
+                    out.writeShort(o.cpool_index);
+                    break;
+                case ITEM_Uninitialized:
+                    Uninitialized_variable_info u = (Uninitialized_variable_info) info;
+                    out.writeShort(u.offset);
+                    break;
+                default:
+                    throw new Error();
             }
         }
     }
 
-    /**
-     * Writer for annotations and the values they contain.
-     */
     protected static class AnnotationWriter
-            implements element_value.Visitor<Void,ClassOutputStream> {
+            implements element_value.Visitor<Void, ClassOutputStream> {
         public void write(Annotation[] annos, ClassOutputStream out) {
             out.writeShort(annos.length);
-            for (Annotation anno: annos)
+            for (Annotation anno : annos)
                 write(anno, out);
         }
 
         public void write(TypeAnnotation[] annos, ClassOutputStream out) {
             out.writeShort(annos.length);
-            for (TypeAnnotation anno: annos)
+            for (TypeAnnotation anno : annos)
                 write(anno, out);
         }
 
         public void write(Annotation anno, ClassOutputStream out) {
             out.writeShort(anno.type_index);
             out.writeShort(anno.element_value_pairs.length);
-            for (element_value_pair p: anno.element_value_pairs)
+            for (element_value_pair p : anno.element_value_pairs)
                 write(p, out);
         }
 
@@ -718,93 +647,91 @@ public class ClassWriter {
 
         public Void visitArray(Array_element_value ev, ClassOutputStream out) {
             out.writeShort(ev.num_values);
-            for (element_value v: ev.values)
+            for (element_value v : ev.values)
                 write(v, out);
             return null;
         }
 
-        // TODO: Move this to TypeAnnotation to be closer with similar logic?
         private void write(TypeAnnotation.Position p, ClassOutputStream out) {
             out.writeByte(p.type.targetTypeValue());
             switch (p.type) {
-            // instanceof
-            case INSTANCEOF:
-            // new expression
-            case NEW:
-            // constructor/method reference receiver
-            case CONSTRUCTOR_REFERENCE:
-            case METHOD_REFERENCE:
-                out.writeShort(p.offset);
-                break;
-            // local variable
-            case LOCAL_VARIABLE:
-            // resource variable
-            case RESOURCE_VARIABLE:
-                int table_length = p.lvarOffset.length;
-                out.writeShort(table_length);
-                for (int i = 0; i < table_length; ++i) {
-                    out.writeShort(1);  // for table length
-                    out.writeShort(p.lvarOffset[i]);
-                    out.writeShort(p.lvarLength[i]);
-                    out.writeShort(p.lvarIndex[i]);
-                }
-                break;
-            // exception parameter
-            case EXCEPTION_PARAMETER:
-                out.writeShort(p.exception_index);
-                break;
-            // method receiver
-            case METHOD_RECEIVER:
-                // Do nothing
-                break;
-            // type parameters
-            case CLASS_TYPE_PARAMETER:
-            case METHOD_TYPE_PARAMETER:
-                out.writeByte(p.parameter_index);
-                break;
-            // type parameters bounds
-            case CLASS_TYPE_PARAMETER_BOUND:
-            case METHOD_TYPE_PARAMETER_BOUND:
-                out.writeByte(p.parameter_index);
-                out.writeByte(p.bound_index);
-                break;
-            // class extends or implements clause
-            case CLASS_EXTENDS:
-                out.writeShort(p.type_index);
-                break;
-            // throws
-            case THROWS:
-                out.writeShort(p.type_index);
-                break;
-            // method parameter
-            case METHOD_FORMAL_PARAMETER:
-                out.writeByte(p.parameter_index);
-                break;
-            // type cast
-            case CAST:
-            // method/constructor/reference type argument
-            case CONSTRUCTOR_INVOCATION_TYPE_ARGUMENT:
-            case METHOD_INVOCATION_TYPE_ARGUMENT:
-            case CONSTRUCTOR_REFERENCE_TYPE_ARGUMENT:
-            case METHOD_REFERENCE_TYPE_ARGUMENT:
-                out.writeShort(p.offset);
-                out.writeByte(p.type_index);
-                break;
-            // We don't need to worry about these
-            case METHOD_RETURN:
-            case FIELD:
-                break;
-            case UNKNOWN:
-                throw new AssertionError("ClassWriter: UNKNOWN target type should never occur!");
-            default:
-                throw new AssertionError("ClassWriter: Unknown target type for position: " + p);
-            }
 
-            { // Append location data for generics/arrays.
-                // TODO: check for overrun?
-                out.writeByte((byte)p.location.size());
+                case INSTANCEOF:
+
+                case NEW:
+
+                case CONSTRUCTOR_REFERENCE:
+                case METHOD_REFERENCE:
+                    out.writeShort(p.offset);
+                    break;
+
+                case LOCAL_VARIABLE:
+
+                case RESOURCE_VARIABLE:
+                    int table_length = p.lvarOffset.length;
+                    out.writeShort(table_length);
+                    for (int i = 0; i < table_length; ++i) {
+                        out.writeShort(1);
+                        out.writeShort(p.lvarOffset[i]);
+                        out.writeShort(p.lvarLength[i]);
+                        out.writeShort(p.lvarIndex[i]);
+                    }
+                    break;
+
+                case EXCEPTION_PARAMETER:
+                    out.writeShort(p.exception_index);
+                    break;
+
+                case METHOD_RECEIVER:
+
+                    break;
+
+                case CLASS_TYPE_PARAMETER:
+                case METHOD_TYPE_PARAMETER:
+                    out.writeByte(p.parameter_index);
+                    break;
+
+                case CLASS_TYPE_PARAMETER_BOUND:
+                case METHOD_TYPE_PARAMETER_BOUND:
+                    out.writeByte(p.parameter_index);
+                    out.writeByte(p.bound_index);
+                    break;
+
+                case CLASS_EXTENDS:
+                    out.writeShort(p.type_index);
+                    break;
+
+                case THROWS:
+                    out.writeShort(p.type_index);
+                    break;
+
+                case METHOD_FORMAL_PARAMETER:
+                    out.writeByte(p.parameter_index);
+                    break;
+
+                case CAST:
+
+                case CONSTRUCTOR_INVOCATION_TYPE_ARGUMENT:
+                case METHOD_INVOCATION_TYPE_ARGUMENT:
+                case CONSTRUCTOR_REFERENCE_TYPE_ARGUMENT:
+                case METHOD_REFERENCE_TYPE_ARGUMENT:
+                    out.writeShort(p.offset);
+                    out.writeByte(p.type_index);
+                    break;
+
+                case METHOD_RETURN:
+                case FIELD:
+                    break;
+                case UNKNOWN:
+                    throw new AssertionError("ClassWriter: UNKNOWN target type should never occur!");
+                default:
+                    throw new AssertionError("ClassWriter: Unknown target type for position: " + p);
+            }
+            {
+
+                out.writeByte((byte) p.location.size());
                 for (int i : TypeAnnotation.Position.getBinaryFromTypePath(p.location))
-                    out.writeByte((byte)i);
+                    out.writeByte((byte) i);
             }
         }
     }

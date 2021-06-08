@@ -18,7 +18,6 @@ import java.lang.annotation.Target;
 import java.net.URI;
 import java.util.*;
 
-
 public class ClientCodeWrapper {
     Map<Class<?>, Boolean> trustedClasses;
 
@@ -315,7 +314,7 @@ public class ClientCodeWrapper {
         protected FileObject clientFileObject;
 
         WrappedFileObject(FileObject clientFileObject) {
-            clientFileObject.getClass(); // null check
+            clientFileObject.getClass();
             this.clientFileObject = clientFileObject;
         }
 

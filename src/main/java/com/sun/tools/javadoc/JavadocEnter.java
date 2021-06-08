@@ -65,5 +65,4 @@ public class JavadocEnter extends Enter {
     @Override
     protected void duplicateClass(DiagnosticPosition pos, ClassSymbol c) {
     }
-
 }

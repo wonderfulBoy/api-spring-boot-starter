@@ -6,10 +6,8 @@ import com.sun.tools.javac.code.Attribute;
 import static com.sun.tools.javac.code.TypeTag.BOOLEAN;
 
 public class AnnotationValueImpl implements AnnotationValue {
-
     private final DocEnv env;
     private final Attribute attr;
-
 
     AnnotationValueImpl(DocEnv env, Attribute attr) {
         this.env = env;
@@ -34,7 +32,7 @@ public class AnnotationValueImpl implements AnnotationValue {
 
         public void visitConstant(Attribute.Constant c) {
             if (c.type.hasTag(BOOLEAN)) {
-                // javac represents false and true as integers 0 and 1
+
                 value = Boolean.valueOf(
                         ((Integer) c.value).intValue() != 0);
             } else {
@@ -56,7 +54,7 @@ public class AnnotationValueImpl implements AnnotationValue {
         }
 
         public void visitArray(Attribute.Array a) {
-            AnnotationValue vals[] = new AnnotationValue[a.values.length];
+            AnnotationValue[] vals = new AnnotationValue[a.values.length];
             for (int i = 0; i < vals.length; i++) {
                 vals[i] = new AnnotationValueImpl(env, a.values[i]);
             }
@@ -78,7 +76,7 @@ public class AnnotationValueImpl implements AnnotationValue {
 
         public void visitConstant(Attribute.Constant c) {
             if (c.type.hasTag(BOOLEAN)) {
-                // javac represents false and true as integers 0 and 1
+
                 sb.append(((Integer) c.value).intValue() != 0);
             } else {
                 sb.append(FieldDocImpl.constantValueExpression(c.value));
@@ -98,9 +96,8 @@ public class AnnotationValueImpl implements AnnotationValue {
         }
 
         public void visitArray(Attribute.Array a) {
-            // Omit braces from singleton.
-            if (a.values.length != 1) sb.append('{');
 
+            if (a.values.length != 1) sb.append('{');
             boolean first = true;
             for (Attribute elem : a.values) {
                 if (first) {
@@ -110,7 +107,7 @@ public class AnnotationValueImpl implements AnnotationValue {
                 }
                 elem.accept(this);
             }
-            // Omit braces from singleton.
+
             if (a.values.length != 1) sb.append('}');
         }
 

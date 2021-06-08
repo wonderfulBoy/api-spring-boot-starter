@@ -15,7 +15,6 @@ import static com.sun.tools.javac.code.TypeTag.CLASS;
 
 public class MethodDocImpl
         extends ExecutableMemberDocImpl implements MethodDoc {
-
     private String name;
     private String qualifiedName;
 
@@ -49,11 +48,9 @@ public class MethodDocImpl
     }
 
     public com.sun.javadoc.Type overriddenType() {
-
         if ((sym.flags() & Flags.STATIC) != 0) {
             return null;
         }
-
         ClassSymbol origin = (ClassSymbol) sym.owner;
         for (Type t = env.types.supertype(origin.type);
              t.hasTag(CLASS);
@@ -69,11 +66,9 @@ public class MethodDocImpl
     }
 
     public MethodDoc overriddenMethod() {
-
         if ((sym.flags() & Flags.STATIC) != 0) {
             return null;
         }
-
         ClassSymbol origin = (ClassSymbol) sym.owner;
         for (Type t = env.types.supertype(origin.type);
              t.hasTag(CLASS);
@@ -91,7 +86,6 @@ public class MethodDocImpl
     public boolean overrides(MethodDoc meth) {
         MethodSymbol overridee = ((MethodDocImpl) meth).sym;
         ClassSymbol origin = (ClassSymbol) sym.owner;
-
         return sym.name == overridee.name && sym != overridee && !sym.isStatic() &&
                 env.types.asSuper(origin.type, overridee.owner) != null &&
                 sym.overrides(overridee, origin, env.types, false);

@@ -1,7 +1,6 @@
 package com.sun.javadoc;
 
 public interface ProgramElementDoc extends Doc {
-
     ClassDoc containingClass();
 
     PackageDoc containingPackage();

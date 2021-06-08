@@ -1,6 +1,5 @@
 package com.sun.tools.doclint;
 
-
 import com.sun.source.doctree.DocCommentTree;
 import com.sun.source.util.DocTrees;
 import com.sun.source.util.JavacTask;
@@ -35,6 +34,7 @@ public class Env {
     DocCommentTree currDocComment;
     AccessKind currAccess;
     Set<? extends ExecutableElement> currOverriddenMethods;
+
     Env() {
         messages = new Messages(this);
     }
@@ -70,7 +70,6 @@ public class Env {
         currDocComment = comment;
         currElement = trees.getElement(currPath);
         currOverriddenMethods = ((JavacTypes) types).getOverriddenMethods(currElement);
-
         AccessKind ak = AccessKind.PUBLIC;
         for (TreePath p = path; p != null; p = p.getParentPath()) {
             Element e = trees.getElement(p);

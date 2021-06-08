@@ -1,7 +1,6 @@
 package com.sun.javadoc;
 
 public interface ClassDoc extends ProgramElementDoc, Type {
-
     boolean isAbstract();
 
     boolean isSerializable();
@@ -53,5 +52,4 @@ public interface ClassDoc extends ProgramElementDoc, Type {
 
     @Deprecated
     PackageDoc[] importedPackages();
-
 }

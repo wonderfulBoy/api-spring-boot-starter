@@ -1,53 +1,7 @@
-/*
- * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package com.sun.tools.javac.util;
 
-/**
- * Access to the compiler's name table.  STandard names are defined,
- * as well as methods to create new names.
- *
- *  <p><b>This is NOT part of any supported API.
- *  If you write code that depends on this, you do so at your own risk.
- *  This code and its internal interfaces are subject to change or
- *  deletion without notice.</b>
- */
 public class Names {
-
     public static final Context.Key<Names> namesKey = new Context.Key<Names>();
-
-    public static Names instance(Context context) {
-        Names instance = context.get(namesKey);
-        if (instance == null) {
-            instance = new Names(context);
-            context.put(namesKey, instance);
-        }
-        return instance;
-    }
-
-    // operators and punctuation
     public final Name asterisk;
     public final Name comma;
     public final Name empty;
@@ -57,14 +11,10 @@ public class Names {
     public final Name semicolon;
     public final Name slash;
     public final Name slashequals;
-
-    // keywords
     public final Name _class;
     public final Name _default;
     public final Name _super;
     public final Name _this;
-
-    // field and method names
     public final Name _name;
     public final Name addSuppressed;
     public final Name any;
@@ -98,8 +48,6 @@ public class Names {
     public final Name value;
     public final Name valueOf;
     public final Name values;
-
-    // class names
     public final Name java_io_Serializable;
     public final Name java_lang_AutoCloseable;
     public final Name java_lang_Class;
@@ -107,16 +55,10 @@ public class Names {
     public final Name java_lang_Enum;
     public final Name java_lang_Object;
     public final Name java_lang_invoke_MethodHandle;
-
-    // names of builtin classes
     public final Name Array;
     public final Name Bound;
     public final Name Method;
-
-    // package names
     public final Name java_lang;
-
-    // attribute names
     public final Name Annotation;
     public final Name AnnotationDefault;
     public final Name BootstrapMethods;
@@ -148,8 +90,6 @@ public class Names {
     public final Name Synthetic;
     public final Name Value;
     public final Name Varargs;
-
-    // members of java.lang.annotation.ElementType
     public final Name ANNOTATION_TYPE;
     public final Name CONSTRUCTOR;
     public final Name FIELD;
@@ -160,30 +100,21 @@ public class Names {
     public final Name TYPE;
     public final Name TYPE_PARAMETER;
     public final Name TYPE_USE;
-
-    // members of java.lang.annotation.RetentionPolicy
     public final Name CLASS;
     public final Name RUNTIME;
     public final Name SOURCE;
-
-    // other identifiers
     public final Name T;
     public final Name deprecated;
     public final Name ex;
     public final Name package_info;
-
-    //lambda-related
     public final Name lambda;
     public final Name metafactory;
     public final Name altMetafactory;
-
     public final Name.Table table;
-
     public Names(Context context) {
         Options options = Options.instance(context);
         table = createTable(options);
 
-        // operators and punctuation
         asterisk = fromString("*");
         comma = fromString(",");
         empty = fromString("");
@@ -194,13 +125,11 @@ public class Names {
         slash = fromString("/");
         slashequals = fromString("/=");
 
-        // keywords
         _class = fromString("class");
         _default = fromString("default");
         _super = fromString("super");
         _this = fromString("this");
 
-        // field and method names
         _name = fromString("name");
         addSuppressed = fromString("addSuppressed");
         any = fromString("<any>");
@@ -235,7 +164,6 @@ public class Names {
         valueOf = fromString("valueOf");
         values = fromString("values");
 
-        // class names
         java_io_Serializable = fromString("java.io.Serializable");
         java_lang_AutoCloseable = fromString("java.lang.AutoCloseable");
         java_lang_Class = fromString("java.lang.Class");
@@ -244,15 +172,12 @@ public class Names {
         java_lang_Object = fromString("java.lang.Object");
         java_lang_invoke_MethodHandle = fromString("java.lang.invoke.MethodHandle");
 
-        // names of builtin classes
         Array = fromString("Array");
         Bound = fromString("Bound");
         Method = fromString("Method");
 
-        // package names
         java_lang = fromString("java.lang");
 
-        // attribute names
         Annotation = fromString("Annotation");
         AnnotationDefault = fromString("AnnotationDefault");
         BootstrapMethods = fromString("BootstrapMethods");
@@ -285,7 +210,6 @@ public class Names {
         Value = fromString("Value");
         Varargs = fromString("Varargs");
 
-        // members of java.lang.annotation.ElementType
         ANNOTATION_TYPE = fromString("ANNOTATION_TYPE");
         CONSTRUCTOR = fromString("CONSTRUCTOR");
         FIELD = fromString("FIELD");
@@ -297,21 +221,27 @@ public class Names {
         TYPE_PARAMETER = fromString("TYPE_PARAMETER");
         TYPE_USE = fromString("TYPE_USE");
 
-        // members of java.lang.annotation.RetentionPolicy
         CLASS = fromString("CLASS");
         RUNTIME = fromString("RUNTIME");
         SOURCE = fromString("SOURCE");
 
-        // other identifiers
         T = fromString("T");
         deprecated = fromString("deprecated");
         ex = fromString("ex");
         package_info = fromString("package-info");
 
-        //lambda-related
         lambda = fromString("lambda$");
         metafactory = fromString("metafactory");
         altMetafactory = fromString("altMetafactory");
+    }
+
+    public static Names instance(Context context) {
+        Names instance = context.get(namesKey);
+        if (instance == null) {
+            instance = new Names(context);
+            context.put(namesKey, instance);
+        }
+        return instance;
     }
 
     protected Name.Table createTable(Options options) {

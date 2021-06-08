@@ -1,7 +1,6 @@
 package com.sun.javadoc;
 
 public interface Doc extends Comparable<Object> {
-
     String commentText();
 
     Tag[] tags();
@@ -49,5 +48,4 @@ public interface Doc extends Comparable<Object> {
     boolean isIncluded();
 
     SourcePosition position();
-
 }

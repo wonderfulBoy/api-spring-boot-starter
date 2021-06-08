@@ -1,65 +1,20 @@
-/*
- * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package com.sun.tools.doclets.formats.html;
 
-import java.io.*;
-
 import com.sun.tools.doclets.formats.html.markup.*;
-import com.sun.tools.doclets.internal.toolkit.*;
-import com.sun.tools.doclets.internal.toolkit.util.*;
+import com.sun.tools.doclets.internal.toolkit.Content;
+import com.sun.tools.doclets.internal.toolkit.util.DocPath;
+import com.sun.tools.doclets.internal.toolkit.util.DocPaths;
+import com.sun.tools.doclets.internal.toolkit.util.DocletAbortException;
 
-/**
- * Generate the Help File for the generated API documentation. The help file
- * contents are helpful for browsing the generated documentation.
- *
- *  <p><b>This is NOT part of any supported API.
- *  If you write code that depends on this, you do so at your own risk.
- *  This code and its internal interfaces are subject to change or
- *  deletion without notice.</b>
- *
- * @author Atul M Dambalkar
- */
+import java.io.IOException;
+
 public class HelpWriter extends HtmlDocletWriter {
 
-    /**
-     * Constructor to construct HelpWriter object.
-     * @param filename File to be generated.
-     */
     public HelpWriter(ConfigurationImpl configuration,
                       DocPath filename) throws IOException {
         super(configuration, filename);
     }
 
-    /**
-     * Construct the HelpWriter object and then use it to generate the help
-     * file. The name of the generated file is "help-doc.html". The help file
-     * will get generated if and only if "-helpfile" and "-nohelp" is not used
-     * on the command line.
-     * @throws DocletAbortException
-     */
     public static void generate(ConfigurationImpl configuration) {
         HelpWriter helpgen;
         DocPath filename = DocPath.empty;
@@ -70,15 +25,12 @@ public class HelpWriter extends HtmlDocletWriter {
             helpgen.close();
         } catch (IOException exc) {
             configuration.standardmessage.error(
-                        "doclet.exception_encountered",
-                        exc.toString(), filename);
+                    "doclet.exception_encountered",
+                    exc.toString(), filename);
             throw new DocletAbortException(exc);
         }
     }
 
-    /**
-     * Generate the help file contents.
-     */
     protected void generateHelpFile() throws IOException {
         String title = configuration.getText("doclet.Window_Help_title");
         Content body = getBody(true, getWindowTitle(title));
@@ -90,14 +42,6 @@ public class HelpWriter extends HtmlDocletWriter {
         printHtmlDocument(null, true, body);
     }
 
-    /**
-     * Add the help file contents from the resource file to the content tree. While adding the
-     * help file contents it also keeps track of user options. If "-notree"
-     * is used, then the "overview-tree.html" will not get added and hence
-     * help information also will not get added.
-     *
-     * @param contentTree the content tree to which the help file contents will be added
-     */
     protected void addHelpFileContents(Content contentTree) {
         Content heading = HtmlTree.HEADING(HtmlConstants.TITLE_HEADING, false, HtmlStyle.title,
                 getResource("doclet.Help_line_1"));
@@ -110,11 +54,11 @@ public class HelpWriter extends HtmlDocletWriter {
         ul.addStyle(HtmlStyle.blockList);
         if (configuration.createoverview) {
             Content overviewHeading = HtmlTree.HEADING(HtmlConstants.CONTENT_HEADING,
-                getResource("doclet.Overview"));
+                    getResource("doclet.Overview"));
             Content liOverview = HtmlTree.LI(HtmlStyle.blockList, overviewHeading);
             Content line3 = getResource("doclet.Help_line_3",
                     getHyperLink(DocPaths.OVERVIEW_SUMMARY,
-                    configuration.getText("doclet.Overview")));
+                            configuration.getText("doclet.Overview")));
             Content overviewPara = HtmlTree.P(line3);
             liOverview.addContent(overviewPara);
             ul.addContent(liOverview);
@@ -182,7 +126,7 @@ public class HelpWriter extends HtmlDocletWriter {
         Content para = HtmlTree.P(line13);
         liClass.addContent(para);
         ul.addContent(liClass);
-        //Annotation Types
+
         Content aHead = HtmlTree.HEADING(HtmlConstants.CONTENT_HEADING,
                 getResource("doclet.AnnotationType"));
         Content liAnnotation = HtmlTree.LI(HtmlStyle.blockList, aHead);
@@ -202,7 +146,7 @@ public class HelpWriter extends HtmlDocletWriter {
                 getResource("doclet.Annotation_Type_Member_Detail")));
         liAnnotation.addContent(aul);
         ul.addContent(liAnnotation);
-        //Enums
+
         Content enumHead = HtmlTree.HEADING(HtmlConstants.CONTENT_HEADING,
                 getResource("doclet.Enum"));
         Content liEnum = HtmlTree.LI(HtmlStyle.blockList, enumHead);
@@ -235,7 +179,7 @@ public class HelpWriter extends HtmlDocletWriter {
             Content liTree = HtmlTree.LI(HtmlStyle.blockList, treeHead);
             Content line17 = getResource("doclet.Help_line_17_with_tree_link",
                     getHyperLink(DocPaths.OVERVIEW_TREE,
-                    configuration.getText("doclet.Class_Hierarchy")),
+                            configuration.getText("doclet.Class_Hierarchy")),
                     HtmlTree.CODE(new StringContent("java.lang.Object")));
             Content treePara = HtmlTree.P(line17);
             liTree.addContent(treePara);
@@ -248,13 +192,13 @@ public class HelpWriter extends HtmlDocletWriter {
             ul.addContent(liTree);
         }
         if (!(configuration.nodeprecatedlist ||
-                  configuration.nodeprecated)) {
+                configuration.nodeprecated)) {
             Content dHead = HtmlTree.HEADING(HtmlConstants.CONTENT_HEADING,
                     getResource("doclet.Deprecated_API"));
             Content liDeprecated = HtmlTree.LI(HtmlStyle.blockList, dHead);
             Content line20 = getResource("doclet.Help_line_20_with_deprecated_api_link",
                     getHyperLink(DocPaths.DEPRECATED_LIST,
-                    configuration.getText("doclet.Deprecated_API")));
+                            configuration.getText("doclet.Deprecated_API")));
             Content dPara = HtmlTree.P(line20);
             liDeprecated.addContent(dPara);
             ul.addContent(liDeprecated);
@@ -295,7 +239,7 @@ public class HelpWriter extends HtmlDocletWriter {
         Content liAllClasses = HtmlTree.LI(HtmlStyle.blockList, allclassesHead);
         Content line27 = getResource("doclet.Help_line_27",
                 getHyperLink(DocPaths.ALLCLASSES_NOFRAME,
-                configuration.getText("doclet.All_Classes")));
+                        configuration.getText("doclet.All_Classes")));
         Content allclassesPara = HtmlTree.P(line27);
         liAllClasses.addContent(allclassesPara);
         ul.addContent(liAllClasses);
@@ -311,7 +255,7 @@ public class HelpWriter extends HtmlDocletWriter {
         Content liConst = HtmlTree.LI(HtmlStyle.blockList, constHead);
         Content line29 = getResource("doclet.Help_line_29",
                 getHyperLink(DocPaths.CONSTANT_VALUES,
-                configuration.getText("doclet.Constants_Summary")));
+                        configuration.getText("doclet.Constants_Summary")));
         Content constPara = HtmlTree.P(line29);
         liConst.addContent(constPara);
         ul.addContent(liConst);
@@ -321,11 +265,6 @@ public class HelpWriter extends HtmlDocletWriter {
         contentTree.addContent(divContent);
     }
 
-    /**
-     * Get the help label.
-     *
-     * @return a content tree for the help label
-     */
     @Override
     protected Content getNavLinkHelp() {
         Content li = HtmlTree.LI(HtmlStyle.navBarCell1Rev, helpLabel);

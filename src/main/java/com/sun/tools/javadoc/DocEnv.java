@@ -21,7 +21,6 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 
 public class DocEnv {
-
     protected static final Context.Key<DocEnv> docEnvKey = new Context.Key<DocEnv>();
     final Symbol externalizableSym;
     protected ModifierFilter showAccess;
@@ -56,7 +55,6 @@ public class DocEnv {
     protected DocEnv(Context context) {
         context.put(docEnvKey, this);
         this.context = context;
-
         messager = Messager.instance0(context);
         syms = Symtab.instance(context);
         reader = JavadocClassReader.instance0(context);
@@ -69,7 +67,6 @@ public class DocEnv {
         if (fileManager instanceof JavacFileManager) {
             ((JavacFileManager) fileManager).setSymbolFileEnabled(false);
         }
-
         this.doclocale = new DocLocale(this, "", breakiterator);
         source = Source.instance(context);
     }
@@ -171,27 +168,23 @@ public class DocEnv {
 
     public boolean shouldDocument(VarSymbol sym) {
         long mod = sym.flags();
-
         if ((mod & Flags.SYNTHETIC) != 0) {
             return false;
         }
-
         return showAccess.checkModifier(translateModifiers(mod));
     }
 
     public boolean shouldDocument(MethodSymbol sym) {
         long mod = sym.flags();
-
         if ((mod & Flags.SYNTHETIC) != 0) {
             return false;
         }
-
         return showAccess.checkModifier(translateModifiers(mod));
     }
 
     public boolean shouldDocument(ClassSymbol sym) {
         return
-                (sym.flags_field & Flags.SYNTHETIC) == 0 && // no synthetics
+                (sym.flags_field & Flags.SYNTHETIC) == 0 &&
                         (docClasses || getClassDoc(sym).tree != null) &&
                         isVisible(sym);
     }
@@ -446,7 +439,6 @@ public class DocEnv {
 
     public AnnotationTypeElementDocImpl getAnnotationTypeElementDoc(
             MethodSymbol meth) {
-
         AnnotationTypeElementDocImpl result =
                 (AnnotationTypeElementDocImpl) methodMap.get(meth);
         if (result != null) return result;
@@ -487,18 +479,15 @@ public class DocEnv {
 
     void initDoclint(Collection<String> opts, Collection<String> customTagNames) {
         ArrayList<String> doclintOpts = new ArrayList<String>();
-
         for (String opt : opts) {
             doclintOpts.add(opt == null ? DocLint.XMSGS_OPTION : DocLint.XMSGS_CUSTOM_PREFIX + opt);
         }
-
         if (doclintOpts.isEmpty()) {
             doclintOpts.add(DocLint.XMSGS_OPTION);
         } else if (doclintOpts.size() == 1
                 && doclintOpts.get(0).equals(DocLint.XMSGS_CUSTOM_PREFIX + "none")) {
             return;
         }
-
         String sep = "";
         StringBuilder customTags = new StringBuilder();
         for (String customTag : customTagNames) {
@@ -507,7 +496,6 @@ public class DocEnv {
             sep = DocLint.TAGS_SEPARATOR;
         }
         doclintOpts.add(DocLint.XCUSTOM_TAGS_PREFIX + customTags.toString());
-
         JavacTask t = BasicJavacTask.instance(context);
         doclint = new DocLint();
         doclintOpts.add(DocLint.XIMPLICIT_HEADERS + "2");

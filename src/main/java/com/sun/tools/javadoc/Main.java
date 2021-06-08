@@ -1,7 +1,6 @@
 package com.sun.tools.javadoc;
 
 public class Main {
-
     private Main() {
     }
 
@@ -13,5 +12,4 @@ public class Main {
         Start jdoc = new Start();
         return jdoc.begin(args);
     }
-
 }

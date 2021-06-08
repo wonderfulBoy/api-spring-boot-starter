@@ -1,7 +1,6 @@
 package com.sun.javadoc;
 
 public interface ExecutableMemberDoc extends MemberDoc {
-
     ClassDoc[] thrownExceptions();
 
     Type[] thrownExceptionTypes();
@@ -27,5 +26,4 @@ public interface ExecutableMemberDoc extends MemberDoc {
     String flatSignature();
 
     TypeVariable[] typeParameters();
-
 }

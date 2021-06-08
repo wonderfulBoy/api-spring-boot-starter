@@ -8,42 +8,29 @@ import static com.sun.tools.doclint.HtmlTag.Attr.*;
 public enum HtmlTag {
     A(BlockType.INLINE, EndKind.REQUIRED,
             attrs(AttrKind.OK, HREF, TARGET, NAME)),
-
     B(BlockType.INLINE, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT, Flag.NO_NEST)),
-
     BIG(BlockType.INLINE, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT)),
-
     BLOCKQUOTE(BlockType.BLOCK, EndKind.REQUIRED,
             EnumSet.of(Flag.ACCEPTS_BLOCK, Flag.ACCEPTS_INLINE)),
-
     BODY(BlockType.OTHER, EndKind.REQUIRED),
-
     BR(BlockType.INLINE, EndKind.NONE,
             attrs(AttrKind.USE_CSS, CLEAR)),
-
     CAPTION(BlockType.TABLE_ITEM, EndKind.REQUIRED,
             EnumSet.of(Flag.ACCEPTS_INLINE, Flag.EXPECT_CONTENT)),
-
     CENTER(BlockType.BLOCK, EndKind.REQUIRED,
             EnumSet.of(Flag.ACCEPTS_BLOCK, Flag.ACCEPTS_INLINE)),
-
     CITE(BlockType.INLINE, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT, Flag.NO_NEST)),
-
     CODE(BlockType.INLINE, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT, Flag.NO_NEST)),
-
     DD(BlockType.LIST_ITEM, EndKind.OPTIONAL,
             EnumSet.of(Flag.ACCEPTS_BLOCK, Flag.ACCEPTS_INLINE, Flag.EXPECT_CONTENT)),
-
     DFN(BlockType.INLINE, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT, Flag.NO_NEST)),
-
     DIV(BlockType.BLOCK, EndKind.REQUIRED,
             EnumSet.of(Flag.ACCEPTS_BLOCK, Flag.ACCEPTS_INLINE)),
-
     DL(BlockType.BLOCK, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT),
             attrs(AttrKind.USE_CSS, COMPACT)) {
@@ -52,62 +39,44 @@ public enum HtmlTag {
             return (t == DT) || (t == DD);
         }
     },
-
     DT(BlockType.LIST_ITEM, EndKind.OPTIONAL,
             EnumSet.of(Flag.ACCEPTS_INLINE, Flag.EXPECT_CONTENT)),
-
     EM(BlockType.INLINE, EndKind.REQUIRED,
             EnumSet.of(Flag.NO_NEST)),
-
     FONT(BlockType.INLINE, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT),
             attrs(AttrKind.USE_CSS, SIZE, COLOR, FACE)),
-
     FRAME(BlockType.OTHER, EndKind.NONE),
-
     FRAMESET(BlockType.OTHER, EndKind.REQUIRED),
-
     H1(BlockType.BLOCK, EndKind.REQUIRED),
     H2(BlockType.BLOCK, EndKind.REQUIRED),
     H3(BlockType.BLOCK, EndKind.REQUIRED),
     H4(BlockType.BLOCK, EndKind.REQUIRED),
     H5(BlockType.BLOCK, EndKind.REQUIRED),
     H6(BlockType.BLOCK, EndKind.REQUIRED),
-
     HEAD(BlockType.OTHER, EndKind.REQUIRED),
-
     HR(BlockType.BLOCK, EndKind.NONE,
             attrs(AttrKind.OK, WIDTH)),
-
     HTML(BlockType.OTHER, EndKind.REQUIRED),
-
     I(BlockType.INLINE, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT, Flag.NO_NEST)),
-
     IMG(BlockType.INLINE, EndKind.NONE,
             attrs(AttrKind.OK, SRC, ALT, HEIGHT, WIDTH),
             attrs(AttrKind.OBSOLETE, NAME),
             attrs(AttrKind.USE_CSS, ALIGN, HSPACE, VSPACE, BORDER)),
-
     LI(BlockType.LIST_ITEM, EndKind.OPTIONAL,
             EnumSet.of(Flag.ACCEPTS_BLOCK, Flag.ACCEPTS_INLINE),
             attrs(AttrKind.OK, VALUE)),
-
     LINK(BlockType.OTHER, EndKind.NONE),
-
     MENU(BlockType.BLOCK, EndKind.REQUIRED) {
         @Override
         public boolean accepts(HtmlTag t) {
             return (t == LI);
         }
     },
-
     META(BlockType.OTHER, EndKind.NONE),
-
     NOFRAMES(BlockType.OTHER, EndKind.REQUIRED),
-
     NOSCRIPT(BlockType.BLOCK, EndKind.REQUIRED),
-
     OL(BlockType.BLOCK, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT),
             attrs(AttrKind.OK, START, TYPE)) {
@@ -116,11 +85,9 @@ public enum HtmlTag {
             return (t == LI);
         }
     },
-
     P(BlockType.BLOCK, EndKind.OPTIONAL,
             EnumSet.of(Flag.EXPECT_CONTENT),
             attrs(AttrKind.USE_CSS, ALIGN)),
-
     PRE(BlockType.BLOCK, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT)) {
         @Override
@@ -137,24 +104,17 @@ public enum HtmlTag {
             }
         }
     },
-
     SCRIPT(BlockType.OTHER, EndKind.REQUIRED),
-
     SMALL(BlockType.INLINE, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT)),
-
     SPAN(BlockType.INLINE, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT)),
-
     STRONG(BlockType.INLINE, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT)),
-
     SUB(BlockType.INLINE, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT, Flag.NO_NEST)),
-
     SUP(BlockType.INLINE, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT, Flag.NO_NEST)),
-
     TABLE(BlockType.BLOCK, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT),
             attrs(AttrKind.OK, SUMMARY, Attr.FRAME, RULES, BORDER,
@@ -174,7 +134,6 @@ public enum HtmlTag {
             }
         }
     },
-
     TBODY(BlockType.TABLE_ITEM, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT),
             attrs(AttrKind.OK, ALIGN, CHAR, CHAROFF, VALIGN)) {
@@ -183,13 +142,11 @@ public enum HtmlTag {
             return (t == TR);
         }
     },
-
     TD(BlockType.TABLE_ITEM, EndKind.OPTIONAL,
             EnumSet.of(Flag.ACCEPTS_BLOCK, Flag.ACCEPTS_INLINE),
             attrs(AttrKind.OK, COLSPAN, ROWSPAN, HEADERS, SCOPE, ABBR, AXIS,
                     ALIGN, CHAR, CHAROFF, VALIGN),
             attrs(AttrKind.USE_CSS, WIDTH, BGCOLOR, HEIGHT, NOWRAP)),
-
     TFOOT(BlockType.TABLE_ITEM, EndKind.REQUIRED,
             attrs(AttrKind.OK, ALIGN, CHAR, CHAROFF, VALIGN)) {
         @Override
@@ -197,13 +154,11 @@ public enum HtmlTag {
             return (t == TR);
         }
     },
-
     TH(BlockType.TABLE_ITEM, EndKind.OPTIONAL,
             EnumSet.of(Flag.ACCEPTS_BLOCK, Flag.ACCEPTS_INLINE),
             attrs(AttrKind.OK, COLSPAN, ROWSPAN, HEADERS, SCOPE, ABBR, AXIS,
                     ALIGN, CHAR, CHAROFF, VALIGN),
             attrs(AttrKind.USE_CSS, WIDTH, BGCOLOR, HEIGHT, NOWRAP)),
-
     THEAD(BlockType.TABLE_ITEM, EndKind.REQUIRED,
             attrs(AttrKind.OK, ALIGN, CHAR, CHAROFF, VALIGN)) {
         @Override
@@ -211,9 +166,7 @@ public enum HtmlTag {
             return (t == TR);
         }
     },
-
     TITLE(BlockType.OTHER, EndKind.REQUIRED),
-
     TR(BlockType.TABLE_ITEM, EndKind.OPTIONAL,
             attrs(AttrKind.OK, ALIGN, CHAR, CHAROFF, VALIGN),
             attrs(AttrKind.USE_CSS, BGCOLOR)) {
@@ -222,13 +175,10 @@ public enum HtmlTag {
             return (t == TH) || (t == TD);
         }
     },
-
     TT(BlockType.INLINE, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT, Flag.NO_NEST)),
-
     U(BlockType.INLINE, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT, Flag.NO_NEST)),
-
     UL(BlockType.BLOCK, EndKind.REQUIRED,
             EnumSet.of(Flag.EXPECT_CONTENT),
             attrs(AttrKind.OK, COMPACT, TYPE)) {
@@ -237,9 +187,7 @@ public enum HtmlTag {
             return (t == LI);
         }
     },
-
     VAR(BlockType.INLINE, EndKind.REQUIRED);
-
     private static final Map<String, HtmlTag> index = new HashMap<String, HtmlTag>();
 
     static {
@@ -253,9 +201,8 @@ public enum HtmlTag {
     public final Set<Flag> flags;
     private final Map<Attr, AttrKind> attrs;
 
-
     HtmlTag(BlockType blockType, EndKind endKind, AttrMap... attrMaps) {
-        this(blockType, endKind, Collections.<Flag>emptySet(), attrMaps);
+        this(blockType, endKind, Collections.emptySet(), attrMaps);
     }
 
     HtmlTag(BlockType blockType, EndKind endKind, Set<Flag> flags, AttrMap... attrMaps) {
@@ -320,28 +267,28 @@ public enum HtmlTag {
         return (k == null) ? AttrKind.INVALID : k;
     }
 
-    public static enum BlockType {
+    public enum BlockType {
         BLOCK,
         INLINE,
         LIST_ITEM,
         TABLE_ITEM,
-        OTHER;
+        OTHER
     }
 
-    public static enum EndKind {
+    public enum EndKind {
         NONE,
         OPTIONAL,
-        REQUIRED;
+        REQUIRED
     }
 
-    public static enum Flag {
+    public enum Flag {
         ACCEPTS_BLOCK,
         ACCEPTS_INLINE,
         EXPECT_CONTENT,
         NO_NEST
     }
 
-    public static enum Attr {
+    public enum Attr {
         ABBR,
         ALIGN,
         ALT,
@@ -382,7 +329,6 @@ public enum HtmlTag {
         VALUE,
         VSPACE,
         WIDTH;
-
         static final Map<String, Attr> index = new HashMap<String, Attr>();
 
         static {
@@ -396,7 +342,7 @@ public enum HtmlTag {
         }
     }
 
-    public static enum AttrKind {
+    public enum AttrKind {
         INVALID,
         OBSOLETE,
         USE_CSS,

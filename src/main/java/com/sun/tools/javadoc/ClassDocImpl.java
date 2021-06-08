@@ -33,7 +33,6 @@ import static com.sun.tools.javac.code.TypeTag.CLASS;
 import static com.sun.tools.javac.tree.JCTree.Tag.IMPORT;
 
 public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
-
     public final ClassType type;
     protected final ClassSymbol tsym;
     boolean isIncluded = false;
@@ -90,7 +89,6 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
         s.append(TypeMaker.typeParametersString(env, c, full));
         return s.toString();
     }
-
 
     static boolean isGeneric(ClassSymbol c) {
         return c.type.allparams().nonEmpty();
@@ -209,13 +207,11 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
             try {
                 Location location = env.fileManager.hasLocation(StandardLocation.SOURCE_PATH)
                         ? StandardLocation.SOURCE_PATH : StandardLocation.CLASS_PATH;
-
                 docPath = env.fileManager.getFileForInput(
                         location, p.qualifiedName(), "package.html");
             } catch (IOException e) {
                 docPath = null;
             }
-
             if (docPath == null) {
                 SourcePosition po = position();
                 if (env.fileManager instanceof StandardJavaFileManager &&
@@ -231,11 +227,9 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
                                 docPath = sfm.getJavaFileObjects(pf).iterator().next();
                             }
                         }
-
                     }
                 }
             }
-
             p.setDocPath(docPath);
         }
         return p;
@@ -263,7 +257,6 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
         return qualifiedName();
     }
 
-
     public String simpleTypeName() {
         if (simpleTypeName == null) {
             simpleTypeName = tsym.name.toString();
@@ -276,12 +269,11 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
         return classToString(env, tsym, true);
     }
 
-
     public TypeVariable[] typeParameters() {
         if (env.legacyDoclet) {
             return new TypeVariable[0];
         }
-        TypeVariable res[] = new TypeVariable[type.getTypeArguments().length()];
+        TypeVariable[] res = new TypeVariable[type.getTypeArguments().length()];
         TypeMaker.getTypes(env, type.getTypeArguments(), res);
         return res;
     }
@@ -463,7 +455,6 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
 
     private ClassDoc searchClass(String className) {
         Names names = tsym.name.table.names;
-
         ClassDoc cd = env.lookupClass(className);
         if (cd != null) {
             return cd;
@@ -478,21 +469,16 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
                 }
             }
         }
-
         cd = containingPackage().findClass(className);
         if (cd != null) {
             return cd;
         }
-
         if (tsym.completer != null) {
             tsym.complete();
         }
-
         if (tsym.sourcefile != null) {
-
             Env<AttrContext> compenv = env.enter.getEnv(tsym);
             if (compenv == null) return null;
-
             Scope s = compenv.toplevel.namedImportScope;
             for (Scope.Entry e = s.lookup(names.fromString(className)); e.scope != null; e = e.next()) {
                 if (e.sym.kind == Kinds.TYP) {
@@ -500,7 +486,6 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
                     return c;
                 }
             }
-
             s = compenv.toplevel.starImportScope;
             for (Scope.Entry e = s.lookup(names.fromString(className)); e.scope != null; e = e.next()) {
                 if (e.sym.kind == Kinds.TYP) {
@@ -509,24 +494,18 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
                 }
             }
         }
-
         return null;
     }
 
-
     private boolean hasParameterTypes(MethodSymbol method, String[] argTypes) {
-
         if (argTypes == null) {
             return true;
         }
-
         int i = 0;
         List<Type> types = method.type.getParameterTypes();
-
         if (argTypes.length != types.length()) {
             return false;
         }
-
         for (Type t : types) {
             String argType = argTypes[i++];
             if (i == argTypes.length) {
@@ -558,19 +537,14 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
         if (names.init.contentEquals(methodName)) {
             return null;
         }
-
         ClassDocImpl cdi;
         MethodDocImpl mdi;
-
         if (searched.contains(this)) {
             return null;
         }
         searched.add(this);
-
         Scope.Entry e = tsym.members().lookup(names.fromString(methodName));
-
         if (paramTypes == null) {
-
             MethodSymbol lastFound = null;
             for (; e.scope != null; e = e.next()) {
                 if (e.sym.kind == Kinds.MTH) {
@@ -592,7 +566,6 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
                 }
             }
         }
-
         cdi = (ClassDocImpl) superclass();
         if (cdi != null) {
             mdi = cdi.searchMethod(methodName, paramTypes, searched);
@@ -600,8 +573,7 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
                 return mdi;
             }
         }
-
-        ClassDoc intf[] = interfaces();
+        ClassDoc[] intf = interfaces();
         for (int i = 0; i < intf.length; i++) {
             cdi = (ClassDocImpl) intf[i];
             mdi = cdi.searchMethod(methodName, paramTypes, searched);
@@ -609,15 +581,11 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
                 return mdi;
             }
         }
-
         cdi = (ClassDocImpl) containingClass();
         if (cdi != null) {
             mdi = cdi.searchMethod(methodName, paramTypes, searched);
-            if (mdi != null) {
-                return mdi;
-            }
+            return mdi;
         }
-
         return null;
     }
 
@@ -644,7 +612,6 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
             return null;
         }
         searched.add(this);
-
         for (Scope.Entry e = tsym.members().lookup(names.fromString(fieldName)); e.scope != null; e = e.next()) {
             if (e.sym.kind == Kinds.VAR) {
                 return env.getFieldDoc((VarSymbol) e.sym);
@@ -657,7 +624,6 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
                 return fdi;
             }
         }
-
         cdi = (ClassDocImpl) superclass();
         if (cdi != null) {
             FieldDocImpl fdi = cdi.searchField(fieldName, searched);
@@ -665,8 +631,7 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
                 return fdi;
             }
         }
-
-        ClassDoc intf[] = interfaces();
+        ClassDoc[] intf = interfaces();
         for (int i = 0; i < intf.length; i++) {
             cdi = (ClassDocImpl) intf[i];
             FieldDocImpl fdi = cdi.searchField(fieldName, searched);
@@ -674,20 +639,16 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
                 return fdi;
             }
         }
-
         return null;
     }
 
     @Deprecated
     public ClassDoc[] importedClasses() {
-        // information is not available for binary classfiles
+
         if (tsym.sourcefile == null) return new ClassDoc[0];
-
         ListBuffer<ClassDocImpl> importedClasses = new ListBuffer<ClassDocImpl>();
-
         Env<AttrContext> compenv = env.enter.getEnv(tsym);
         if (compenv == null) return new ClassDocImpl[0];
-
         Name asterisk = tsym.name.table.names.asterisk;
         for (JCTree t : compenv.toplevel.defs) {
             if (t.hasTag(IMPORT)) {
@@ -699,24 +660,19 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
                 }
             }
         }
-
         return importedClasses.toArray(new ClassDocImpl[importedClasses.length()]);
     }
 
     @Deprecated
     public PackageDoc[] importedPackages() {
-        // information is not available for binary classfiles
-        if (tsym.sourcefile == null) return new PackageDoc[0];
 
+        if (tsym.sourcefile == null) return new PackageDoc[0];
         ListBuffer<PackageDocImpl> importedPackages = new ListBuffer<PackageDocImpl>();
 
-        //### Add the implicit "import java.lang.*" to the result
         Names names = tsym.name.table.names;
         importedPackages.append(env.getPackageDoc(env.reader.enterPackage(names.java_lang)));
-
         Env<AttrContext> compenv = env.enter.getEnv(tsym);
         if (compenv == null) return new PackageDocImpl[0];
-
         for (JCTree t : compenv.toplevel.defs) {
             if (t.hasTag(IMPORT)) {
                 JCTree imp = ((JCImport) t).qualid;
@@ -729,7 +685,6 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
                 }
             }
         }
-
         return importedPackages.toArray(new PackageDocImpl[importedPackages.length()]);
     }
 
@@ -781,12 +736,11 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
         }
     }
 
-
     public MethodDoc[] serializationMethods() {
         if (serializedForm == null) {
             serializedForm = new SerializedForm(env, tsym, this);
         }
-        //### Clone this?
+
         return serializedForm.methods();
     }
 
@@ -794,7 +748,7 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
         if (serializedForm == null) {
             serializedForm = new SerializedForm(env, tsym, this);
         }
-        //### Clone this?
+
         return serializedForm.fields();
     }
 
@@ -805,11 +759,10 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
             if (serializedForm == null) {
                 serializedForm = new SerializedForm(env, tsym, this);
             }
-            //### Clone this?
+
             return serializedForm.definesSerializableFields();
         }
     }
-
 
     boolean isRuntimeException() {
         return tsym.isSubClass(env.syms.runtimeExceptionType.tsym, env.types);
@@ -822,5 +775,4 @@ public class ClassDocImpl extends ProgramElementDocImpl implements ClassDoc {
                 (tree == null) ? Position.NOPOS : tree.pos,
                 lineMap);
     }
-
 }

@@ -1,7 +1,6 @@
 package com.sun.javadoc;
 
 public interface RootDoc extends Doc, DocErrorReporter {
-
     String[][] options();
 
     PackageDoc[] specifiedPackages();

@@ -7,7 +7,6 @@ import com.sun.tools.javac.util.List;
 
 public class AnnotatedTypeImpl
         extends AbstractTypeImpl implements AnnotatedType {
-
     AnnotatedTypeImpl(DocEnv env, com.sun.tools.javac.code.Type type) {
         super(env, type);
     }
@@ -19,7 +18,7 @@ public class AnnotatedTypeImpl
                 tas.isEmpty()) {
             return new AnnotationDesc[0];
         }
-        AnnotationDesc res[] = new AnnotationDesc[tas.length()];
+        AnnotationDesc[] res = new AnnotationDesc[tas.length()];
         int i = 0;
         for (Attribute.Compound a : tas) {
             res[i++] = new AnnotationDescImpl(env, a);

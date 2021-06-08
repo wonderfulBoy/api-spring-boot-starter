@@ -7,7 +7,6 @@ import com.sun.tools.javac.code.Symbol.MethodSymbol;
 
 public class AnnotationTypeElementDocImpl
         extends MethodDocImpl implements AnnotationTypeElementDoc {
-
     public AnnotationTypeElementDocImpl(DocEnv env,
                                         MethodSymbol sym) {
         super(env, sym);
@@ -35,5 +34,4 @@ public class AnnotationTypeElementDocImpl
         return (sym.defaultValue == null) ?
                 null : new AnnotationValueImpl(env, sym.defaultValue);
     }
-
 }

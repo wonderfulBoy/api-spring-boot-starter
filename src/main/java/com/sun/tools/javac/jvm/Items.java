@@ -1,84 +1,34 @@
-/*
- * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package com.sun.tools.javac.jvm;
 
 import com.sun.tools.javac.code.*;
-import com.sun.tools.javac.code.Symbol.*;
-import com.sun.tools.javac.code.Type.*;
-import com.sun.tools.javac.jvm.Code.*;
+import com.sun.tools.javac.code.Symbol.VarSymbol;
+import com.sun.tools.javac.code.Type.MethodType;
+import com.sun.tools.javac.jvm.Code.Chain;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Assert;
 
 import static com.sun.tools.javac.jvm.ByteCodes.*;
 
-/** A helper class for code generation. Items are objects
- *  that stand for addressable entities in the bytecode. Each item
- *  supports a fixed protocol for loading the item on the stack, storing
- *  into it, converting it into a jump condition, and several others.
- *  There are many individual forms of items, such as local, static,
- *  indexed, or instance variables, values on the top of stack, the
- *  special values this or super, etc. Individual items are represented as
- *  inner classes in class Items.
- *
- *  <p><b>This is NOT part of any supported API.
- *  If you write code that depends on this, you do so at your own risk.
- *  This code and its internal interfaces are subject to change or
- *  deletion without notice.</b>
- */
 public class Items {
 
-    /** The current constant pool.
-     */
-    Pool pool;
-
-    /** The current code buffer.
-     */
-    Code code;
-
-    /** The current symbol table.
-     */
-    Symtab syms;
-
-    /** Type utilities. */
-    Types types;
-
-    /** Items that exist only once (flyweight pattern).
-     */
     private final Item voidItem;
     private final Item thisItem;
     private final Item superItem;
     private final Item[] stackItem = new Item[TypeCodeCount];
+    Pool pool;
+    Code code;
+    Symtab syms;
+    Types types;
 
     public Items(Pool pool, Code code, Symtab syms, Types types) {
         this.code = code;
         this.pool = pool;
         this.types = types;
         voidItem = new Item(VOIDcode) {
-                public String toString() { return "void"; }
-            };
+            public String toString() {
+                return "void";
+            }
+        };
         thisItem = new SelfItem(false);
         superItem = new SelfItem(true);
         for (int i = 0; i < VOIDcode; i++) stackItem[i] = new StackItem(i);
@@ -86,163 +36,97 @@ public class Items {
         this.syms = syms;
     }
 
-    /** Make a void item
-     */
     Item makeVoidItem() {
         return voidItem;
     }
-    /** Make an item representing `this'.
-     */
+
     Item makeThisItem() {
         return thisItem;
     }
 
-    /** Make an item representing `super'.
-     */
     Item makeSuperItem() {
         return superItem;
     }
 
-    /** Make an item representing a value on stack.
-     *  @param type    The value's type.
-     */
     Item makeStackItem(Type type) {
         return stackItem[Code.typecode(type)];
     }
 
-    /** Make an item representing a dynamically invoked method.
-     *  @param member   The represented symbol.
-     */
     Item makeDynamicItem(Symbol member) {
         return new DynamicItem(member);
     }
 
-    /** Make an item representing an indexed expression.
-     *  @param type    The expression's type.
-     */
     Item makeIndexedItem(Type type) {
         return new IndexedItem(type);
     }
 
-    /** Make an item representing a local variable.
-     *  @param v    The represented variable.
-     */
     LocalItem makeLocalItem(VarSymbol v) {
         return new LocalItem(v.erasure(types), v.adr);
     }
 
-    /** Make an item representing a local anonymous variable.
-     *  @param type  The represented variable's type.
-     *  @param reg   The represented variable's register.
-     */
     private LocalItem makeLocalItem(Type type, int reg) {
         return new LocalItem(type, reg);
     }
 
-    /** Make an item representing a static variable or method.
-     *  @param member   The represented symbol.
-     */
     Item makeStaticItem(Symbol member) {
         return new StaticItem(member);
     }
 
-    /** Make an item representing an instance variable or method.
-     *  @param member       The represented symbol.
-     *  @param nonvirtual   Is the reference not virtual? (true for constructors
-     *                      and private members).
-     */
     Item makeMemberItem(Symbol member, boolean nonvirtual) {
         return new MemberItem(member, nonvirtual);
     }
 
-    /** Make an item representing a literal.
-     *  @param type     The literal's type.
-     *  @param value    The literal's value.
-     */
     Item makeImmediateItem(Type type, Object value) {
         return new ImmediateItem(type, value);
     }
 
-    /** Make an item representing an assignment expression.
-     *  @param lhs      The item representing the assignment's left hand side.
-     */
     Item makeAssignItem(Item lhs) {
         return new AssignItem(lhs);
     }
 
-    /** Make an item representing a conditional or unconditional jump.
-     *  @param opcode      The jump's opcode.
-     *  @param trueJumps   A chain encomassing all jumps that can be taken
-     *                     if the condition evaluates to true.
-     *  @param falseJumps  A chain encomassing all jumps that can be taken
-     *                     if the condition evaluates to false.
-     */
     CondItem makeCondItem(int opcode, Chain trueJumps, Chain falseJumps) {
         return new CondItem(opcode, trueJumps, falseJumps);
     }
 
-    /** Make an item representing a conditional or unconditional jump.
-     *  @param opcode      The jump's opcode.
-     */
     CondItem makeCondItem(int opcode) {
         return makeCondItem(opcode, null, null);
     }
 
-    /** The base class of all items, which implements default behavior.
-     */
     abstract class Item {
 
-        /** The type code of values represented by this item.
-         */
         int typecode;
 
         Item(int typecode) {
             this.typecode = typecode;
         }
 
-        /** Generate code to load this item onto stack.
-         */
         Item load() {
             throw new AssertionError();
         }
 
-        /** Generate code to store top of stack into this item.
-         */
         void store() {
             throw new AssertionError("store unsupported: " + this);
         }
 
-        /** Generate code to invoke method represented by this item.
-         */
         Item invoke() {
             throw new AssertionError(this);
         }
 
-        /** Generate code to use this item twice.
-         */
-        void duplicate() {}
+        void duplicate() {
+        }
 
-        /** Generate code to avoid having to use this item.
-         */
-        void drop() {}
+        void drop() {
+        }
 
-        /** Generate code to stash a copy of top of stack - of typecode toscode -
-         *  under this item.
-         */
         void stash(int toscode) {
             stackItem[toscode].duplicate();
         }
 
-        /** Generate code to turn item into a testable condition.
-         */
         CondItem mkCond() {
             load();
             return makeCondItem(ifne);
         }
 
-        /** Generate code to coerce item to given type code.
-         *  @param targetcode    The type code to coerce to.
-         */
         Item coerce(int targetcode) {
             if (typecode == targetcode)
                 return this;
@@ -252,7 +136,7 @@ public class Items {
                 int targetcode1 = Code.truncate(targetcode);
                 if (typecode1 != targetcode1) {
                     int offset = targetcode1 > typecode1 ? targetcode1 - 1
-                        : targetcode1;
+                            : targetcode1;
                     code.emitop0(i2l + typecode1 * 3 + offset);
                 }
                 if (targetcode != targetcode1) {
@@ -262,15 +146,10 @@ public class Items {
             }
         }
 
-        /** Generate code to coerce item to given type.
-         *  @param targettype    The type to coerce to.
-         */
         Item coerce(Type targettype) {
             return coerce(Code.typecode(targettype));
         }
 
-        /** Return the width of this item on stack as a number of words.
-         */
         int width() {
             return 0;
         }
@@ -278,10 +157,7 @@ public class Items {
         public abstract String toString();
     }
 
-    /** An item representing a value on stack.
-     */
     class StackItem extends Item {
-
         StackItem(int typecode) {
             super(typecode);
         }
@@ -300,7 +176,7 @@ public class Items {
 
         void stash(int toscode) {
             code.emitop0(
-                (width() == 2 ? dup_x2 : dup_x1) + 3 * (Code.width(toscode) - 1));
+                    (width() == 2 ? dup_x2 : dup_x1) + 3 * (Code.width(toscode) - 1));
         }
 
         int width() {
@@ -312,10 +188,7 @@ public class Items {
         }
     }
 
-    /** An item representing an indexed expression.
-     */
     class IndexedItem extends Item {
-
         IndexedItem(Type type) {
             super(Code.typecode(type));
         }
@@ -350,12 +223,8 @@ public class Items {
         }
     }
 
-    /** An item representing `this' or `super'.
-     */
     class SelfItem extends Item {
 
-        /** Flag which determines whether this item represents `this' or `super'.
-         */
         boolean isSuper;
 
         SelfItem(boolean isSuper) {
@@ -373,16 +242,10 @@ public class Items {
         }
     }
 
-    /** An item representing a local variable.
-     */
     class LocalItem extends Item {
 
-        /** The variable's register.
-         */
         int reg;
 
-        /** The variable's type.
-         */
         Type type;
 
         LocalItem(Type type, int reg) {
@@ -430,12 +293,8 @@ public class Items {
         }
     }
 
-    /** An item representing a static variable or method.
-     */
     class StaticItem extends Item {
 
-        /** The represented symbol.
-         */
         Symbol member;
 
         StaticItem(Symbol member) {
@@ -453,7 +312,7 @@ public class Items {
         }
 
         Item invoke() {
-            MethodType mtype = (MethodType)member.erasure(types);
+            MethodType mtype = (MethodType) member.erasure(types);
             int rescode = Code.typecode(mtype.restype);
             code.emitInvokestatic(pool.put(member), mtype);
             return stackItem[rescode];
@@ -464,8 +323,6 @@ public class Items {
         }
     }
 
-    /** An item representing a dynamic call site.
-     */
     class DynamicItem extends StaticItem {
         DynamicItem(Symbol member) {
             super(member);
@@ -481,8 +338,8 @@ public class Items {
         }
 
         Item invoke() {
-            // assert target.hasNativeInvokeDynamic();
-            MethodType mtype = (MethodType)member.erasure(types);
+
+            MethodType mtype = (MethodType) member.erasure(types);
             int rescode = Code.typecode(mtype.restype);
             code.emitInvokedynamic(pool.put(member), mtype);
             return stackItem[rescode];
@@ -493,16 +350,10 @@ public class Items {
         }
     }
 
-    /** An item representing an instance variable or method.
-     */
     class MemberItem extends Item {
 
-        /** The represented symbol.
-         */
         Symbol member;
 
-        /** Flag that determines whether or not access is virtual.
-         */
         boolean nonvirtual;
 
         MemberItem(Symbol member, boolean nonvirtual) {
@@ -521,7 +372,7 @@ public class Items {
         }
 
         Item invoke() {
-            MethodType mtype = (MethodType)member.externalType(types);
+            MethodType mtype = (MethodType) member.externalType(types);
             int rescode = Code.typecode(mtype.restype);
             if ((member.owner.flags() & Flags.INTERFACE) != 0 && !nonvirtual) {
                 code.emitInvokeinterface(pool.put(member), mtype);
@@ -554,12 +405,8 @@ public class Items {
         }
     }
 
-    /** An item representing a literal.
-     */
     class ImmediateItem extends Item {
 
-        /** The literal's value.
-         */
         Object value;
 
         ImmediateItem(Type type, Object value) {
@@ -578,61 +425,62 @@ public class Items {
 
         Item load() {
             switch (typecode) {
-            case INTcode: case BYTEcode: case SHORTcode: case CHARcode:
-                int ival = ((Number)value).intValue();
-                if (-1 <= ival && ival <= 5)
-                    code.emitop0(iconst_0 + ival);
-                else if (Byte.MIN_VALUE <= ival && ival <= Byte.MAX_VALUE)
-                    code.emitop1(bipush, ival);
-                else if (Short.MIN_VALUE <= ival && ival <= Short.MAX_VALUE)
-                    code.emitop2(sipush, ival);
-                else
+                case INTcode:
+                case BYTEcode:
+                case SHORTcode:
+                case CHARcode:
+                    int ival = ((Number) value).intValue();
+                    if (-1 <= ival && ival <= 5)
+                        code.emitop0(iconst_0 + ival);
+                    else if (Byte.MIN_VALUE <= ival && ival <= Byte.MAX_VALUE)
+                        code.emitop1(bipush, ival);
+                    else if (Short.MIN_VALUE <= ival && ival <= Short.MAX_VALUE)
+                        code.emitop2(sipush, ival);
+                    else
+                        ldc();
+                    break;
+                case LONGcode:
+                    long lval = ((Number) value).longValue();
+                    if (lval == 0 || lval == 1)
+                        code.emitop0(lconst_0 + (int) lval);
+                    else
+                        ldc();
+                    break;
+                case FLOATcode:
+                    float fval = ((Number) value).floatValue();
+                    if (isPosZero(fval) || fval == 1.0 || fval == 2.0)
+                        code.emitop0(fconst_0 + (int) fval);
+                    else {
+                        ldc();
+                    }
+                    break;
+                case DOUBLEcode:
+                    double dval = ((Number) value).doubleValue();
+                    if (isPosZero(dval) || dval == 1.0)
+                        code.emitop0(dconst_0 + (int) dval);
+                    else
+                        ldc();
+                    break;
+                case OBJECTcode:
                     ldc();
-                break;
-            case LONGcode:
-                long lval = ((Number)value).longValue();
-                if (lval == 0 || lval == 1)
-                    code.emitop0(lconst_0 + (int)lval);
-                else
-                    ldc();
-                break;
-            case FLOATcode:
-                float fval = ((Number)value).floatValue();
-                if (isPosZero(fval) || fval == 1.0 || fval == 2.0)
-                    code.emitop0(fconst_0 + (int)fval);
-                else {
-                    ldc();
-                }
-                break;
-            case DOUBLEcode:
-                double dval = ((Number)value).doubleValue();
-                if (isPosZero(dval) || dval == 1.0)
-                    code.emitop0(dconst_0 + (int)dval);
-                else
-                    ldc();
-                break;
-            case OBJECTcode:
-                ldc();
-                break;
-            default:
-                Assert.error();
+                    break;
+                default:
+                    Assert.error();
             }
             return stackItem[typecode];
         }
-        //where
-            /** Return true iff float number is positive 0.
-             */
-            private boolean isPosZero(float x) {
-                return x == 0.0f && 1.0f / x > 0.0f;
-            }
-            /** Return true iff double number is positive 0.
-             */
-            private boolean isPosZero(double x) {
-                return x == 0.0d && 1.0d / x > 0.0d;
-            }
+
+
+        private boolean isPosZero(float x) {
+            return x == 0.0f && 1.0f / x > 0.0f;
+        }
+
+        private boolean isPosZero(double x) {
+            return x == 0.0d && 1.0d / x > 0.0d;
+        }
 
         CondItem mkCond() {
-            int ival = ((Number)value).intValue();
+            int ival = ((Number) value).intValue();
             return makeCondItem(ival != 0 ? goto_ : dontgoto);
         }
 
@@ -641,39 +489,39 @@ public class Items {
                 return this;
             } else {
                 switch (targetcode) {
-                case INTcode:
-                    if (Code.truncate(typecode) == INTcode)
-                        return this;
-                    else
+                    case INTcode:
+                        if (Code.truncate(typecode) == INTcode)
+                            return this;
+                        else
+                            return new ImmediateItem(
+                                    syms.intType,
+                                    ((Number) value).intValue());
+                    case LONGcode:
                         return new ImmediateItem(
-                            syms.intType,
-                            ((Number)value).intValue());
-                case LONGcode:
-                    return new ImmediateItem(
-                        syms.longType,
-                        ((Number)value).longValue());
-                case FLOATcode:
-                    return new ImmediateItem(
-                        syms.floatType,
-                        ((Number)value).floatValue());
-                case DOUBLEcode:
-                    return new ImmediateItem(
-                        syms.doubleType,
-                        ((Number)value).doubleValue());
-                case BYTEcode:
-                    return new ImmediateItem(
-                        syms.byteType,
-                        (int)(byte)((Number)value).intValue());
-                case CHARcode:
-                    return new ImmediateItem(
-                        syms.charType,
-                        (int)(char)((Number)value).intValue());
-                case SHORTcode:
-                    return new ImmediateItem(
-                        syms.shortType,
-                        (int)(short)((Number)value).intValue());
-                default:
-                    return super.coerce(targetcode);
+                                syms.longType,
+                                ((Number) value).longValue());
+                    case FLOATcode:
+                        return new ImmediateItem(
+                                syms.floatType,
+                                ((Number) value).floatValue());
+                    case DOUBLEcode:
+                        return new ImmediateItem(
+                                syms.doubleType,
+                                ((Number) value).doubleValue());
+                    case BYTEcode:
+                        return new ImmediateItem(
+                                syms.byteType,
+                                (int) (byte) ((Number) value).intValue());
+                    case CHARcode:
+                        return new ImmediateItem(
+                                syms.charType,
+                                (int) (char) ((Number) value).intValue());
+                    case SHORTcode:
+                        return new ImmediateItem(
+                                syms.shortType,
+                                (int) (short) ((Number) value).intValue());
+                    default:
+                        return super.coerce(targetcode);
                 }
             }
         }
@@ -683,12 +531,8 @@ public class Items {
         }
     }
 
-    /** An item representing an assignment expressions.
-     */
     class AssignItem extends Item {
 
-        /** The item representing the assignment's left hand side.
-         */
         Item lhs;
 
         AssignItem(Item lhs) {
@@ -723,28 +567,14 @@ public class Items {
         }
     }
 
-    /** An item representing a conditional or unconditional jump.
-     */
     class CondItem extends Item {
 
-        /** A chain encomassing all jumps that can be taken
-         *  if the condition evaluates to true.
-         */
         Chain trueJumps;
 
-        /** A chain encomassing all jumps that can be taken
-         *  if the condition evaluates to false.
-         */
         Chain falseJumps;
 
-        /** The jump's opcode.
-         */
         int opcode;
 
-        /*
-         *  An abstract syntax tree of this item. It is needed
-         *  for branch entries in 'CharacterRangeTable' attribute.
-         */
         JCTree tree;
 
         CondItem(int opcode, Chain truejumps, Chain falsejumps) {
@@ -788,7 +618,7 @@ public class Items {
 
         Chain jumpTrue() {
             if (tree == null) return Code.mergeChains(trueJumps, code.branch(opcode));
-            // we should proceed further in -Xjcov mode only
+
             int startpc = code.curCP();
             Chain c = Code.mergeChains(trueJumps, code.branch(opcode));
             code.crt.put(tree, CRTable.CRT_BRANCH_TRUE, startpc, code.curCP());
@@ -797,7 +627,7 @@ public class Items {
 
         Chain jumpFalse() {
             if (tree == null) return Code.mergeChains(falseJumps, code.branch(Code.negate(opcode)));
-            // we should proceed further in -Xjcov mode only
+
             int startpc = code.curCP();
             Chain c = Code.mergeChains(falseJumps, code.branch(Code.negate(opcode)));
             code.crt.put(tree, CRTable.CRT_BRANCH_FALSE, startpc, code.curCP());
@@ -811,7 +641,7 @@ public class Items {
         }
 
         int width() {
-            // a CondItem doesn't have a size on the stack per se.
+
             throw new AssertionError();
         }
 

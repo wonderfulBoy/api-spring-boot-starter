@@ -1,7 +1,6 @@
 package com.sun.javadoc;
 
 public interface Tag {
-
     String name();
 
     Doc holder();
@@ -17,5 +16,4 @@ public interface Tag {
     Tag[] firstSentenceTags();
 
     SourcePosition position();
-
 }

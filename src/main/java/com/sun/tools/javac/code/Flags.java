@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 
 public class Flags {
-
     public static final int PUBLIC = 1;
     public static final int PRIVATE = 1 << 1;
     public static final int PROTECTED = 1 << 2;
@@ -82,6 +81,7 @@ public class Flags {
             LocalVarFlags = FINAL | PARAMETER;
     private static final Map<Long, Set<Modifier>> modifierSets =
             new java.util.concurrent.ConcurrentHashMap<Long, Set<Modifier>>(64);
+
     private Flags() {
     }
 
@@ -143,7 +143,6 @@ public class Flags {
         return symbol.getConstValue() != null;
     }
 
-
     public enum Flag {
         PUBLIC(Flags.PUBLIC),
         PRIVATE(Flags.PRIVATE),
@@ -192,7 +191,6 @@ public class Flags {
         SIGNATURE_POLYMORPHIC(Flags.SIGNATURE_POLYMORPHIC),
         THROWS(Flags.THROWS),
         LAMBDA_METHOD(Flags.LAMBDA_METHOD);
-
         final long value;
         final String lowercaseName;
 
@@ -206,5 +204,4 @@ public class Flags {
             return lowercaseName;
         }
     }
-
 }

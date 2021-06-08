@@ -5,11 +5,9 @@ import com.sun.javadoc.MemberDoc;
 import com.sun.javadoc.SerialFieldTag;
 
 class SerialFieldTagImpl extends TagImpl implements SerialFieldTag, Comparable<Object> {
-
     private String fieldName;
     private String fieldType;
     private String description;
-
     private ClassDoc containingClass;
     private ClassDoc fieldTypeDoc;
     private FieldDocImpl matchingField;
@@ -22,13 +20,11 @@ class SerialFieldTagImpl extends TagImpl implements SerialFieldTag, Comparable<O
         }
     }
 
-
     private void parseSerialFieldString() {
         int len = text.length();
         if (len == 0) {
             return;
         }
-
         int inx = 0;
         int cp;
         for (; inx < len; inx += Character.charCount(cp)) {
@@ -37,7 +33,6 @@ class SerialFieldTagImpl extends TagImpl implements SerialFieldTag, Comparable<O
                 break;
             }
         }
-
         int first = inx;
         int last = inx;
         cp = text.codePointAt(inx);
@@ -47,34 +42,28 @@ class SerialFieldTagImpl extends TagImpl implements SerialFieldTag, Comparable<O
                     new String(Character.toChars(cp)), text);
             return;
         }
-
         for (inx += Character.charCount(cp); inx < len; inx += Character.charCount(cp)) {
             cp = text.codePointAt(inx);
             if (!Character.isJavaIdentifierPart(cp)) {
                 break;
             }
         }
-
         if (inx < len && !Character.isWhitespace(cp = text.codePointAt(inx))) {
             docenv().warning(holder,
                     "tag.serialField.illegal_character",
                     new String(Character.toChars(cp)), text);
             return;
         }
-
         last = inx;
         fieldName = text.substring(first, last);
-
         for (; inx < len; inx += Character.charCount(cp)) {
             cp = text.codePointAt(inx);
             if (!Character.isWhitespace(cp)) {
                 break;
             }
         }
-
         first = inx;
         last = inx;
-
         for (; inx < len; inx += Character.charCount(cp)) {
             cp = text.codePointAt(inx);
             if (Character.isWhitespace(cp)) {
@@ -89,7 +78,6 @@ class SerialFieldTagImpl extends TagImpl implements SerialFieldTag, Comparable<O
         }
         last = inx;
         fieldType = text.substring(first, last);
-
         for (; inx < len; inx += Character.charCount(cp)) {
             cp = text.codePointAt(inx);
             if (!Character.isWhitespace(cp)) {

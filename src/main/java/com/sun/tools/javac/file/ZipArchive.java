@@ -1,35 +1,14 @@
-/*
- * Copyright (c) 2005, 2009, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package com.sun.tools.javac.file;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Writer;
+import com.sun.tools.javac.file.JavacFileManager.Archive;
+import com.sun.tools.javac.file.RelativePath.RelativeDirectory;
+import com.sun.tools.javac.file.RelativePath.RelativeFile;
+import com.sun.tools.javac.util.List;
+
+import javax.tools.JavaFileObject;
+import java.io.*;
+import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -41,22 +20,11 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import javax.tools.JavaFileObject;
-
-import com.sun.tools.javac.file.JavacFileManager.Archive;
-import com.sun.tools.javac.file.RelativePath.RelativeDirectory;
-import com.sun.tools.javac.file.RelativePath.RelativeFile;
-import com.sun.tools.javac.util.List;
-import java.lang.ref.Reference;
-import java.lang.ref.SoftReference;
-
-/**
- * <p><b>This is NOT part of any supported API.
- * If you write code that depends on this, you do so at your own risk.
- * This code and its internal interfaces are subject to change or
- * deletion without notice.</b>
- */
 public class ZipArchive implements Archive {
+    protected final Map<RelativeDirectory, List<String>> map;
+    protected final ZipFile zfile;
+    protected JavacFileManager fileManager;
+    protected Reference<File> absFileRef;
 
     public ZipArchive(JavacFileManager fm, ZipFile zfile) throws IOException {
         this(fm, zfile, true);
@@ -65,7 +33,7 @@ public class ZipArchive implements Archive {
     protected ZipArchive(JavacFileManager fm, ZipFile zfile, boolean initMap) throws IOException {
         this.fileManager = fm;
         this.zfile = zfile;
-        this.map = new HashMap<RelativeDirectory,List<String>>();
+        this.map = new HashMap<RelativeDirectory, List<String>>();
         if (initMap)
             initMap();
     }
@@ -76,8 +44,7 @@ public class ZipArchive implements Archive {
             try {
                 entry = e.nextElement();
             } catch (InternalError ex) {
-                IOException io = new IOException();
-                io.initCause(ex); // convenience constructors added in Mustang :-(
+                IOException io = new IOException(ex);
                 throw io;
             }
             addZipEntry(entry);
@@ -87,8 +54,8 @@ public class ZipArchive implements Archive {
     void addZipEntry(ZipEntry entry) {
         String name = entry.getName();
         int i = name.lastIndexOf('/');
-        RelativeDirectory dirname = new RelativeDirectory(name.substring(0, i+1));
-        String basename = name.substring(i+1);
+        RelativeDirectory dirname = new RelativeDirectory(name.substring(0, i + 1));
+        String basename = name.substring(i + 1);
         if (basename.length() == 0)
             return;
         List<String> list = map.get(dirname);
@@ -138,31 +105,10 @@ public class ZipArchive implements Archive {
         return absFile;
     }
 
-    /**
-     * The file manager that created this archive.
-     */
-    protected JavacFileManager fileManager;
-    /**
-     * The index for the contents of this archive.
-     */
-    protected final Map<RelativeDirectory,List<String>> map;
-    /**
-     * The zip file for the archive.
-     */
-    protected final ZipFile zfile;
-    /**
-     * A reference to the absolute filename for the zip file for the archive.
-     */
-    protected Reference<File> absFileRef;
-
-    /**
-     * A subclass of JavaFileObject representing zip entries.
-     */
     public static class ZipFileObject extends BaseFileObject {
-
-        private String name;
         ZipArchive zarch;
         ZipEntry entry;
+        private String name;
 
         protected ZipFileObject(ZipArchive zarch, String name, ZipEntry entry) {
             super(zarch.fileManager);
@@ -254,26 +200,19 @@ public class ZipArchive implements Archive {
         @Override
         public boolean isNameCompatible(String cn, Kind k) {
             cn.getClass();
-            // null check
+
             if (k == Kind.OTHER && getKind() != k) {
                 return false;
             }
             return name.equals(cn + k.extension);
         }
 
-        /**
-         * Check if two file objects are equal.
-         * Two ZipFileObjects are equal if the absolute paths of the underlying
-         * zip files are equal and if the paths within those zip files are equal.
-         */
         @Override
         public boolean equals(Object other) {
             if (this == other)
                 return true;
-
             if (!(other instanceof ZipFileObject))
                 return false;
-
             ZipFileObject o = (ZipFileObject) other;
             return zarch.getAbsoluteFile().equals(o.zarch.getAbsoluteFile())
                     && name.equals(o.name);
@@ -284,5 +223,4 @@ public class ZipArchive implements Archive {
             return zarch.getAbsoluteFile().hashCode() + name.hashCode();
         }
     }
-
 }

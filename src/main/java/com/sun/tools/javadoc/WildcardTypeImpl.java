@@ -7,7 +7,6 @@ import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.util.List;
 
 public class WildcardTypeImpl extends AbstractTypeImpl implements WildcardType {
-
     WildcardTypeImpl(DocEnv env, Type.WildcardType type) {
         super(env, type);
     }
@@ -40,13 +39,13 @@ public class WildcardTypeImpl extends AbstractTypeImpl implements WildcardType {
 
     private static List<Type> getExtendsBounds(Type.WildcardType wild) {
         return wild.isSuperBound()
-                ? List.<Type>nil()
+                ? List.nil()
                 : List.of(wild.type);
     }
 
     private static List<Type> getSuperBounds(Type.WildcardType wild) {
         return wild.isExtendsBound()
-                ? List.<Type>nil()
+                ? List.nil()
                 : List.of(wild.type);
     }
 

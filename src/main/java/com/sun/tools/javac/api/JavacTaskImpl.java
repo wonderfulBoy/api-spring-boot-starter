@@ -48,7 +48,6 @@ public class JavacTaskImpl extends BasicJavacTask {
     private Map<JavaFileObject, JCCompilationUnit> notYetEntered;
     private ListBuffer<Env<AttrContext>> genList;
     private Iterable<? extends Processor> processors;
-
     private Main.Result result = null;
     private boolean parsed = false;
 
@@ -207,11 +206,8 @@ public class JavacTaskImpl extends BasicJavacTask {
             throws IOException {
         if (trees == null && notYetEntered != null && notYetEntered.isEmpty())
             return List.nil();
-
         prepareCompiler();
-
         ListBuffer<JCCompilationUnit> roots = null;
-
         if (trees == null) {
             if (notYetEntered.size() > 0) {
                 if (!parsed)
@@ -237,16 +233,12 @@ public class JavacTaskImpl extends BasicJavacTask {
                     throw new IllegalArgumentException(cu.toString());
             }
         }
-
         if (roots == null)
             return List.nil();
-
         try {
             List<JCCompilationUnit> units = compiler.enterTrees(roots.toList());
-
             if (notYetEntered.isEmpty())
                 compiler = compiler.processAnnotations(units);
-
             ListBuffer<TypeElement> elements = new ListBuffer<TypeElement>();
             for (JCCompilationUnit unit : units) {
                 for (JCTree node : unit.defs) {
@@ -263,7 +255,6 @@ public class JavacTaskImpl extends BasicJavacTask {
         }
     }
 
-
     @Override
     public Iterable<? extends Element> analyze() throws IOException {
         return analyze(null);
@@ -271,7 +262,6 @@ public class JavacTaskImpl extends BasicJavacTask {
 
     public Iterable<? extends Element> analyze(Iterable<? extends TypeElement> classes) throws IOException {
         enter(null);
-
         final ListBuffer<Element> results = new ListBuffer<Element>();
         try {
             if (classes == null) {
@@ -308,7 +298,6 @@ public class JavacTaskImpl extends BasicJavacTask {
         genList.addAll(queue);
     }
 
-
     @Override
     public Iterable<? extends JavaFileObject> generate() throws IOException {
         return generate(null);
@@ -318,7 +307,6 @@ public class JavacTaskImpl extends BasicJavacTask {
         final ListBuffer<JavaFileObject> results = new ListBuffer<JavaFileObject>();
         try {
             analyze(null);
-
             if (classes == null) {
                 compiler.generate(compiler.desugar(genList), results);
                 genList.clear();
@@ -386,7 +374,6 @@ public class JavacTaskImpl extends BasicJavacTask {
             Set<TypeElement> set = new HashSet<TypeElement>();
             for (TypeElement item : classes)
                 set.add(item);
-
             ListBuffer<Env<AttrContext>> defer = new ListBuffer<>();
             while (list.peek() != null) {
                 Env<AttrContext> env = list.remove();
@@ -396,11 +383,9 @@ public class JavacTaskImpl extends BasicJavacTask {
                 else
                     defer = defer.append(env);
             }
-
             list.addAll(defer);
         }
 
         abstract void process(Env<AttrContext> env);
     }
-
 }

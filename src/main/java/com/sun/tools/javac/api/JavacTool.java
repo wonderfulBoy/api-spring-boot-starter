@@ -22,7 +22,6 @@ import java.nio.charset.Charset;
 import java.util.*;
 
 public final class JavacTool implements JavaCompiler {
-
     @Deprecated
     public JavacTool() {
     }
@@ -36,10 +35,8 @@ public final class JavacTool implements JavaCompiler {
                                       Iterable<String> options) {
         if (options == null)
             return;
-
         final Options optionTable = Options.instance(context);
         Log log = Log.instance(context);
-
         Option[] recognizedOptions =
                 Option.getJavacToolOptions().toArray(new Option[0]);
         OptionHelper optionHelper = new GrumpyHelper(log) {
@@ -58,7 +55,6 @@ public final class JavacTool implements JavaCompiler {
                 optionTable.remove(name);
             }
         };
-
         Iterator<String> flags = options.iterator();
         while (flags.hasNext()) {
             String flag = flags.next();
@@ -66,7 +62,6 @@ public final class JavacTool implements JavaCompiler {
             for (j = 0; j < recognizedOptions.length; j++)
                 if (recognizedOptions[j].matches(flag))
                     break;
-
             if (j == recognizedOptions.length) {
                 if (fileManager.handleOption(flag, flags)) {
                     continue;
@@ -75,7 +70,6 @@ public final class JavacTool implements JavaCompiler {
                     throw new IllegalArgumentException(msg);
                 }
             }
-
             Option option = recognizedOptions[j];
             if (option.hasArg()) {
                 if (!flags.hasNext()) {
@@ -90,7 +84,6 @@ public final class JavacTool implements JavaCompiler {
                     throw new IllegalArgumentException(flag);
             }
         }
-
         optionTable.notifyListeners();
     }
 
@@ -131,7 +124,6 @@ public final class JavacTool implements JavaCompiler {
                              Context context) {
         try {
             ClientCodeWrapper ccw = ClientCodeWrapper.instance(context);
-
             if (options != null)
                 for (String option : options)
                     option.getClass();
@@ -150,21 +142,16 @@ public final class JavacTool implements JavaCompiler {
                     }
                 }
             }
-
             if (diagnosticListener != null)
                 context.put(DiagnosticListener.class, ccw.wrap(diagnosticListener));
-
             if (out == null)
                 context.put(Log.outKey, new PrintWriter(System.err, true));
             else
                 context.put(Log.outKey, new PrintWriter(out, true));
-
             if (fileManager == null)
                 fileManager = getStandardFileManager(diagnosticListener, null, null);
             fileManager = ccw.wrap(fileManager);
-
             context.put(JavaFileManager.class, fileManager);
-
             processOptions(context, fileManager, options);
             Main compiler = new Main("javacTask", context.get(Log.outKey));
             return new JavacTaskImpl(compiler, options, context, classes, compilationUnits);
@@ -194,5 +181,4 @@ public final class JavacTool implements JavaCompiler {
         }
         return -1;
     }
-
 }

@@ -8,7 +8,6 @@ import javax.tools.JavaFileObject;
 import java.util.EnumSet;
 
 public class JavadocClassReader extends ClassReader {
-
     private DocEnv docenv;
     private EnumSet<JavaFileObject.Kind> all = EnumSet.of(JavaFileObject.Kind.CLASS,
             JavaFileObject.Kind.SOURCE,

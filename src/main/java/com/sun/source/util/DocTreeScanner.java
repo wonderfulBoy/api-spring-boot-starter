@@ -4,7 +4,6 @@ import com.sun.source.doctree.*;
 
 @jdk.Exported
 public class DocTreeScanner<R, P> implements DocTreeVisitor<R, P> {
-
     public R scan(DocTree node, P p) {
         return (node == null) ? null : node.accept(this, p);
     }
@@ -189,5 +188,4 @@ public class DocTreeScanner<R, P> implements DocTreeVisitor<R, P> {
     public R visitOther(DocTree node, P p) {
         return null;
     }
-
 }

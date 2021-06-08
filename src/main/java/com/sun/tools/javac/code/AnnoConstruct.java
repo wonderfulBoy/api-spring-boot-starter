@@ -11,7 +11,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public abstract class AnnoConstruct implements AnnotatedConstruct {
-
     private static final Class<? extends Annotation> REPEATABLE_CLASS = initRepeatable();
     private static final Method VALUE_ELEMENT_METHOD = initValueElementMethod();
 
@@ -26,7 +25,6 @@ public abstract class AnnoConstruct implements AnnotatedConstruct {
     private static Method initValueElementMethod() {
         if (REPEATABLE_CLASS == null)
             return null;
-
         Method m = null;
         try {
             m = REPEATABLE_CLASS.getMethod("value");
@@ -41,14 +39,11 @@ public abstract class AnnoConstruct implements AnnotatedConstruct {
     private static Class<? extends Annotation> getContainer(Class<? extends Annotation> annoType) {
         if (REPEATABLE_CLASS != null &&
                 VALUE_ELEMENT_METHOD != null) {
-            Annotation repeatable = (Annotation) annoType.getAnnotation(REPEATABLE_CLASS);
+            Annotation repeatable = annoType.getAnnotation(REPEATABLE_CLASS);
             if (repeatable != null) {
                 try {
                     @SuppressWarnings("unchecked")
                     Class<? extends Annotation> containerType = (Class) VALUE_ELEMENT_METHOD.invoke(repeatable);
-                    if (containerType == null)
-                        return null;
-
                     return containerType;
                 } catch (ClassCastException | IllegalAccessException | InvocationTargetException e) {
                     return null;
@@ -67,12 +62,10 @@ public abstract class AnnoConstruct implements AnnotatedConstruct {
 
     protected <A extends Annotation> Attribute.Compound getAttribute(Class<A> annoType) {
         String name = annoType.getName();
-
         for (Attribute.Compound anno : getAnnotationMirrors()) {
             if (name.equals(anno.type.tsym.flatName().toString()))
                 return anno;
         }
-
         return null;
     }
 
@@ -82,7 +75,6 @@ public abstract class AnnoConstruct implements AnnotatedConstruct {
     }
 
     public <A extends Annotation> A[] getAnnotationsByType(Class<A> annoType) {
-
         if (!annoType.isAnnotation())
             throw new IllegalArgumentException("Not an annotation type: "
                     + annoType);
@@ -90,14 +82,12 @@ public abstract class AnnoConstruct implements AnnotatedConstruct {
         if (containerType == null) {
             A res = getAnnotation(annoType);
             int size = res == null ? 0 : 1;
-
             @SuppressWarnings("unchecked")
             A[] arr = (A[]) java.lang.reflect.Array.newInstance(annoType, size);
             if (res != null)
                 arr[0] = res;
             return arr;
         }
-
         String annoTypeName = annoType.getName();
         String containerTypeName = containerType.getName();
         int directIndex = -1, containerIndex = -1;
@@ -114,21 +104,16 @@ public abstract class AnnoConstruct implements AnnotatedConstruct {
                 container = attribute;
             }
         }
-
         if (direct == null && container == null &&
                 annoType.isAnnotationPresent(Inherited.class))
             return getInheritedAnnotations(annoType);
-
         Attribute.Compound[] contained = unpackContained(container);
-
         if (direct == null && contained.length == 0 &&
                 annoType.isAnnotationPresent(Inherited.class))
             return getInheritedAnnotations(annoType);
-
         int size = (direct == null ? 0 : 1) + contained.length;
         @SuppressWarnings("unchecked")
         A[] arr = (A[]) java.lang.reflect.Array.newInstance(annoType, size);
-
         int insert = -1;
         int length = arr.length;
         if (directIndex >= 0 && containerIndex >= 0) {
@@ -146,10 +131,8 @@ public abstract class AnnoConstruct implements AnnotatedConstruct {
         } else {
             insert = 0;
         }
-
         for (int i = 0; i + insert < length; i++)
             arr[insert + i] = AnnotationProxyMaker.generateAnnotation(contained[i], annoType);
-
         return arr;
     }
 
@@ -167,12 +150,9 @@ public abstract class AnnoConstruct implements AnnotatedConstruct {
     }
 
     public <A extends Annotation> A getAnnotation(Class<A> annoType) {
-
         if (!annoType.isAnnotation())
             throw new IllegalArgumentException("Not an annotation type: " + annoType);
-
         Attribute.Compound c = getAttribute(annoType);
         return c == null ? null : AnnotationProxyMaker.generateAnnotation(c, annoType);
     }
-
 }

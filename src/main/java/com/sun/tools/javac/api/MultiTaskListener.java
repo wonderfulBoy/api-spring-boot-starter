@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.Collection;
 
 public class MultiTaskListener implements TaskListener {
-
     public static final Context.Key<MultiTaskListener> taskListenerKey = new Context.Key<MultiTaskListener>();
     TaskListener[] listeners = {};
     ClientCodeWrapper ccw;

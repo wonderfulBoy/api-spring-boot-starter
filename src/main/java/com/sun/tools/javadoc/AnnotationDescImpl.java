@@ -11,10 +11,8 @@ import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Pair;
 
 public class AnnotationDescImpl implements AnnotationDesc {
-
     private final DocEnv env;
     private final Attribute.Compound annotation;
-
 
     AnnotationDescImpl(DocEnv env, Attribute.Compound annotation) {
         this.env = env;
@@ -33,7 +31,7 @@ public class AnnotationDescImpl implements AnnotationDesc {
 
     public ElementValuePair[] elementValues() {
         List<Pair<MethodSymbol, Attribute>> vals = annotation.values;
-        ElementValuePair res[] = new ElementValuePair[vals.length()];
+        ElementValuePair[] res = new ElementValuePair[vals.length()];
         int i = 0;
         for (Pair<MethodSymbol, Attribute> val : vals) {
             res[i++] = new ElementValuePairImpl(env, val.fst, val.snd);
@@ -49,8 +47,7 @@ public class AnnotationDescImpl implements AnnotationDesc {
     public String toString() {
         StringBuilder sb = new StringBuilder("@");
         sb.append(annotation.type.tsym);
-
-        ElementValuePair vals[] = elementValues();
+        ElementValuePair[] vals = elementValues();
         if (vals.length > 0) {
             sb.append('(');
             boolean first = true;
@@ -59,7 +56,6 @@ public class AnnotationDescImpl implements AnnotationDesc {
                     sb.append(", ");
                 }
                 first = false;
-
                 String name = val.element().name();
                 if (vals.length == 1 && name.equals("value")) {
                     sb.append(val.value());
@@ -73,7 +69,6 @@ public class AnnotationDescImpl implements AnnotationDesc {
     }
 
     public static class ElementValuePairImpl implements ElementValuePair {
-
         private final DocEnv env;
         private final MethodSymbol meth;
         private final Attribute value;
@@ -97,5 +92,4 @@ public class AnnotationDescImpl implements AnnotationDesc {
             return meth.name + "=" + value();
         }
     }
-
 }

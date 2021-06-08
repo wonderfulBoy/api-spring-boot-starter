@@ -1,7 +1,6 @@
 package com.sun.javadoc;
 
 public interface SeeTag extends Tag {
-
     String label();
 
     PackageDoc referencedPackage();

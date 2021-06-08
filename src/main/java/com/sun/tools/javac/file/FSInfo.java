@@ -1,5 +1,6 @@
-
 package com.sun.tools.javac.file;
+
+import com.sun.tools.javac.util.Context;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,35 +12,20 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-import com.sun.tools.javac.util.Context;
-
-/**
- * Get meta-info about files. Default direct (non-caching) implementation.
- * @see CacheFSInfo
- *
- * <p><b>This is NOT part of any supported API.
- * If you write code that depends on this, you do so at your own risk.
- * This code and its internal interfaces are subject to change or
- * deletion without notice.</b>
- */
 public class FSInfo {
-
-    /** Get the FSInfo instance for this context.
-     *  @param context the context
-     *  @return the Paths instance for this context
-     */
-    public static FSInfo instance(Context context) {
-        FSInfo instance = context.get(FSInfo.class);
-        if (instance == null)
-            instance = new FSInfo();
-        return instance;
-    }
 
     protected FSInfo() {
     }
 
     protected FSInfo(Context context) {
         context.put(FSInfo.class, this);
+    }
+
+    public static FSInfo instance(Context context) {
+        FSInfo instance = context.get(FSInfo.class);
+        if (instance == null)
+            instance = new FSInfo();
+        return instance;
     }
 
     public File getCanonicalFile(File file) {
@@ -69,23 +55,18 @@ public class FSInfo {
             Manifest man = jarFile.getManifest();
             if (man == null)
                 return Collections.emptyList();
-
             Attributes attr = man.getMainAttributes();
             if (attr == null)
                 return Collections.emptyList();
-
             String path = attr.getValue(Attributes.Name.CLASS_PATH);
             if (path == null)
                 return Collections.emptyList();
-
             List<File> list = new ArrayList<File>();
-
             for (StringTokenizer st = new StringTokenizer(path); st.hasMoreTokens(); ) {
                 String elt = st.nextToken();
                 File f = (parent == null ? new File(elt) : new File(parent, elt));
                 list.add(f);
             }
-
             return list;
         } finally {
             jarFile.close();

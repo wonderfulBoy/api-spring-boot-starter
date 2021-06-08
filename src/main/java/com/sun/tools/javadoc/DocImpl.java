@@ -18,19 +18,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class DocImpl implements Doc, Comparable<Object> {
-
     protected final DocEnv env;
-
     protected TreePath treePath;
-
     protected String documentation;
-
     private Comment comment;
-
     private CollationKey collationkey = null;
-
     private Tag[] firstSentence;
-
     private Tag[] inlineTags;
 
     DocImpl(DocEnv env, TreePath treePath) {
@@ -42,7 +35,6 @@ public abstract class DocImpl implements Doc, Comparable<Object> {
     private static String getCommentText(TreePath p) {
         if (p == null)
             return null;
-
         JCCompilationUnit topLevel = (JCCompilationUnit) p.getCompilationUnit();
         JCTree tree = (JCTree) p.getLeaf();
         return topLevel.docComments.getCommentText(tree);
@@ -221,5 +213,4 @@ public abstract class DocImpl implements Doc, Comparable<Object> {
     public SourcePosition position() {
         return null;
     }
-
 }

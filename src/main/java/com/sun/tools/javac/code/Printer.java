@@ -15,7 +15,6 @@ import static com.sun.tools.javac.code.TypeTag.CLASS;
 import static com.sun.tools.javac.code.TypeTag.FORALL;
 
 public abstract class Printer implements Type.Visitor<String, Locale>, Symbol.Visitor<String, Locale> {
-
     static final int PRIME = 997;
     List<Type> seenCaptured = List.nil();
 

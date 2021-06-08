@@ -1,7 +1,6 @@
 package com.sun.javadoc;
 
 public interface DocErrorReporter {
-
     void printError(String msg);
 
     void printError(SourcePosition pos, String msg);
@@ -13,5 +12,4 @@ public interface DocErrorReporter {
     void printNotice(String msg);
 
     void printNotice(SourcePosition pos, String msg);
-
 }

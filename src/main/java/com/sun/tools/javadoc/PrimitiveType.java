@@ -3,7 +3,6 @@ package com.sun.tools.javadoc;
 import com.sun.javadoc.*;
 
 class PrimitiveType implements Type {
-
     static final PrimitiveType voidType = new PrimitiveType("void");
     static final PrimitiveType booleanType = new PrimitiveType("boolean");
     static final PrimitiveType byteType = new PrimitiveType("byte");

@@ -7,7 +7,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class Comment {
-
     private static final Pattern prePat = Pattern.compile("(?i)<(/?)pre>");
     private final ListBuffer<Tag> tagList = new ListBuffer<Tag>();
     private final DocEnv docenv;
@@ -15,7 +14,6 @@ class Comment {
 
     Comment(final DocImpl holder, final String commentString) {
         this.docenv = holder.env;
-
         @SuppressWarnings("fallthrough")
         class CommentStringParser {
             void parseCommentStateMachine() {
@@ -109,13 +107,10 @@ class Comment {
 
             void warnIfEmpty(String tagName, String tx) {
                 if (tx.length() == 0) {
-                    //echils
-//                    docenv.warning(holder, "tag.tag_has_no_arguments", tagName);
+
                 }
             }
-
         }
-
         new CommentStringParser().parseCommentStateMachine();
     }
 
@@ -124,7 +119,6 @@ class Comment {
         int delimend = 0, textstart = 0, len = inlinetext.length();
         boolean inPre = false;
         DocEnv docenv = holder.env;
-
         if (len == 0) {
             return taglist.toArray(new Tag[taglist.length()]);
         }
@@ -222,7 +216,7 @@ class Comment {
             return -1;
         } else if (inlinetext.indexOf('}', linkstart) == -1) {
             docenv.warning(holder, "tag.Improper_Use_Of_Link_Tag",
-                    inlinetext.substring(linkstart, inlinetext.length()));
+                    inlinetext.substring(linkstart));
             return -1;
         } else {
             return linkstart;

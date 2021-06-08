@@ -15,7 +15,6 @@ import java.text.CollationKey;
 
 public abstract class ExecutableMemberDocImpl
         extends MemberDocImpl implements ExecutableMemberDoc {
-
     protected final MethodSymbol sym;
 
     public ExecutableMemberDocImpl(DocEnv env, MethodSymbol sym, TreePath treePath) {
@@ -86,8 +85,7 @@ public abstract class ExecutableMemberDocImpl
 
     public Parameter[] parameters() {
         List<VarSymbol> params = sym.params();
-        Parameter result[] = new Parameter[params.length()];
-
+        Parameter[] result = new Parameter[params.length()];
         int i = 0;
         for (VarSymbol param : params) {
             result[i++] = new ParameterImpl(env, param);
@@ -104,7 +102,7 @@ public abstract class ExecutableMemberDocImpl
         if (env.legacyDoclet) {
             return new TypeVariable[0];
         }
-        TypeVariable res[] = new TypeVariable[sym.type.getTypeArguments().length()];
+        TypeVariable[] res = new TypeVariable[sym.type.getTypeArguments().length()];
         TypeMaker.getTypes(env, sym.type.getTypeArguments(), res);
         return res;
     }

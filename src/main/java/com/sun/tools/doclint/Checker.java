@@ -45,9 +45,7 @@ public class Checker extends DocTreePathScanner<Void, Void> {
 
     public Void scan(DocCommentTree tree, TreePath p) {
         env.setCurrent(p, tree);
-
         boolean isOverridingMethod = !env.currOverriddenMethods.isEmpty();
-
         if (p.getLeaf() == p.getCompilationUnit()) {
             JavaFileObject fo = p.getCompilationUnit().getSourceFile();
             boolean isPkgInfo = fo.isNameCompatible("package-info", JavaFileObject.Kind.SOURCE);
@@ -66,17 +64,13 @@ public class Checker extends DocTreePathScanner<Void, Void> {
                 return null;
             }
         }
-
         tagStack.clear();
         currHeaderTag = null;
-
         foundParams.clear();
         foundThrows.clear();
         foundInheritDoc = false;
         foundReturn = false;
-
         scan(new DocTreePath(p, tree), null);
-
         if (!isOverridingMethod) {
             switch (env.currElement.getKind()) {
                 case METHOD:
@@ -99,7 +93,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
                 }
             }
         }
-
         return null;
     }
 
@@ -191,10 +184,8 @@ public class Checker extends DocTreePathScanner<Void, Void> {
                     tagStack.pop();
                 }
             }
-
             markEnclosingTag(Flag.HAS_ELEMENT);
             checkStructure(tree, t);
-
             switch (t) {
                 case H1:
                 case H2:
@@ -205,7 +196,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
                     checkHeader(tree, t);
                     break;
             }
-
             if (t.flags.contains(HtmlTag.Flag.NO_NEST)) {
                 for (TagStackItem i : tagStack) {
                     if (t == i.tag) {
@@ -215,35 +205,28 @@ public class Checker extends DocTreePathScanner<Void, Void> {
                 }
             }
         }
-
         if (tree.isSelfClosing()) {
             env.messages.error(HTML, tree, "dc.tag.self.closing", treeName);
         }
-
         try {
             TagStackItem parent = tagStack.peek();
             TagStackItem top = new TagStackItem(tree, t);
             tagStack.push(top);
-
             super.visitStartElement(tree, ignore);
-
             if (t != null) {
                 switch (t) {
                     case CAPTION:
                         if (parent != null && parent.tag == HtmlTag.TABLE)
                             parent.flags.add(Flag.TABLE_HAS_CAPTION);
                         break;
-
                     case IMG:
                         if (!top.attrs.contains(HtmlTag.Attr.ALT))
                             env.messages.error(ACCESSIBILITY, tree, "dc.no.alt.attr.for.image");
                         break;
                 }
             }
-
             return null;
         } finally {
-
             if (t == null || t.endKind == HtmlTag.EndKind.NONE)
                 tagStack.pop();
         }
@@ -256,7 +239,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
             case BLOCK:
                 if (top == null || top.tag.accepts(t))
                     return;
-
                 switch (top.tree.getKind()) {
                     case START_ELEMENT: {
                         if (top.tag.blockType == HtmlTag.BlockType.INLINE) {
@@ -267,7 +249,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
                         }
                     }
                     break;
-
                     case LINK:
                     case LINK_PLAIN: {
                         String name = top.tree.getKind().tagName;
@@ -277,27 +258,23 @@ public class Checker extends DocTreePathScanner<Void, Void> {
                     }
                 }
                 break;
-
             case INLINE:
                 if (top == null || top.tag.accepts(t))
                     return;
                 break;
-
             case LIST_ITEM:
             case TABLE_ITEM:
                 if (top != null) {
-                    // reset this flag so subsequent bad inline content gets reported
+
                     top.flags.remove(Flag.REPORTED_BAD_INLINE);
                     if (top.tag.accepts(t))
                         return;
                 }
                 break;
-
             case OTHER:
                 env.messages.error(HTML, tree, "dc.tag.not.allowed", treeName);
                 return;
         }
-
         env.messages.error(HTML, tree, "dc.tag.not.allowed.here", treeName);
     }
 
@@ -310,7 +287,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
                         tag, currHeaderTag);
             }
         }
-
         currHeaderTag = tag;
     }
 
@@ -381,12 +357,10 @@ public class Checker extends DocTreePathScanner<Void, Void> {
                     }
                 }
             }
-
             if (!done && tagStack.isEmpty()) {
                 env.messages.error(HTML, tree, "dc.tag.end.unexpected", treeName);
             }
         }
-
         return super.visitEndElement(tree, ignore);
     }
 
@@ -419,20 +393,16 @@ public class Checker extends DocTreePathScanner<Void, Void> {
             switch (k) {
                 case OK:
                     break;
-
                 case INVALID:
                     env.messages.error(HTML, tree, "dc.attr.unknown", name);
                     break;
-
                 case OBSOLETE:
                     env.messages.warning(ACCESSIBILITY, tree, "dc.attr.obsolete", name);
                     break;
-
                 case USE_CSS:
                     env.messages.warning(ACCESSIBILITY, tree, "dc.attr.obsolete.use.css", name);
                     break;
             }
-
             if (attr != null) {
                 switch (attr) {
                     case NAME:
@@ -452,7 +422,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
                             }
                         }
                         break;
-
                     case HREF:
                         if (currTag == HtmlTag.A) {
                             String v = getAttrValue(tree);
@@ -470,7 +439,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
                             }
                         }
                         break;
-
                     case VALUE:
                         if (currTag == HtmlTag.LI) {
                             String v = getAttrValue(tree);
@@ -484,7 +452,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
                 }
             }
         }
-
         return super.visitAttribute(tree, ignore);
     }
 
@@ -516,7 +483,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
     private String getAttrValue(AttributeTree tree) {
         if (tree.getValue() == null)
             return null;
-
         StringWriter sw = new StringWriter();
         try {
             new DocPretty(sw).print(tree.getValue());
@@ -585,7 +551,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
         boolean typaram = tree.isTypeParameter();
         IdentifierTree nameTree = tree.getName();
         Element paramElement = nameTree != null ? env.trees.getElement(new DocTreePath(getCurrentPath(), nameTree)) : null;
-
         if (paramElement == null) {
             switch (env.currElement.getKind()) {
                 case CLASS:
@@ -600,7 +565,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
                     env.messages.error(REFERENCE, nameTree, "dc.param.name.not.found");
                     break;
                 }
-
                 default:
                     env.messages.error(REFERENCE, tree, "dc.invalid.param");
                     break;
@@ -608,7 +572,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
         } else {
             foundParams.add(paramElement);
         }
-
         warnIfEmpty(tree, tree.getDescription());
         return super.visitParam(tree, ignore);
     }
@@ -616,7 +579,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
     private void checkParamsDocumented(List<? extends Element> list) {
         if (foundInheritDoc)
             return;
-
         for (Element e : list) {
             if (!foundParams.contains(e)) {
                 CharSequence paramName = (e.getKind() == ElementKind.TYPE_PARAMETER)
@@ -632,7 +594,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
         String sig = tree.getSignature();
         if (sig.contains("<") || sig.contains(">"))
             env.messages.error(REFERENCE, tree, "dc.type.arg.not.allowed");
-
         Element e = env.trees.getElement(getCurrentPath());
         if (e == null)
             env.messages.error(REFERENCE, tree, "dc.ref.not.found");
@@ -717,7 +678,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
     private void checkThrowsDocumented(List<? extends TypeMirror> list) {
         if (foundInheritDoc)
             return;
-
         for (TypeMirror tl : list) {
             if (isCheckedException(tl) && !foundThrows.contains(tl))
                 reportMissing("dc.missing.throws", tl);
@@ -752,7 +712,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
             if (!isConstant(e))
                 env.messages.error(REFERENCE, tree, "dc.value.not.a.constant");
         }
-
         markEnclosingTag(Flag.HAS_INLINE_TAG);
         return super.visitValue(tree, ignore);
     }
@@ -760,7 +719,6 @@ public class Checker extends DocTreePathScanner<Void, Void> {
     private boolean isConstant(Element e) {
         if (e == null)
             return false;
-
         switch (e.getKind()) {
             case FIELD:
                 Object value = ((VariableElement) e).getConstantValue();
@@ -867,5 +825,4 @@ public class Checker extends DocTreePathScanner<Void, Void> {
             return String.valueOf(tag);
         }
     }
-
 }

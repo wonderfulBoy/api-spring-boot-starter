@@ -7,7 +7,10 @@ import javax.lang.model.element.TypeElement;
 @jdk.Exported
 public interface Scope {
     Scope getEnclosingScope();
+
     TypeElement getEnclosingClass();
+
     ExecutableElement getEnclosingMethod();
+
     Iterable<? extends Element> getLocalElements();
 }

@@ -10,10 +10,7 @@ import java.text.MessageFormat;
 import java.util.*;
 
 public class Messages {
-
     private final Options options;
-
-    ;
     private final Stats stats;
     ResourceBundle bundle;
     Env env;
@@ -22,7 +19,6 @@ public class Messages {
         this.env = env;
         String name = getClass().getPackage().getName() + ".resources.doclint";
         bundle = ResourceBundle.getBundle(name, Locale.ENGLISH);
-
         stats = new Stats(bundle);
         options = new Options(stats);
     }
@@ -52,7 +48,6 @@ public class Messages {
             String msg = (code == null) ? (String) args[0] : localize(code, args);
             env.trees.printMessage(dkind, msg, tree,
                     env.currDocComment, env.currPath.getCompilationUnit());
-
             stats.record(group, dkind, code);
         }
     }
@@ -61,7 +56,6 @@ public class Messages {
         if (options.isEnabled(group, env.currAccess)) {
             String msg = localize(code, args);
             env.trees.printMessage(dkind, msg, tree, env.currPath.getCompilationUnit());
-
             stats.record(group, dkind, code);
         }
     }
@@ -124,7 +118,6 @@ public class Messages {
         private static boolean isValidOption(String opt) {
             if (opt.equals("none") || opt.equals(Stats.OPT))
                 return true;
-
             int begin = opt.startsWith("-") ? 1 : 0;
             int sep = opt.indexOf("/");
             String grp = opt.substring(begin, (sep != -1) ? sep : opt.length());
@@ -135,18 +128,14 @@ public class Messages {
         boolean isEnabled(Group g, AccessKind access) {
             if (map.isEmpty())
                 map.put("all", AccessKind.PROTECTED);
-
             AccessKind ak = map.get(g.optName());
             if (ak != null && access.compareTo(ak) >= 0)
                 return true;
-
             ak = map.get(ALL);
             if (ak != null && access.compareTo(ak) >= 0) {
                 ak = map.get(g.notOptName());
-                if (ak == null || access.compareTo(ak) > 0)
-                    return true;
+                return ak == null || access.compareTo(ak) > 0;
             }
-
             return false;
         }
 
@@ -164,7 +153,6 @@ public class Messages {
                 stats.setEnabled(true);
                 return;
             }
-
             int sep = arg.indexOf("/");
             if (sep > 0) {
                 AccessKind ak = AccessKind.valueOf(arg.substring(sep + 1).toUpperCase());
@@ -251,9 +239,7 @@ public class Messages {
         }
 
         private static class Table {
-
             private static final Comparator<Integer> DECREASING = new Comparator<Integer>() {
-
                 public int compare(Integer o1, Integer o2) {
                     return o2.compareTo(o1);
                 }

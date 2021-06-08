@@ -1,55 +1,12 @@
-/*
- * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package com.sun.tools.javac.tree;
 
-import com.sun.tools.javac.util.*;
 import com.sun.tools.javac.tree.JCTree.*;
+import com.sun.tools.javac.util.List;
 
-/** A subclass of Tree.Visitor, this class defines
- *  a general tree translator pattern. Translation proceeds recursively in
- *  left-to-right order down a tree, constructing translated nodes by
- *  overwriting existing ones. There is one visitor method in this class
- *  for every possible kind of tree node.  To obtain a specific
- *  translator, it suffices to override those visitor methods which
- *  do some interesting work. The translator class itself takes care of all
- *  navigational aspects.
- *
- *  <p><b>This is NOT part of any supported API.
- *  If you write code that depends on this, you do so at your own risk.
- *  This code and its internal interfaces are subject to change or
- *  deletion without notice.</b>
- */
 public class TreeTranslator extends Visitor {
 
-    /** Visitor result field: a tree
-     */
     protected JCTree result;
 
-    /** Visitor method: Translate a single node.
-     */
     @SuppressWarnings("unchecked")
     public <T extends JCTree> T translate(T tree) {
         if (tree == null) {
@@ -58,12 +15,10 @@ public class TreeTranslator extends Visitor {
             tree.accept(this);
             JCTree result = this.result;
             this.result = null;
-            return (T)result; // XXX cast
+            return (T) result;
         }
     }
 
-    /** Visitor method: translate a list of nodes.
-     */
     public <T extends JCTree> List<T> translate(List<T> trees) {
         if (trees == null) return null;
         for (List<T> l = trees; l.nonEmpty(); l = l.tail)
@@ -71,49 +26,35 @@ public class TreeTranslator extends Visitor {
         return trees;
     }
 
-    /**  Visitor method: translate a list of variable definitions.
-     */
     public List<JCVariableDecl> translateVarDefs(List<JCVariableDecl> trees) {
         for (List<JCVariableDecl> l = trees; l.nonEmpty(); l = l.tail)
             l.head = translate(l.head);
         return trees;
     }
 
-    /**  Visitor method: translate a list of type parameters.
-     */
     public List<JCTypeParameter> translateTypeParams(List<JCTypeParameter> trees) {
         for (List<JCTypeParameter> l = trees; l.nonEmpty(); l = l.tail)
             l.head = translate(l.head);
         return trees;
     }
 
-    /**  Visitor method: translate a list of case parts of switch statements.
-     */
     public List<JCCase> translateCases(List<JCCase> trees) {
         for (List<JCCase> l = trees; l.nonEmpty(); l = l.tail)
             l.head = translate(l.head);
         return trees;
     }
 
-    /**  Visitor method: translate a list of catch clauses in try statements.
-     */
     public List<JCCatch> translateCatchers(List<JCCatch> trees) {
         for (List<JCCatch> l = trees; l.nonEmpty(); l = l.tail)
             l.head = translate(l.head);
         return trees;
     }
 
-    /**  Visitor method: translate a list of catch clauses in try statements.
-     */
     public List<JCAnnotation> translateAnnotations(List<JCAnnotation> trees) {
         for (List<JCAnnotation> l = trees; l.nonEmpty(); l = l.tail)
             l.head = translate(l.head);
         return trees;
     }
-
-/* ***************************************************************************
- * Visitor methods
- ****************************************************************************/
 
     public void visitTopLevel(JCCompilationUnit tree) {
         tree.pid = translate(tree.pid);

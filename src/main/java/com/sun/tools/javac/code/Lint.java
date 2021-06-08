@@ -24,9 +24,7 @@ public class Lint {
             if (options.lint(e.getKey()))
                 values.add(e.getValue());
         }
-
         suppressedValues = EnumSet.noneOf(LintCategory.class);
-
         context.put(lintKey, this);
         augmentor = new AugmentVisitor(context);
     }
@@ -68,14 +66,11 @@ public class Lint {
         return values.contains(lc);
     }
 
-    ;
-
     public boolean isSuppressed(LintCategory lc) {
         return suppressedValues.contains(lc);
     }
 
     public enum LintCategory {
-
         AUXILIARYCLASS("auxiliaryclass"),
         CAST("cast"),
         CLASSFILE("classfile"),
@@ -96,9 +91,7 @@ public class Lint {
         SUNAPI("sunapi", true),
         TRY("try"),
         UNCHECKED("unchecked"),
-
         VARARGS("varargs");
-
         public final String option;
         public final boolean hidden;
 
@@ -176,7 +169,6 @@ public class Lint {
                     if (value.fst.name.toString().equals("value"))
                         value.snd.accept(this);
                 }
-
             }
         }
 
@@ -191,5 +183,4 @@ public class Lint {
         public void visitError(Attribute.Error e) {
         }
     }
-
 }

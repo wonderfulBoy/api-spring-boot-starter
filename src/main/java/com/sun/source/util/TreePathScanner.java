@@ -1,8 +1,10 @@
 package com.sun.source.util;
 
-import com.sun.source.tree.*;
+import com.sun.source.tree.Tree;
+
 @jdk.Exported
 public class TreePathScanner<R, P> extends TreeScanner<R, P> {
+    private TreePath path;
 
     public R scan(TreePath path, P p) {
         this.path = path;
@@ -17,7 +19,6 @@ public class TreePathScanner<R, P> extends TreeScanner<R, P> {
     public R scan(Tree tree, P p) {
         if (tree == null)
             return null;
-
         TreePath prev = path;
         path = new TreePath(path, tree);
         try {
@@ -30,6 +31,4 @@ public class TreePathScanner<R, P> extends TreeScanner<R, P> {
     public TreePath getCurrentPath() {
         return path;
     }
-
-    private TreePath path;
 }

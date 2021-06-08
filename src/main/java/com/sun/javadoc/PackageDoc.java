@@ -1,7 +1,6 @@
 package com.sun.javadoc;
 
 public interface PackageDoc extends Doc {
-
     ClassDoc[] allClasses(boolean filter);
 
     ClassDoc[] allClasses();
@@ -21,5 +20,4 @@ public interface PackageDoc extends Doc {
     AnnotationDesc[] annotations();
 
     ClassDoc findClass(String className);
-
 }

@@ -1,9 +1,9 @@
 package com.sun.source.util;
 
 import com.sun.source.tree.*;
-@jdk.Exported
-public class TreeScanner<R,P> implements TreeVisitor<R,P> {
 
+@jdk.Exported
+public class TreeScanner<R, P> implements TreeVisitor<R, P> {
     public R scan(Tree node, P p) {
         return (node == null) ? null : node.accept(this, p);
     }
@@ -205,7 +205,7 @@ public class TreeScanner<R,P> implements TreeVisitor<R,P> {
         r = scanAndReduce(node.getDimensions(), p, r);
         r = scanAndReduce(node.getInitializers(), p, r);
         r = scanAndReduce(node.getAnnotations(), p, r);
-        for (Iterable< ? extends Tree> dimAnno : node.getDimAnnotations()) {
+        for (Iterable<? extends Tree> dimAnno : node.getDimAnnotations()) {
             r = scanAndReduce(dimAnno, p, r);
         }
         return r;
@@ -321,11 +321,11 @@ public class TreeScanner<R,P> implements TreeVisitor<R,P> {
         return r;
     }
 
-   public R visitAnnotatedType(AnnotatedTypeTree node, P p) {
-       R r = scan(node.getAnnotations(), p);
-       r = scanAndReduce(node.getUnderlyingType(), p, r);
-       return r;
-   }
+    public R visitAnnotatedType(AnnotatedTypeTree node, P p) {
+        R r = scan(node.getAnnotations(), p);
+        r = scanAndReduce(node.getUnderlyingType(), p, r);
+        return r;
+    }
 
     public R visitOther(Tree node, P p) {
         return null;

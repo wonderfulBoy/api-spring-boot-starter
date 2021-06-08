@@ -8,7 +8,6 @@ import com.sun.tools.javac.util.Name;
 import java.util.Iterator;
 
 public class Scope {
-
     public static final Scope emptyScope = new Scope(null, null, new Entry[]{});
     static final Filter<Symbol> noFilter = new Filter<Symbol>() {
         public boolean accepts(Symbol s) {
@@ -134,7 +133,6 @@ public class Scope {
         Assert.check(shared == 0);
         Entry e = lookup(sym.name);
         if (e.scope == null) return;
-
         int i = getIndex(sym.name);
         Entry te = table[i];
         if (te == e)
@@ -146,7 +144,6 @@ public class Scope {
             }
             te = te.shadowed;
         }
-
         te = elems;
         if (te == e)
             elems = e.sibling;
@@ -157,7 +154,6 @@ public class Scope {
             }
             te = te.sibling;
         }
-
         for (List<ScopeListener> l = listeners; l.nonEmpty(); l = l.tail) {
             l.head.symbolRemoved(sym, this);
         }
@@ -314,7 +310,6 @@ public class Scope {
     }
 
     public static class Entry {
-
         public Symbol sym;
         public Entry sibling;
         public Scope scope;
@@ -346,7 +341,6 @@ public class Scope {
     }
 
     public static class ImportScope extends Scope {
-
         public ImportScope(Symbol owner) {
             super(owner);
         }
@@ -369,7 +363,6 @@ public class Scope {
     }
 
     public static class StarImportScope extends ImportScope implements ScopeListener {
-
         public StarImportScope(Symbol owner) {
             super(owner);
         }
@@ -427,9 +420,7 @@ public class Scope {
     }
 
     public static class CompoundScope extends Scope implements ScopeListener {
-
         public static final Entry[] emptyTable = new Entry[0];
-
         private List<Scope> subScopes = List.nil();
         private int mark = 0;
 
@@ -527,7 +518,6 @@ public class Scope {
         }
 
         abstract class CompoundScopeIterator implements Iterator<Symbol> {
-
             private Iterator<Symbol> currentIterator;
             private List<Scope> scopesToScan;
 
@@ -567,7 +557,7 @@ public class Scope {
 
     public static class ErrorScope extends Scope {
         ErrorScope(Scope next, Symbol errSymbol, Entry[] table) {
-            super(next, /*owner=*/errSymbol, table);
+            super(next, errSymbol, table);
         }
 
         public ErrorScope(Symbol errSymbol) {

@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class PackageDocImpl extends DocImpl implements PackageDoc {
-
     public FileObject docPath = null;
     public boolean setDocPath = false;
     protected PackageSymbol sym;
@@ -54,7 +53,7 @@ public class PackageDocImpl extends DocImpl implements PackageDoc {
         if (documentation != null)
             return documentation;
         if (docPath != null) {
-            // read from file
+
             try {
                 InputStream s = docPath.openInputStream();
                 documentation = readHTMLDocumentation(s, docPath);
@@ -63,7 +62,7 @@ public class PackageDocImpl extends DocImpl implements PackageDoc {
                 env.error(null, "javadoc.File_Read_Error", docPath.getName());
             }
         } else {
-            // no doc file to be had
+
             documentation = "";
         }
         return documentation;
@@ -166,7 +165,7 @@ public class PackageDocImpl extends DocImpl implements PackageDoc {
     }
 
     public AnnotationDesc[] annotations() {
-        AnnotationDesc res[] = new AnnotationDesc[sym.getRawAttributes().length()];
+        AnnotationDesc[] res = new AnnotationDesc[sym.getRawAttributes().length()];
         int i = 0;
         for (Attribute.Compound a : sym.getRawAttributes()) {
             res[i++] = new AnnotationDescImpl(env, a);

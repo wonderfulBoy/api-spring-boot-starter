@@ -9,7 +9,6 @@ import com.sun.tools.javac.code.Type.ClassType;
 import static com.sun.tools.javac.code.TypeTag.CLASS;
 
 public class ParameterizedTypeImpl extends AbstractTypeImpl implements ParameterizedType {
-
     ParameterizedTypeImpl(DocEnv env, Type type) {
         super(env, type);
     }

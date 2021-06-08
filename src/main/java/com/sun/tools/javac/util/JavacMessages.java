@@ -7,7 +7,6 @@ import java.text.MessageFormat;
 import java.util.*;
 
 public class JavacMessages implements Messages {
-
     public static final Context.Key<JavacMessages> messagesKey = new Context.Key<JavacMessages>();
     private static final String defaultBundleName =
             "com.sun.tools.javac.resources.compiler";
@@ -115,8 +114,7 @@ public class JavacMessages implements Messages {
                     ResourceBundle rb = ResourceBundle.getBundle(bundleName, locale);
                     bundleList = bundleList.prepend(rb);
                 } catch (MissingResourceException e) {
-                    //echils
-//                    throw new InternalError("Cannot find javac resource bundle for locale " + locale);
+
                 }
             }
             bundleCache.put(locale, new SoftReference<List<ResourceBundle>>(bundleList));

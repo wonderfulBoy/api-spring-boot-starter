@@ -13,7 +13,6 @@ import java.io.File;
 import java.util.Locale;
 
 class SeeTagImpl extends TagImpl implements SeeTag, LayoutCharacters {
-
     private static final boolean showRef = false;
     String label = "";
     private String where;
@@ -53,7 +52,6 @@ class SeeTagImpl extends TagImpl implements SeeTag, LayoutCharacters {
             sym = ((PackageDocImpl) referencedPackage).sym;
         } else
             return;
-
         final JavacMessages messages = JavacMessages.instance(docenv().context);
         Locale locale = Locale.getDefault();
         Printer printer = new Printer() {
@@ -69,7 +67,6 @@ class SeeTagImpl extends TagImpl implements SeeTag, LayoutCharacters {
                 return "CAP#" + (++count);
             }
         };
-
         String s = text.replaceAll("\\s+", " ");
         int sp = s.indexOf(" ");
         int lparen = s.indexOf("(");
@@ -77,9 +74,7 @@ class SeeTagImpl extends TagImpl implements SeeTag, LayoutCharacters {
         String seetext = (sp == -1) ? s
                 : (lparen == -1 || sp < lparen) ? s.substring(0, sp)
                 : s.substring(0, rparen + 1);
-
         File file = new File(holder.position().file().getAbsoluteFile().toURI().normalize());
-
         StringBuilder sb = new StringBuilder();
         sb.append("+++ ").append(file).append(": ")
                 .append(name()).append(" ").append(seetext).append(": ");
@@ -87,7 +82,6 @@ class SeeTagImpl extends TagImpl implements SeeTag, LayoutCharacters {
         if (sym.kind == Kinds.MTH || sym.kind == Kinds.VAR)
             sb.append(printer.visit(sym.owner, locale)).append(".");
         sb.append(printer.visit(sym, locale));
-
         System.err.println(sb);
     }
 
@@ -183,10 +177,8 @@ class SeeTagImpl extends TagImpl implements SeeTag, LayoutCharacters {
                     name, text);
             return;
         }
-
         String seetext = "";
         String labeltext = "";
-
         if (commentstart > 0) {
             seetext = text.substring(start, commentstart);
             labeltext = text.substring(commentstart + 1);
@@ -201,7 +193,6 @@ class SeeTagImpl extends TagImpl implements SeeTag, LayoutCharacters {
             seetext = text;
             label = "";
         }
-
         int sharp = seetext.indexOf('#');
         if (sharp >= 0) {
             where = seetext.substring(0, sharp);
@@ -231,7 +222,6 @@ class SeeTagImpl extends TagImpl implements SeeTag, LayoutCharacters {
                 referencedClass = docenv().lookupClass(
                         ((ProgramElementDoc) holder()).containingPackage().name() + "." + where);
             }
-
             if (referencedClass == null) {
                 referencedPackage = docenv().lookupPackage(where);
                 return;
@@ -247,7 +237,6 @@ class SeeTagImpl extends TagImpl implements SeeTag, LayoutCharacters {
             }
         }
         where = referencedClass.qualifiedName();
-
         if (what == null) {
             return;
         } else {
@@ -256,7 +245,7 @@ class SeeTagImpl extends TagImpl implements SeeTag, LayoutCharacters {
             String[] paramarr;
             if (paren > 0) {
                 paramarr = new ParameterParseMachine(what.
-                        substring(paren, what.length())).parseParameters();
+                        substring(paren)).parseParameters();
                 if (paramarr != null) {
                     referencedMember = findExecutableMember(memName, paramarr,
                             referencedClass);
@@ -325,11 +314,8 @@ class SeeTagImpl extends TagImpl implements SeeTag, LayoutCharacters {
         static final int TNSPACE = 3;
         static final int ARRAYDECORATION = 4;
         static final int ARRAYSPACE = 5;
-
         String parameters;
-
         StringBuilder typeId;
-
         ListBuffer<String> paramList;
 
         ParameterParseMachine(String parameters) {
@@ -341,7 +327,7 @@ class SeeTagImpl extends TagImpl implements SeeTag, LayoutCharacters {
         public String[] parseParameters() {
             if (parameters.equals("()")) {
                 return new String[0];
-            }   // now strip off '(' and ')'
+            }
             int state = START;
             int prevstate = START;
             parameters = parameters.substring(1, parameters.length() - 1);
@@ -377,7 +363,7 @@ class SeeTagImpl extends TagImpl implements SeeTag, LayoutCharacters {
                                         "tag.missing_comma_space",
                                         name,
                                         "(" + parameters + ")");
-                                return (String[]) null;
+                                return null;
                             }
                             addTypeToParamList();
                             state = NAME;
@@ -399,7 +385,7 @@ class SeeTagImpl extends TagImpl implements SeeTag, LayoutCharacters {
                                     "tag.illegal_char_in_arr_dim",
                                     name,
                                     "(" + parameters + ")");
-                            return (String[]) null;
+                            return null;
                         }
                         prevstate = ARRAYDECORATION;
                         break;

@@ -88,7 +88,6 @@ public class Messager extends Log implements DocErrorReporter {
             report(DiagnosticType.ERROR, pos, msg);
             return;
         }
-
         if (nerrors < MaxErrors) {
             String prefix = (pos == null) ? programName : pos.toString();
             errWriter.println(prefix + ": " + getText("javadoc.error") + " - " + msg);
@@ -107,7 +106,6 @@ public class Messager extends Log implements DocErrorReporter {
             report(DiagnosticType.WARNING, pos, msg);
             return;
         }
-
         if (nwarnings < MaxWarnings) {
             String prefix = (pos == null) ? programName : pos.toString();
             warnWriter.println(prefix + ": " + getText("javadoc.warning") + " - " + msg);
@@ -125,7 +123,6 @@ public class Messager extends Log implements DocErrorReporter {
             report(DiagnosticType.NOTE, pos, msg);
             return;
         }
-
         if (pos == null)
             noticeWriter.println(msg);
         else
@@ -175,12 +172,10 @@ public class Messager extends Log implements DocErrorReporter {
                 Object prefix = (pos == null) ? programName : pos;
                 report(javadocDiags.create(type, null, null, "msg", prefix, msg));
                 break;
-
             case NOTE:
                 String key = (pos == null) ? "msg" : "pos.msg";
                 report(javadocDiags.create(type, null, null, key, pos, msg));
                 break;
-
             default:
                 throw new IllegalArgumentException(type.toString());
         }

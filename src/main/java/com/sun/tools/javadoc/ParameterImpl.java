@@ -5,7 +5,6 @@ import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 
 class ParameterImpl implements Parameter {
-
     private final DocEnv env;
     private final VarSymbol sym;
     private final Type type;
@@ -35,7 +34,7 @@ class ParameterImpl implements Parameter {
     }
 
     public AnnotationDesc[] annotations() {
-        AnnotationDesc res[] = new AnnotationDesc[sym.getRawAttributes().length()];
+        AnnotationDesc[] res = new AnnotationDesc[sym.getRawAttributes().length()];
         int i = 0;
         for (Attribute.Compound a : sym.getRawAttributes()) {
             res[i++] = new AnnotationDescImpl(env, a);

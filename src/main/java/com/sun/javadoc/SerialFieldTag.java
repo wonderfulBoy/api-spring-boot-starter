@@ -1,7 +1,6 @@
 package com.sun.javadoc;
 
 public interface SerialFieldTag extends Tag, Comparable<Object> {
-
     String fieldName();
 
     String fieldType();

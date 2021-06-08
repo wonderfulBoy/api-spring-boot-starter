@@ -39,7 +39,6 @@ import static com.sun.tools.javac.code.TypeTag.ARRAY;
 import static com.sun.tools.javac.code.TypeTag.CLASS;
 
 public class JavacTrees extends DocTrees {
-
     private Resolve resolve;
     private Enter enter;
     private Log log;
@@ -55,10 +54,8 @@ public class JavacTrees extends DocTrees {
         public Boolean visitType(Type t, Type s) {
             if (t == s)
                 return true;
-
             if (s.isPartial())
                 return visit(s, t);
-
             switch (t.getTag()) {
                 case BYTE:
                 case CHAR:
@@ -81,10 +78,8 @@ public class JavacTrees extends DocTrees {
         public Boolean visitArrayType(ArrayType t, Type s) {
             if (t == s)
                 return true;
-
             if (s.isPartial())
                 return visit(s, t);
-
             return s.hasTag(ARRAY)
                     && visit(t.elemtype, types.elemtype(s));
         }
@@ -93,10 +88,8 @@ public class JavacTrees extends DocTrees {
         public Boolean visitClassType(ClassType t, Type s) {
             if (t == s)
                 return true;
-
             if (s.isPartial())
                 return visit(s, t);
-
             return t.tsym == s.tsym;
         }
 
@@ -145,7 +138,6 @@ public class JavacTrees extends DocTrees {
         memberEnter = MemberEnter.instance(context);
         names = Names.instance(context);
         types = Types.instance(context);
-
         JavacTask t = context.get(JavacTask.class);
         if (t instanceof JavacTaskImpl)
             javacTaskImpl = (JavacTaskImpl) t;
@@ -171,7 +163,6 @@ public class JavacTrees extends DocTrees {
                 DCDocComment dcComment = (DCDocComment) comment;
                 if (tree instanceof DCEndPosTree) {
                     int endPos = ((DCEndPosTree) tree).getEndPos(dcComment);
-
                     if (endPos != Position.NOPOS) {
                         return endPos;
                     }
@@ -180,19 +171,15 @@ public class JavacTrees extends DocTrees {
                 switch (tree.getKind()) {
                     case TEXT:
                         DCText text = (DCText) tree;
-
                         return dcComment.comment.getSourcePos(text.pos + text.text.length());
                     case ERRONEOUS:
                         DCErroneous err = (DCErroneous) tree;
-
                         return dcComment.comment.getSourcePos(err.pos + err.body.length());
                     case IDENTIFIER:
                         DCIdentifier ident = (DCIdentifier) tree;
-
                         return dcComment.comment.getSourcePos(ident.pos + (ident.name != names.error ? ident.name.length() : 0));
                     case PARAM:
                         DCParam param = (DCParam) tree;
-
                         if (param.isTypeParameter && param.getDescription().isEmpty()) {
                             correction = 1;
                         }
@@ -208,24 +195,19 @@ public class JavacTrees extends DocTrees {
                     case UNKNOWN_BLOCK_TAG:
                     case VERSION: {
                         DocTree last = getLastChild(tree);
-
                         if (last != null) {
                             return getEndPosition(file, comment, last) + correction;
                         }
-
                         DCBlockTag block = (DCBlockTag) tree;
-
                         return dcComment.comment.getSourcePos(block.pos + block.getTagName().length() + 1);
                     }
                     default:
                         DocTree last = getLastChild(tree);
-
                         if (last != null) {
                             return getEndPosition(file, comment, last);
                         }
                         break;
                 }
-
                 return Position.NOPOS;
             }
         };
@@ -233,7 +215,6 @@ public class JavacTrees extends DocTrees {
 
     private DocTree getLastChild(DocTree tree) {
         final DocTree[] last = new DocTree[]{null};
-
         tree.accept(new DocTreeScanner<Void, Void>() {
             @Override
             public Void scan(DocTree node, Void p) {
@@ -241,7 +222,6 @@ public class JavacTrees extends DocTrees {
                 return null;
             }
         }, null);
-
         return last[0];
     }
 
@@ -338,7 +318,6 @@ public class JavacTrees extends DocTrees {
 
     private Symbol attributeDocReference(TreePath path, DCReference ref) {
         Env<AttrContext> env = getAttrContext(path);
-
         Log.DeferredDiagnosticHandler deferredDiagnosticHandler =
                 new Log.DeferredDiagnosticHandler(log);
         try {
@@ -367,10 +346,8 @@ public class JavacTrees extends DocTrees {
                     memberName = ref.memberName;
                 }
             }
-
             if (memberName == null)
                 return tsym;
-
             final List<Type> paramTypes;
             if (ref.paramTypes == null)
                 paramTypes = null;
@@ -383,16 +360,13 @@ public class JavacTrees extends DocTrees {
                 }
                 paramTypes = lb.toList();
             }
-
             ClassSymbol sym = (ClassSymbol) types.upperBound(tsym.type).tsym;
-
             Symbol msym = (memberName == sym.name)
                     ? findConstructor(sym, paramTypes)
                     : findMethod(sym, memberName, paramTypes);
             if (paramTypes != null) {
                 return msym;
             }
-
             VarSymbol vsym = (ref.paramTypes != null) ? null : findField(sym, memberName);
             if (vsym != null &&
                     (msym == null ||
@@ -423,7 +397,6 @@ public class JavacTrees extends DocTrees {
             ClassSymbol te = (ClassSymbol) javadocSymbol;
             params = te.getTypeParameters();
         }
-
         for (Symbol param : params) {
             if (param.getSimpleName() == ptag.getName().getName()) {
                 return param;
@@ -441,14 +414,12 @@ public class JavacTrees extends DocTrees {
             return null;
         }
         searched.add(tsym);
-
         for (com.sun.tools.javac.code.Scope.Entry e = tsym.members().lookup(fieldName);
              e.scope != null; e = e.next()) {
             if (e.sym.kind == Kinds.VAR) {
                 return (VarSymbol) e.sym;
             }
         }
-
         ClassSymbol encl = tsym.owner.enclClass();
         if (encl != null) {
             VarSymbol vsym = searchField(encl, fieldName, searched);
@@ -456,7 +427,6 @@ public class JavacTrees extends DocTrees {
                 return vsym;
             }
         }
-
         Type superclass = tsym.getSuperclass();
         if (superclass.tsym != null) {
             VarSymbol vsym = searchField((ClassSymbol) superclass.tsym, fieldName, searched);
@@ -473,7 +443,6 @@ public class JavacTrees extends DocTrees {
                 return vsym;
             }
         }
-
         return null;
     }
 
@@ -497,13 +466,10 @@ public class JavacTrees extends DocTrees {
                                       List<Type> paramTypes, Set<ClassSymbol> searched) {
         if (methodName == names.init)
             return null;
-
         if (searched.contains(tsym))
             return null;
         searched.add(tsym);
-
         com.sun.tools.javac.code.Scope.Entry e = tsym.members().lookup(methodName);
-
         if (paramTypes == null) {
             MethodSymbol lastFound = null;
             for (; e.scope != null; e = e.next()) {
@@ -526,7 +492,6 @@ public class JavacTrees extends DocTrees {
                 }
             }
         }
-
         Type superclass = tsym.getSuperclass();
         if (superclass.tsym != null) {
             MethodSymbol msym = searchMethod((ClassSymbol) superclass.tsym, methodName, paramTypes, searched);
@@ -534,7 +499,6 @@ public class JavacTrees extends DocTrees {
                 return msym;
             }
         }
-
         List<Type> intfs = tsym.getInterfaces();
         for (List<Type> l = intfs; l.nonEmpty(); l = l.tail) {
             Type intf = l.head;
@@ -544,27 +508,20 @@ public class JavacTrees extends DocTrees {
                 return msym;
             }
         }
-
         ClassSymbol encl = tsym.owner.enclClass();
         if (encl != null) {
             MethodSymbol msym = searchMethod(encl, methodName, paramTypes, searched);
-            if (msym != null) {
-                return msym;
-            }
+            return msym;
         }
-
         return null;
     }
 
     private boolean hasParameterTypes(MethodSymbol method, List<Type> paramTypes) {
         if (paramTypes == null)
             return true;
-
         if (method.params().size() != paramTypes.size())
             return false;
-
         List<Type> methodParamTypes = types.erasureRecursive(method.asType()).getParameterTypes();
-
         return (Type.isErroneous(paramTypes))
                 ? fuzzyMatch(paramTypes, methodParamTypes)
                 : types.isSameTypes(paramTypes, methodParamTypes);
@@ -641,7 +598,6 @@ public class JavacTrees extends DocTrees {
     private Env<AttrContext> getAttrContext(TreePath path) {
         if (!(path.getLeaf() instanceof JCTree))
             throw new IllegalArgumentException();
-
         if (javacTaskImpl != null) {
             try {
                 javacTaskImpl.enter(null);
@@ -649,22 +605,17 @@ public class JavacTrees extends DocTrees {
                 throw new Error("unexpected error while entering symbols: " + e);
             }
         }
-
-
         JCCompilationUnit unit = (JCCompilationUnit) path.getCompilationUnit();
         Copier copier = createCopier(treeMaker.forToplevel(unit));
-
         Env<AttrContext> env = null;
         JCMethodDecl method = null;
         JCVariableDecl field = null;
-
         List<Tree> l = List.nil();
         TreePath p = path;
         while (p != null) {
             l = l.prepend(p.getLeaf());
             p = p.getParentPath();
         }
-
         for (; l.nonEmpty(); l = l.tail) {
             Tree tree = l.head;
             switch (tree.getKind()) {
@@ -737,7 +688,6 @@ public class JavacTrees extends DocTrees {
         if (errorType instanceof ErrorType) {
             return ((ErrorType) errorType).getOriginalType();
         }
-
         return Type.noType;
     }
 
@@ -759,14 +709,12 @@ public class JavacTrees extends DocTrees {
                               CompilationUnitTree root) {
         JavaFileObject oldSource = null;
         JavaFileObject newSource = null;
-
         newSource = root.getSourceFile();
         if (newSource == null) {
             pos = null;
         } else {
             oldSource = log.useSource(newSource);
         }
-
         try {
             switch (kind) {
                 case ERROR:
@@ -777,15 +725,12 @@ public class JavacTrees extends DocTrees {
                         log.multipleErrors = prev;
                     }
                     break;
-
                 case WARNING:
                     log.warning(pos, "proc.messager", msg.toString());
                     break;
-
                 case MANDATORY_WARNING:
                     log.mandatoryWarning(pos, "proc.messager", msg.toString());
                     break;
-
                 default:
                     log.note(pos, "proc.messager", msg.toString());
             }

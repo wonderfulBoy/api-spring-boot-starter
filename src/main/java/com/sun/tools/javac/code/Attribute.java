@@ -12,7 +12,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public abstract class Attribute implements AnnotationValue {
-
     public Type type;
 
     public Attribute(Type type) {
@@ -37,15 +36,13 @@ public abstract class Attribute implements AnnotationValue {
         return null;
     }
 
-    ;
-
-    public static enum RetentionPolicy {
+    public enum RetentionPolicy {
         SOURCE,
         CLASS,
         RUNTIME
     }
 
-    public static interface Visitor {
+    public interface Visitor {
         void visitConstant(Constant value);
 
         void visitClass(Class clazz);
@@ -144,9 +141,7 @@ public abstract class Attribute implements AnnotationValue {
     }
 
     public static class Compound extends Attribute implements AnnotationMirror {
-
         public final List<Pair<MethodSymbol, Attribute>> values;
-
         private boolean synthesized = false;
 
         public Compound(Type type,
@@ -179,7 +174,6 @@ public abstract class Attribute implements AnnotationValue {
                 for (Pair<MethodSymbol, Attribute> value : values) {
                     if (!first) buf.append(", ");
                     first = false;
-
                     Name name = value.fst.name;
                     if (len > 1 || name != name.table.names.value) {
                         buf.append(name);
@@ -284,7 +278,6 @@ public abstract class Attribute implements AnnotationValue {
         public boolean tryFixPosition() {
             if (!isContainerTypeCompound())
                 return false;
-
             TypeCompound from = getFirstEmbeddedTC();
             if (from != null && from.position != null &&
                     from.position.type != TargetType.UNKNOWN) {
@@ -356,7 +349,7 @@ public abstract class Attribute implements AnnotationValue {
         }
 
         public String toString() {
-            return value.enclClass() + "." + value;     // qualified name
+            return value.enclClass() + "." + value;
         }
 
         public VarSymbol getValue() {

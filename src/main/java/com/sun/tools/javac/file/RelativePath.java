@@ -1,49 +1,14 @@
-/*
- * Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package com.sun.tools.javac.file;
 
+import javax.tools.JavaFileObject;
 import java.io.File;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import javax.tools.JavaFileObject;
 
-/**
- * Used to represent a platform-neutral path within a platform-specific
- * container, such as a directory or zip file.
- * Internally, the file separator is always '/'.
- *
- * <p><b>This is NOT part of any supported API.
- * If you write code that depends on this, you do so at your own risk.
- * This code and its internal interfaces are subject to change or
- * deletion without notice.</b>
- */
 public abstract class RelativePath implements Comparable<RelativePath> {
-    /**
-     * @param p must use '/' as an internal separator
-     */
+
+    protected final String path;
+
     protected RelativePath(String p) {
         path = p;
     }
@@ -66,7 +31,7 @@ public abstract class RelativePath implements Comparable<RelativePath> {
     public boolean equals(Object other) {
         if (!(other instanceof RelativePath))
             return false;
-         return path.equals(((RelativePath) other).path);
+        return path.equals(((RelativePath) other).path);
     }
 
     @Override
@@ -83,32 +48,17 @@ public abstract class RelativePath implements Comparable<RelativePath> {
         return path;
     }
 
-    protected final String path;
-
-    /**
-     * Used to represent a platform-neutral subdirectory within a platform-specific
-     * container, such as a directory or zip file.
-     * Internally, the file separator is always '/', and if the path is not empty,
-     * it always ends in a '/' as well.
-     */
     public static class RelativeDirectory extends RelativePath {
-
-        static RelativeDirectory forPackage(CharSequence packageName) {
-            return new RelativeDirectory(packageName.toString().replace('.', '/'));
-        }
-
-        /**
-         * @param p must use '/' as an internal separator
-         */
         public RelativeDirectory(String p) {
             super(p.length() == 0 || p.endsWith("/") ? p : p + "/");
         }
 
-        /**
-         * @param p must use '/' as an internal separator
-         */
         public RelativeDirectory(RelativeDirectory d, String p) {
             this(d.path + p);
+        }
+
+        static RelativeDirectory forPackage(CharSequence packageName) {
+            return new RelativeDirectory(packageName.toString().replace('.', '/'));
         }
 
         @Override
@@ -129,10 +79,6 @@ public abstract class RelativePath implements Comparable<RelativePath> {
             return path.substring(sep + 1, l - 1);
         }
 
-        /**
-         * Return true if this subdirectory "contains" the other path.
-         * A subdirectory path does not contain itself.
-         **/
         boolean contains(RelativePath other) {
             return other.path.length() > path.length() && other.path.startsWith(path);
         }
@@ -143,31 +89,23 @@ public abstract class RelativePath implements Comparable<RelativePath> {
         }
     }
 
-    /**
-     * Used to represent a platform-neutral file within a platform-specific
-     * container, such as a directory or zip file.
-     * Internally, the file separator is always '/'. It never ends in '/'.
-     */
     public static class RelativeFile extends RelativePath {
-        static RelativeFile forClass(CharSequence className, JavaFileObject.Kind kind) {
-            return new RelativeFile(className.toString().replace('.', '/') + kind.extension);
-        }
-
         public RelativeFile(String p) {
             super(p);
             if (p.endsWith("/"))
                 throw new IllegalArgumentException(p);
         }
 
-        /**
-         * @param p must use '/' as an internal separator
-         */
         public RelativeFile(RelativeDirectory d, String p) {
             this(d.path + p);
         }
 
         RelativeFile(RelativeDirectory d, RelativePath p) {
             this(d, p.path);
+        }
+
+        static RelativeFile forClass(CharSequence className, JavaFileObject.Kind kind) {
+            return new RelativeFile(className.toString().replace('.', '/') + kind.extension);
         }
 
         @Override
@@ -190,7 +128,5 @@ public abstract class RelativePath implements Comparable<RelativePath> {
         public String toString() {
             return "RelativeFile[" + path + "]";
         }
-
     }
-
 }

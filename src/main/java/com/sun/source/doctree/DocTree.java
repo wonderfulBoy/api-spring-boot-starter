@@ -40,7 +40,6 @@ public interface DocTree {
         VALUE("value"),
         VERSION("version"),
         OTHER;
-
         public final String tagName;
 
         Kind() {

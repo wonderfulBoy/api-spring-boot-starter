@@ -14,11 +14,8 @@ import java.util.Collection;
 import java.util.Locale;
 
 public class RootDocImpl extends DocImpl implements RootDoc {
-
     private List<ClassDocImpl> cmdLineClasses;
-
     private List<PackageDocImpl> cmdLinePackages;
-
     private List<String[]> options;
 
     public RootDocImpl(DocEnv env, List<JCClassDecl> classes, List<String> packages, List<String[]> options) {
@@ -76,7 +73,7 @@ public class RootDocImpl extends DocImpl implements RootDoc {
     }
 
     public PackageDoc[] specifiedPackages() {
-        return (PackageDoc[]) cmdLinePackages
+        return cmdLinePackages
                 .toArray(new PackageDocImpl[cmdLinePackages.length()]);
     }
 
@@ -85,7 +82,7 @@ public class RootDocImpl extends DocImpl implements RootDoc {
         for (ClassDocImpl cd : cmdLineClasses) {
             cd.addAllClasses(classesToDocument, true);
         }
-        return (ClassDoc[]) classesToDocument.toArray(new ClassDocImpl[classesToDocument.length()]);
+        return classesToDocument.toArray(new ClassDocImpl[classesToDocument.length()]);
     }
 
     public ClassDoc[] classes() {
@@ -160,10 +157,10 @@ public class RootDocImpl extends DocImpl implements RootDoc {
         if (documentation == null) {
             JavaFileObject overviewPath = getOverviewPath();
             if (overviewPath == null) {
-                // no doc file to be had
+
                 documentation = "";
             } else {
-                // read from file
+
                 try {
                     documentation = readHTMLDocumentation(
                             overviewPath.openInputStream(),

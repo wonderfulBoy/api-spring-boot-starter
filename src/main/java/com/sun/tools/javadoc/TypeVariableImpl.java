@@ -17,7 +17,6 @@ import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 
 public class TypeVariableImpl extends AbstractTypeImpl implements TypeVariable {
-
     TypeVariableImpl(DocEnv env, TypeVar type) {
         super(env, type);
     }
@@ -84,7 +83,7 @@ public class TypeVariableImpl extends AbstractTypeImpl implements TypeVariable {
             return new AnnotationDesc[0];
         }
         List<? extends TypeCompound> tas = type.getAnnotationMirrors();
-        AnnotationDesc res[] = new AnnotationDesc[tas.length()];
+        AnnotationDesc[] res = new AnnotationDesc[tas.length()];
         int i = 0;
         for (Attribute.Compound a : tas) {
             res[i++] = new AnnotationDescImpl(env, a);

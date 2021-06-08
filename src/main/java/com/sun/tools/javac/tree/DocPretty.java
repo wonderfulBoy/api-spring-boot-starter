@@ -1,15 +1,16 @@
 package com.sun.tools.javac.tree;
 
-import java.io.Writer;
-
 import com.sun.source.doctree.*;
 import com.sun.source.doctree.AttributeTree.ValueKind;
 import com.sun.tools.javac.util.Convert;
-import java.io.IOException;
-import java.util.List;
-public class DocPretty implements DocTreeVisitor<Void,Void> {
 
+import java.io.IOException;
+import java.io.Writer;
+import java.util.List;
+
+public class DocPretty implements DocTreeVisitor<Void, Void> {
     final Writer out;
+    final String lineSep = System.getProperty("line.separator");
     int lmargin = 0;
 
     public DocPretty(Writer out) {
@@ -33,7 +34,7 @@ public class DocPretty implements DocTreeVisitor<Void,Void> {
     }
 
     public void print(List<? extends DocTree> list) throws IOException {
-        for (DocTree t: list) {
+        for (DocTree t : list) {
             print(t);
         }
     }
@@ -42,7 +43,7 @@ public class DocPretty implements DocTreeVisitor<Void,Void> {
         if (list.isEmpty())
             return;
         boolean first = true;
-        for (DocTree t: list) {
+        for (DocTree t : list) {
             if (!first)
                 print(sep);
             print(t);
@@ -58,16 +59,6 @@ public class DocPretty implements DocTreeVisitor<Void,Void> {
         out.write("@");
         out.write(node.getKind().tagName);
     }
-
-    final String lineSep = System.getProperty("line.separator");
-
-    private static class UncheckedIOException extends Error {
-        static final long serialVersionUID = -4032692679158424751L;
-        UncheckedIOException(IOException e) {
-            super(e.getMessage(), e);
-        }
-    }
-
 
     public Void visitAttribute(AttributeTree node, Void p) {
         try {
@@ -285,7 +276,7 @@ public class DocPretty implements DocTreeVisitor<Void,Void> {
             printTagName(node);
             boolean first = true;
             boolean needSep = true;
-            for (DocTree t: node.getReference()) {
+            for (DocTree t : node.getReference()) {
                 if (needSep) print(" ");
                 needSep = (first && (t instanceof ReferenceTree));
                 first = false;
@@ -457,5 +448,13 @@ public class DocPretty implements DocTreeVisitor<Void,Void> {
             throw new UncheckedIOException(e);
         }
         return null;
+    }
+
+    private static class UncheckedIOException extends Error {
+        static final long serialVersionUID = -4032692679158424751L;
+
+        UncheckedIOException(IOException e) {
+            super(e.getMessage(), e);
+        }
     }
 }

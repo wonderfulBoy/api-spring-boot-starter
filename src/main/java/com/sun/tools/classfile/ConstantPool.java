@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2007, 2011, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package com.sun.tools.classfile;
 
 import java.io.DataOutputStream;
@@ -30,79 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
 
-/**
- * See JVMS, section 4.5.
- *
- *  <p><b>This is NOT part of any supported API.
- *  If you write code that depends on this, you do so at your own risk.
- *  This code and its internal interfaces are subject to change or
- *  deletion without notice.</b>
- */
 public class ConstantPool {
-
-    public static class InvalidIndex extends ConstantPoolException {
-        private static final long serialVersionUID = -4350294289300939730L;
-        InvalidIndex(int index) {
-            super(index);
-        }
-
-        @Override
-        public String getMessage() {
-            // i18n
-            return "invalid index #" + index;
-        }
-    }
-
-    public static class UnexpectedEntry extends ConstantPoolException {
-        private static final long serialVersionUID = 6986335935377933211L;
-        UnexpectedEntry(int index, int expected_tag, int found_tag) {
-            super(index);
-            this.expected_tag = expected_tag;
-            this.found_tag = found_tag;
-        }
-
-        @Override
-        public String getMessage() {
-            // i18n?
-            return "unexpected entry at #" + index + " -- expected tag " + expected_tag + ", found " + found_tag;
-        }
-
-        public final int expected_tag;
-        public final int found_tag;
-    }
-
-    public static class InvalidEntry extends ConstantPoolException {
-        private static final long serialVersionUID = 1000087545585204447L;
-        InvalidEntry(int index, int tag) {
-            super(index);
-            this.tag = tag;
-        }
-
-        @Override
-        public String getMessage() {
-            // i18n?
-            return "unexpected tag at #" + index + ": " + tag;
-        }
-
-        public final int tag;
-    }
-
-    public static class EntryNotFound extends ConstantPoolException {
-        private static final long serialVersionUID = 2885537606468581850L;
-        EntryNotFound(Object value) {
-            super(-1);
-            this.value = value;
-        }
-
-        @Override
-        public String getMessage() {
-            // i18n?
-            return "value not found: " + value;
-        }
-
-        public final Object value;
-    }
-
     public static final int CONSTANT_Utf8 = 1;
     public static final int CONSTANT_Integer = 3;
     public static final int CONSTANT_Float = 4;
@@ -117,122 +20,62 @@ public class ConstantPool {
     public static final int CONSTANT_MethodHandle = 15;
     public static final int CONSTANT_MethodType = 16;
     public static final int CONSTANT_InvokeDynamic = 18;
-
-    public static enum RefKind {
-        REF_getField(1, "getfield"),
-        REF_getStatic(2, "getstatic"),
-        REF_putField(3, "putfield"),
-        REF_putStatic(4, "putstatic"),
-        REF_invokeVirtual(5, "invokevirtual"),
-        REF_invokeStatic(6, "invokestatic"),
-        REF_invokeSpecial(7, "invokespecial"),
-        REF_newInvokeSpecial(8, "newinvokespecial"),
-        REF_invokeInterface(9, "invokeinterface");
-
-        public final int tag;
-        public final String name;
-
-        RefKind(int tag, String name) {
-            this.tag = tag;
-            this.name = name;
-        }
-
-        static RefKind getRefkind(int tag) {
-            switch(tag) {
-                case 1:
-                    return REF_getField;
-                case 2:
-                    return REF_getStatic;
-                case 3:
-                    return REF_putField;
-                case 4:
-                    return REF_putStatic;
-                case 5:
-                    return REF_invokeVirtual;
-                case 6:
-                    return REF_invokeStatic;
-                case 7:
-                    return REF_invokeSpecial;
-                case 8:
-                    return REF_newInvokeSpecial;
-                case 9:
-                    return REF_invokeInterface;
-                default:
-                    return null;
-            }
-        }
-    }
-
+    private CPInfo[] pool;
     ConstantPool(ClassReader cr) throws IOException, InvalidEntry {
         int count = cr.readUnsignedShort();
         pool = new CPInfo[count];
         for (int i = 1; i < count; i++) {
             int tag = cr.readUnsignedByte();
             switch (tag) {
-            case CONSTANT_Class:
-                pool[i] = new CONSTANT_Class_info(this, cr);
-                break;
-
-            case CONSTANT_Double:
-                pool[i] = new CONSTANT_Double_info(cr);
-                i++;
-                break;
-
-            case CONSTANT_Fieldref:
-                pool[i] = new CONSTANT_Fieldref_info(this, cr);
-                break;
-
-            case CONSTANT_Float:
-                pool[i] = new CONSTANT_Float_info(cr);
-                break;
-
-            case CONSTANT_Integer:
-                pool[i] = new CONSTANT_Integer_info(cr);
-                break;
-
-            case CONSTANT_InterfaceMethodref:
-                pool[i] = new CONSTANT_InterfaceMethodref_info(this, cr);
-                break;
-
-            case CONSTANT_InvokeDynamic:
-                pool[i] = new CONSTANT_InvokeDynamic_info(this, cr);
-                break;
-
-            case CONSTANT_Long:
-                pool[i] = new CONSTANT_Long_info(cr);
-                i++;
-                break;
-
-            case CONSTANT_MethodHandle:
-                pool[i] = new CONSTANT_MethodHandle_info(this, cr);
-                break;
-
-            case CONSTANT_MethodType:
-                pool[i] = new CONSTANT_MethodType_info(this, cr);
-                break;
-
-            case CONSTANT_Methodref:
-                pool[i] = new CONSTANT_Methodref_info(this, cr);
-                break;
-
-            case CONSTANT_NameAndType:
-                pool[i] = new CONSTANT_NameAndType_info(this, cr);
-                break;
-
-            case CONSTANT_String:
-                pool[i] = new CONSTANT_String_info(this, cr);
-                break;
-
-            case CONSTANT_Utf8:
-                pool[i] = new CONSTANT_Utf8_info(cr);
-                break;
-
-            default:
-                throw new InvalidEntry(i, tag);
+                case CONSTANT_Class:
+                    pool[i] = new CONSTANT_Class_info(this, cr);
+                    break;
+                case CONSTANT_Double:
+                    pool[i] = new CONSTANT_Double_info(cr);
+                    i++;
+                    break;
+                case CONSTANT_Fieldref:
+                    pool[i] = new CONSTANT_Fieldref_info(this, cr);
+                    break;
+                case CONSTANT_Float:
+                    pool[i] = new CONSTANT_Float_info(cr);
+                    break;
+                case CONSTANT_Integer:
+                    pool[i] = new CONSTANT_Integer_info(cr);
+                    break;
+                case CONSTANT_InterfaceMethodref:
+                    pool[i] = new CONSTANT_InterfaceMethodref_info(this, cr);
+                    break;
+                case CONSTANT_InvokeDynamic:
+                    pool[i] = new CONSTANT_InvokeDynamic_info(this, cr);
+                    break;
+                case CONSTANT_Long:
+                    pool[i] = new CONSTANT_Long_info(cr);
+                    i++;
+                    break;
+                case CONSTANT_MethodHandle:
+                    pool[i] = new CONSTANT_MethodHandle_info(this, cr);
+                    break;
+                case CONSTANT_MethodType:
+                    pool[i] = new CONSTANT_MethodType_info(this, cr);
+                    break;
+                case CONSTANT_Methodref:
+                    pool[i] = new CONSTANT_Methodref_info(this, cr);
+                    break;
+                case CONSTANT_NameAndType:
+                    pool[i] = new CONSTANT_NameAndType_info(this, cr);
+                    break;
+                case CONSTANT_String:
+                    pool[i] = new CONSTANT_String_info(this, cr);
+                    break;
+                case CONSTANT_Utf8:
+                    pool[i] = new CONSTANT_Utf8_info(cr);
+                    break;
+                default:
+                    throw new InvalidEntry(i, tag);
             }
         }
     }
-
     public ConstantPool(CPInfo[] pool) {
         this.pool = pool;
     }
@@ -256,8 +99,8 @@ public class ConstantPool {
             throw new InvalidIndex(index);
         CPInfo info = pool[index];
         if (info == null) {
-            // this occurs for indices referencing the "second half" of an
-            // 8 byte constant, such as CONSTANT_Double or CONSTANT_Long
+
+
             throw new InvalidIndex(index);
         }
         return pool[index];
@@ -300,6 +143,8 @@ public class ConstantPool {
         return new Iterable<CPInfo>() {
             public Iterator<CPInfo> iterator() {
                 return new Iterator<CPInfo>() {
+                    private CPInfo current;
+                    private int next = 1;
 
                     public boolean hasNext() {
                         return next < pool.length;
@@ -321,35 +166,152 @@ public class ConstantPool {
                     public void remove() {
                         throw new UnsupportedOperationException();
                     }
-
-                    private CPInfo current;
-                    private int next = 1;
-
                 };
             }
         };
     }
 
-    private CPInfo[] pool;
+    public enum RefKind {
+        REF_getField(1, "getfield"),
+        REF_getStatic(2, "getstatic"),
+        REF_putField(3, "putfield"),
+        REF_putStatic(4, "putstatic"),
+        REF_invokeVirtual(5, "invokevirtual"),
+        REF_invokeStatic(6, "invokestatic"),
+        REF_invokeSpecial(7, "invokespecial"),
+        REF_newInvokeSpecial(8, "newinvokespecial"),
+        REF_invokeInterface(9, "invokeinterface");
+        public final int tag;
+        public final String name;
 
-    public interface Visitor<R,P> {
+        RefKind(int tag, String name) {
+            this.tag = tag;
+            this.name = name;
+        }
+
+        static RefKind getRefkind(int tag) {
+            switch (tag) {
+                case 1:
+                    return REF_getField;
+                case 2:
+                    return REF_getStatic;
+                case 3:
+                    return REF_putField;
+                case 4:
+                    return REF_putStatic;
+                case 5:
+                    return REF_invokeVirtual;
+                case 6:
+                    return REF_invokeStatic;
+                case 7:
+                    return REF_invokeSpecial;
+                case 8:
+                    return REF_newInvokeSpecial;
+                case 9:
+                    return REF_invokeInterface;
+                default:
+                    return null;
+            }
+        }
+    }
+
+    public interface Visitor<R, P> {
         R visitClass(CONSTANT_Class_info info, P p);
+
         R visitDouble(CONSTANT_Double_info info, P p);
+
         R visitFieldref(CONSTANT_Fieldref_info info, P p);
+
         R visitFloat(CONSTANT_Float_info info, P p);
+
         R visitInteger(CONSTANT_Integer_info info, P p);
+
         R visitInterfaceMethodref(CONSTANT_InterfaceMethodref_info info, P p);
+
         R visitInvokeDynamic(CONSTANT_InvokeDynamic_info info, P p);
+
         R visitLong(CONSTANT_Long_info info, P p);
+
         R visitNameAndType(CONSTANT_NameAndType_info info, P p);
+
         R visitMethodref(CONSTANT_Methodref_info info, P p);
+
         R visitMethodHandle(CONSTANT_MethodHandle_info info, P p);
+
         R visitMethodType(CONSTANT_MethodType_info info, P p);
+
         R visitString(CONSTANT_String_info info, P p);
+
         R visitUtf8(CONSTANT_Utf8_info info, P p);
     }
 
+    public static class InvalidIndex extends ConstantPoolException {
+        private static final long serialVersionUID = -4350294289300939730L;
+
+        InvalidIndex(int index) {
+            super(index);
+        }
+
+        @Override
+        public String getMessage() {
+
+            return "invalid index #" + index;
+        }
+    }
+
+    public static class UnexpectedEntry extends ConstantPoolException {
+        private static final long serialVersionUID = 6986335935377933211L;
+        public final int expected_tag;
+        public final int found_tag;
+
+        UnexpectedEntry(int index, int expected_tag, int found_tag) {
+            super(index);
+            this.expected_tag = expected_tag;
+            this.found_tag = found_tag;
+        }
+
+        @Override
+        public String getMessage() {
+
+            return "unexpected entry at #" + index + " -- expected tag " + expected_tag + ", found " + found_tag;
+        }
+    }
+
+    public static class InvalidEntry extends ConstantPoolException {
+        private static final long serialVersionUID = 1000087545585204447L;
+        public final int tag;
+
+        InvalidEntry(int index, int tag) {
+            super(index);
+            this.tag = tag;
+        }
+
+        @Override
+        public String getMessage() {
+
+            return "unexpected tag at #" + index + ": " + tag;
+        }
+    }
+
+    public static class EntryNotFound extends ConstantPoolException {
+        private static final long serialVersionUID = 2885537606468581850L;
+        public final Object value;
+
+        EntryNotFound(Object value) {
+            super(-1);
+            this.value = value;
+        }
+
+        @Override
+        public String getMessage() {
+
+            return "value not found: " + value;
+        }
+    }
+
     public static abstract class CPInfo {
+        protected final ConstantPool cp;
+
         CPInfo() {
             this.cp = null;
         }
@@ -360,20 +322,20 @@ public class ConstantPool {
 
         public abstract int getTag();
 
-        /** The number of slots in the constant pool used by this entry.
-         * 2 for CONSTANT_Double and CONSTANT_Long; 1 for everything else. */
         public int size() {
             return 1;
         }
 
         public abstract int byteLength();
 
-        public abstract <R,D> R accept(Visitor<R,D> visitor, D data);
-
-        protected final ConstantPool cp;
+        public abstract <R, D> R accept(Visitor<R, D> visitor, D data);
     }
 
     public static abstract class CPRefInfo extends CPInfo {
+        public final int tag;
+        public final int class_index;
+        public final int name_and_type_index;
+
         protected CPRefInfo(ConstantPool cp, ClassReader cr, int tag) throws IOException {
             super(cp);
             this.tag = tag;
@@ -407,13 +369,11 @@ public class ConstantPool {
         public CONSTANT_NameAndType_info getNameAndTypeInfo() throws ConstantPoolException {
             return cp.getNameAndTypeInfo(name_and_type_index);
         }
-
-        public final int tag;
-        public final int class_index;
-        public final int name_and_type_index;
     }
 
     public static class CONSTANT_Class_info extends CPInfo {
+        public final int name_index;
+
         CONSTANT_Class_info(ConstantPool cp, ClassReader cr) throws IOException {
             super(cp);
             name_index = cr.readUnsignedShort();
@@ -428,28 +388,14 @@ public class ConstantPool {
             return CONSTANT_Class;
         }
 
-        public int  byteLength() {
+        public int byteLength() {
             return 3;
         }
 
-        /**
-         * Get the raw value of the class referenced by this constant pool entry.
-         * This will either be the name of the class, in internal form, or a
-         * descriptor for an array class.
-         * @return the raw value of the class
-         */
         public String getName() throws ConstantPoolException {
             return cp.getUTF8Value(name_index);
         }
 
-        /**
-         * If this constant pool entry identifies either a class or interface type,
-         * or a possibly multi-dimensional array of a class of interface type,
-         * return the name of the class or interface in internal form. Otherwise,
-         * (i.e. if this is a possibly multi-dimensional array of a primitive type),
-         * return null.
-         * @return the base class or interface name
-         */
         public String getBaseName() throws ConstantPoolException {
             String name = getName();
             if (name.startsWith("[")) {
@@ -477,11 +423,11 @@ public class ConstantPool {
         public <R, D> R accept(Visitor<R, D> visitor, D data) {
             return visitor.visitClass(this, data);
         }
-
-        public final int name_index;
     }
 
     public static class CONSTANT_Double_info extends CPInfo {
+        public final double value;
+
         CONSTANT_Double_info(ClassReader cr) throws IOException {
             value = cr.readDouble();
         }
@@ -494,7 +440,7 @@ public class ConstantPool {
             return CONSTANT_Double;
         }
 
-        public int  byteLength() {
+        public int byteLength() {
             return 9;
         }
 
@@ -511,8 +457,6 @@ public class ConstantPool {
         public <R, D> R accept(Visitor<R, D> visitor, D data) {
             return visitor.visitDouble(this, data);
         }
-
-        public final double value;
     }
 
     public static class CONSTANT_Fieldref_info extends CPRefInfo {
@@ -535,6 +479,8 @@ public class ConstantPool {
     }
 
     public static class CONSTANT_Float_info extends CPInfo {
+        public final float value;
+
         CONSTANT_Float_info(ClassReader cr) throws IOException {
             value = cr.readFloat();
         }
@@ -559,11 +505,11 @@ public class ConstantPool {
         public <R, D> R accept(Visitor<R, D> visitor, D data) {
             return visitor.visitFloat(this, data);
         }
-
-        public final float value;
     }
 
     public static class CONSTANT_Integer_info extends CPInfo {
+        public final int value;
+
         CONSTANT_Integer_info(ClassReader cr) throws IOException {
             value = cr.readInt();
         }
@@ -588,8 +534,6 @@ public class ConstantPool {
         public <R, D> R accept(Visitor<R, D> visitor, D data) {
             return visitor.visitInteger(this, data);
         }
-
-        public final int value;
     }
 
     public static class CONSTANT_InterfaceMethodref_info extends CPRefInfo {
@@ -612,6 +556,9 @@ public class ConstantPool {
     }
 
     public static class CONSTANT_InvokeDynamic_info extends CPInfo {
+        public final int bootstrap_method_attr_index;
+        public final int name_and_type_index;
+
         CONSTANT_InvokeDynamic_info(ConstantPool cp, ClassReader cr) throws IOException {
             super(cp);
             bootstrap_method_attr_index = cr.readUnsignedShort();
@@ -644,12 +591,11 @@ public class ConstantPool {
         public CONSTANT_NameAndType_info getNameAndTypeInfo() throws ConstantPoolException {
             return cp.getNameAndTypeInfo(name_and_type_index);
         }
-
-        public final int bootstrap_method_attr_index;
-        public final int name_and_type_index;
     }
 
     public static class CONSTANT_Long_info extends CPInfo {
+        public final long value;
+
         CONSTANT_Long_info(ClassReader cr) throws IOException {
             value = cr.readLong();
         }
@@ -679,14 +625,15 @@ public class ConstantPool {
         public <R, D> R accept(Visitor<R, D> visitor, D data) {
             return visitor.visitLong(this, data);
         }
-
-        public final long value;
     }
 
     public static class CONSTANT_MethodHandle_info extends CPInfo {
+        public final RefKind reference_kind;
+        public final int reference_index;
+
         CONSTANT_MethodHandle_info(ConstantPool cp, ClassReader cr) throws IOException {
             super(cp);
-            reference_kind =  RefKind.getRefkind(cr.readUnsignedByte());
+            reference_kind = RefKind.getRefkind(cr.readUnsignedByte());
             reference_index = cr.readUnsignedShort();
         }
 
@@ -716,7 +663,7 @@ public class ConstantPool {
         public CPRefInfo getCPRefInfo() throws ConstantPoolException {
             int expected = CONSTANT_Methodref;
             int actual = cp.get(reference_index).getTag();
-            // allow these tag types also:
+
             switch (actual) {
                 case CONSTANT_Fieldref:
                 case CONSTANT_InterfaceMethodref:
@@ -724,12 +671,11 @@ public class ConstantPool {
             }
             return (CPRefInfo) cp.get(reference_index, expected);
         }
-
-        public final RefKind reference_kind;
-        public final int reference_index;
     }
 
     public static class CONSTANT_MethodType_info extends CPInfo {
+        public final int descriptor_index;
+
         CONSTANT_MethodType_info(ConstantPool cp, ClassReader cr) throws IOException {
             super(cp);
             descriptor_index = cr.readUnsignedShort();
@@ -760,8 +706,6 @@ public class ConstantPool {
         public String getType() throws ConstantPoolException {
             return cp.getUTF8Value(descriptor_index);
         }
-
-        public final int descriptor_index;
     }
 
     public static class CONSTANT_Methodref_info extends CPRefInfo {
@@ -784,6 +728,9 @@ public class ConstantPool {
     }
 
     public static class CONSTANT_NameAndType_info extends CPInfo {
+        public final int name_index;
+        public final int type_index;
+
         CONSTANT_NameAndType_info(ConstantPool cp, ClassReader cr) throws IOException {
             super(cp);
             name_index = cr.readUnsignedShort();
@@ -820,12 +767,11 @@ public class ConstantPool {
         public String toString() {
             return "CONSTANT_NameAndType_info[name_index: " + name_index + ", type_index: " + type_index + "]";
         }
-
-        public final int name_index;
-        public final int type_index;
     }
 
     public static class CONSTANT_String_info extends CPInfo {
+        public final int string_index;
+
         CONSTANT_String_info(ConstantPool cp, ClassReader cr) throws IOException {
             super(cp);
             string_index = cr.readUnsignedShort();
@@ -856,43 +802,17 @@ public class ConstantPool {
         public String toString() {
             return "CONSTANT_String_info[class_index: " + string_index + "]";
         }
-
-        public final int string_index;
     }
 
     public static class CONSTANT_Utf8_info extends CPInfo {
+        public final String value;
+
         CONSTANT_Utf8_info(ClassReader cr) throws IOException {
             value = cr.readUTF();
         }
 
         public CONSTANT_Utf8_info(String value) {
             this.value = value;
-        }
-
-        public int getTag() {
-            return CONSTANT_Utf8;
-        }
-
-        public int byteLength() {
-            class SizeOutputStream extends OutputStream {
-                @Override
-                public void write(int b) {
-                    size++;
-                }
-                int size;
-            }
-            SizeOutputStream sizeOut = new SizeOutputStream();
-            DataOutputStream out = new DataOutputStream(sizeOut);
-            try { out.writeUTF(value); } catch (IOException ignore) { }
-            return 1 + sizeOut.size;
-        }
-
-        @Override
-        public String toString() {
-            if (value.length() < 32 && isPrintableAscii(value))
-                return "CONSTANT_Utf8_info[value: \"" + value + "\"]";
-            else
-                return "CONSTANT_Utf8_info[value: (" + value.length() + " chars)]";
         }
 
         static boolean isPrintableAscii(String s) {
@@ -904,11 +824,38 @@ public class ConstantPool {
             return true;
         }
 
+        public int getTag() {
+            return CONSTANT_Utf8;
+        }
+
+        public int byteLength() {
+            class SizeOutputStream extends OutputStream {
+                int size;
+
+                @Override
+                public void write(int b) {
+                    size++;
+                }
+            }
+            SizeOutputStream sizeOut = new SizeOutputStream();
+            DataOutputStream out = new DataOutputStream(sizeOut);
+            try {
+                out.writeUTF(value);
+            } catch (IOException ignore) {
+            }
+            return 1 + sizeOut.size;
+        }
+
+        @Override
+        public String toString() {
+            if (value.length() < 32 && isPrintableAscii(value))
+                return "CONSTANT_Utf8_info[value: \"" + value + "\"]";
+            else
+                return "CONSTANT_Utf8_info[value: (" + value.length() + " chars)]";
+        }
+
         public <R, D> R accept(Visitor<R, D> visitor, D data) {
             return visitor.visitUtf8(this, data);
         }
-
-        public final String value;
     }
-
 }

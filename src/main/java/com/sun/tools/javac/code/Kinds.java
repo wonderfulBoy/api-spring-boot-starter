@@ -11,7 +11,6 @@ import static com.sun.tools.javac.code.Flags.*;
 import static com.sun.tools.javac.code.TypeTag.*;
 
 public class Kinds {
-
     public final static int NIL = 0;
     public final static int PCK = 1 << 0;
     public final static int TYP = 1 << 1;
@@ -32,6 +31,7 @@ public class Kinds {
     public static final int ABSENT_MTH = ERRONEOUS + 8;
     public static final int ABSENT_TYP = ERRONEOUS + 9;
     public static final int WRONG_STATICNESS = ERRONEOUS + 10;
+
     private Kinds() {
     }
 
@@ -67,20 +67,15 @@ public class Kinds {
         switch (sym.getKind()) {
             case PACKAGE:
                 return KindName.PACKAGE;
-
             case ENUM:
                 return KindName.ENUM;
-
             case ANNOTATION_TYPE:
             case CLASS:
                 return KindName.CLASS;
-
             case INTERFACE:
                 return KindName.INTERFACE;
-
             case TYPE_PARAMETER:
                 return KindName.TYPEVAR;
-
             case ENUM_CONSTANT:
             case FIELD:
             case PARAMETER:
@@ -88,17 +83,14 @@ public class Kinds {
             case EXCEPTION_PARAMETER:
             case RESOURCE_VARIABLE:
                 return KindName.VAR;
-
             case CONSTRUCTOR:
                 return KindName.CONSTRUCTOR;
-
             case METHOD:
                 return KindName.METHOD;
             case STATIC_INIT:
                 return KindName.STATIC_INIT;
             case INSTANCE_INIT:
                 return KindName.INSTANCE_INIT;
-
             default:
                 if (sym.kind == VAL)
                     return KindName.VAL;
@@ -162,7 +154,6 @@ public class Kinds {
         STATIC_INIT("kindname.static.init"),
         INSTANCE_INIT("kindname.instance.init"),
         PACKAGE("kindname.package");
-
         private final String name;
 
         KindName(String name) {

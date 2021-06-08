@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.*;
 
 public class JavadocTool extends com.sun.tools.javac.main.JavaCompiler {
-
     final static boolean surrogatesSupported = surrogatesSupported();
     final Messager messager;
     final JavadocClassReader javadocReader;
@@ -34,15 +33,10 @@ public class JavadocTool extends com.sun.tools.javac.main.JavaCompiler {
         Messager messager = null;
         try {
             JavadocClassReader.preRegister(context);
-
             JavadocEnter.preRegister(context);
-
             JavadocMemberEnter.preRegister(context);
-
             JavadocTodo.preRegister(context);
-
             messager = Messager.instance0(context);
-
             return new JavadocTool(context);
         } catch (CompletionFailure ex) {
             messager.error(Position.NOPOS, ex.getMessage());
@@ -118,11 +112,9 @@ public class JavadocTool extends com.sun.tools.javac.main.JavaCompiler {
         docenv.docClasses = docClasses;
         docenv.legacyDoclet = legacyDoclet;
         javadocReader.sourceCompleter = docClasses ? null : thisCompleter;
-
         ListBuffer<String> names = new ListBuffer<String>();
         ListBuffer<JCCompilationUnit> classTrees = new ListBuffer<JCCompilationUnit>();
         ListBuffer<JCCompilationUnit> packTrees = new ListBuffer<JCCompilationUnit>();
-
         try {
             StandardJavaFileManager fm = docenv.fileManager instanceof StandardJavaFileManager
                     ? (StandardJavaFileManager) docenv.fileManager : null;
@@ -149,11 +141,9 @@ public class JavadocTool extends com.sun.tools.javac.main.JavaCompiler {
                 JCCompilationUnit tree = parse(fo);
                 classTrees.append(tree);
             }
-
             if (!docClasses) {
                 Map<String, List<JavaFileObject>> packageFiles =
                         searchSubPackages(subPackages, names, excludedPackages);
-
                 for (List<String> packs = names.toList(); packs.nonEmpty(); packs = packs.tail) {
                     String packageName = packs.head;
                     parsePackageClasses(packageName, packageFiles.get(packageName), packTrees, excludedPackages);
@@ -164,10 +154,8 @@ public class JavadocTool extends com.sun.tools.javac.main.JavaCompiler {
             }
         } catch (Abort ex) {
         }
-
         if (messager.nerrors() != 0)
             return null;
-
         if (docClasses)
             return new RootDocImpl(docenv, javaNames, options);
         else
@@ -191,10 +179,8 @@ public class JavadocTool extends com.sun.tools.javac.main.JavaCompiler {
         if (excludedPackages.contains(name)) {
             return;
         }
-
         boolean hasFiles = false;
         docenv.notice("main.Loading_source_files_for_package", name);
-
         if (files == null) {
             Location location = docenv.fileManager.hasLocation(StandardLocation.SOURCE_PATH)
                     ? StandardLocation.SOURCE_PATH : StandardLocation.CLASS_PATH;
@@ -209,12 +195,10 @@ public class JavadocTool extends com.sun.tools.javac.main.JavaCompiler {
             }
             files = lb.toList();
         }
-
         for (JavaFileObject fo : files) {
             trees.append(parse(fo));
             hasFiles = true;
         }
-
         if (!hasFiles) {
             messager.warning(Messager.NOPOS, "main.no_source_files_for_package",
                     name.replace(File.separatorChar, '.'));
@@ -228,21 +212,17 @@ public class JavadocTool extends com.sun.tools.javac.main.JavaCompiler {
             throws IOException {
         Map<String, List<JavaFileObject>> packageFiles =
                 new HashMap<String, List<JavaFileObject>>();
-
         Map<String, Boolean> includedPackages = new HashMap<String, Boolean>();
         includedPackages.put("", true);
         for (String p : excludedPackages)
             includedPackages.put(p, false);
-
         StandardLocation path = docenv.fileManager.hasLocation(StandardLocation.SOURCE_PATH)
                 ? StandardLocation.SOURCE_PATH : StandardLocation.CLASS_PATH;
-
         searchSubPackages(subPackages,
                 includedPackages,
                 packages, packageFiles,
                 path,
                 EnumSet.of(JavaFileObject.Kind.SOURCE));
-
         return packageFiles;
     }
 
@@ -255,7 +235,6 @@ public class JavadocTool extends com.sun.tools.javac.main.JavaCompiler {
         for (String subPackage : subPackages) {
             if (!isIncluded(subPackage, includedPackages))
                 continue;
-
             for (JavaFileObject fo : docenv.fileManager.list(location, subPackage, kinds, true)) {
                 String binaryName = docenv.fileManager.inferBinaryName(location, fo);
                 String packageName = getPackageName(binaryName);
@@ -296,12 +275,11 @@ public class JavadocTool extends com.sun.tools.javac.main.JavaCompiler {
                                   Collection<File> pathnames) {
         if (excludedPackages.contains(packageName))
             return;
-
         String packageFilename = packageName.replace('.', File.separatorChar);
         boolean addedPackage = false;
         for (File pathname : pathnames) {
             File f = new File(pathname, packageFilename);
-            String filenames[] = f.list();
+            String[] filenames = f.list();
             if (filenames != null) {
                 for (String filename : filenames) {
                     if (!addedPackage
@@ -330,5 +308,4 @@ public class JavadocTool extends com.sun.tools.javac.main.JavaCompiler {
         }
         return result.toList();
     }
-
 }

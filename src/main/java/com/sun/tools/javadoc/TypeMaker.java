@@ -12,7 +12,6 @@ import com.sun.tools.javac.util.List;
 import static com.sun.tools.javac.code.TypeTag.ARRAY;
 
 public class TypeMaker {
-
     public static com.sun.javadoc.Type getType(DocEnv env, Type t) {
         return getType(env, t, true);
     }
@@ -28,11 +27,9 @@ public class TypeMaker {
         if (env.legacyDoclet) {
             t = env.types.erasure(t);
         }
-
         if (considerAnnotations && t.isAnnotated()) {
             return new AnnotatedTypeImpl(env, t);
         }
-
         switch (t.getTag()) {
             case CLASS:
                 if (ClassDocImpl.isGeneric((ClassSymbol) t.tsym)) {
@@ -78,7 +75,7 @@ public class TypeMaker {
     }
 
     public static com.sun.javadoc.Type[] getTypes(DocEnv env, List<Type> ts,
-                                                  com.sun.javadoc.Type res[]) {
+                                                  com.sun.javadoc.Type[] res) {
         int i = 0;
         for (Type t : ts) {
             res[i++] = getType(env, t);
@@ -153,11 +150,8 @@ public class TypeMaker {
         return s.toString();
     }
 
-
     private static class ArrayTypeImpl implements com.sun.javadoc.Type {
-
         Type arrayType;
-
         DocEnv env;
         private com.sun.javadoc.Type skipArraysCache = null;
 

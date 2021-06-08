@@ -1,14 +1,14 @@
 package com.sun.source.util;
 
+import com.sun.source.doctree.DocCommentTree;
+
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import javax.tools.Diagnostic;
 import javax.tools.JavaCompiler.CompilationTask;
 
-import com.sun.source.doctree.DocCommentTree;
-import javax.tools.Diagnostic;
 @jdk.Exported
 public abstract class DocTrees extends Trees {
-
     public static DocTrees instance(CompilationTask task) {
         return (DocTrees) Trees.instance(task);
     }
@@ -26,7 +26,7 @@ public abstract class DocTrees extends Trees {
     public abstract DocSourcePositions getSourcePositions();
 
     public abstract void printMessage(Diagnostic.Kind kind, CharSequence msg,
-            com.sun.source.doctree.DocTree t,
-            DocCommentTree c,
-            com.sun.source.tree.CompilationUnitTree root);
+                                      com.sun.source.doctree.DocTree t,
+                                      DocCommentTree c,
+                                      com.sun.source.tree.CompilationUnitTree root);
 }

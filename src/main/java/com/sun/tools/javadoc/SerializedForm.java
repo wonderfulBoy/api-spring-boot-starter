@@ -15,7 +15,6 @@ import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 
 class SerializedForm {
-
     private static final String SERIALIZABLE_FIELDS = "serialPersistentFields";
     private static final String READOBJECT = "readObject";
     private static final String WRITEOBJECT = "writeObject";
@@ -37,10 +36,9 @@ class SerializedForm {
             md = cd.findMethod("writeExternal", writeExternalParamArr);
             if (md != null) {
                 methods.append(md);
-                Tag tag[] = md.tags("serialData");
+                Tag[] tag = md.tags("serialData");
             }
         } else if (cd.isSerializable()) {
-
             VarSymbol dsf = getDefinedSerializableFields(def);
             if (dsf != null) {
                 definesSerializableFields = true;
@@ -50,7 +48,6 @@ class SerializedForm {
             } else {
                 computeDefaultSerializableFields(env, def, cd);
             }
-
             addMethodIfExist(env, def, READOBJECT);
             addMethodIfExist(env, def, WRITEOBJECT);
             addMethodIfExist(env, def, READRESOLVE);
@@ -61,7 +58,6 @@ class SerializedForm {
 
     private VarSymbol getDefinedSerializableFields(ClassSymbol def) {
         Names names = def.name.table.names;
-
         for (Scope.Entry e = def.members().lookup(names.fromString(SERIALIZABLE_FIELDS)); e.scope != null; e = e.next()) {
             if (e.sym.kind == Kinds.VAR) {
                 VarSymbol f = (VarSymbol) e.sym;
@@ -91,7 +87,6 @@ class SerializedForm {
 
     private void addMethodIfExist(DocEnv env, ClassSymbol def, String methodName) {
         Names names = def.name.table.names;
-
         for (Scope.Entry e = def.members().lookup(names.fromString(methodName)); e.scope != null; e = e.next()) {
             if (e.sym.kind == Kinds.MTH) {
                 MethodSymbol md = (MethodSymbol) e.sym;
@@ -106,12 +101,10 @@ class SerializedForm {
                                                        DocEnv env,
                                                        ClassSymbol def) {
         Names names = def.name.table.names;
-
         SerialFieldTag[] sfTag = spfDoc.serialFieldTags();
         for (int i = 0; i < sfTag.length; i++) {
             if (sfTag[i].fieldName() == null || sfTag[i].fieldType() == null)
                 continue;
-
             Name fieldName = names.fromString(sfTag[i].fieldName());
             for (Scope.Entry e = def.members().lookup(fieldName); e.scope != null; e = e.next()) {
                 if (e.sym.kind == Kinds.VAR) {
@@ -125,7 +118,7 @@ class SerializedForm {
     }
 
     FieldDoc[] fields() {
-        return (FieldDoc[]) fields.toArray(new FieldDocImpl[fields.length()]);
+        return fields.toArray(new FieldDocImpl[fields.length()]);
     }
 
     MethodDoc[] methods() {

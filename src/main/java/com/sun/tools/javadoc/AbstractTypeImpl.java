@@ -4,7 +4,6 @@ import com.sun.javadoc.*;
 import com.sun.tools.javac.code.Type;
 
 abstract class AbstractTypeImpl implements com.sun.javadoc.Type {
-
     protected final DocEnv env;
     protected final Type type;
 

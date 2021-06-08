@@ -1,7 +1,6 @@
 package com.sun.javadoc;
 
 public interface AnnotationDesc {
-
     AnnotationTypeDoc annotationType();
 
     ElementValuePair[] elementValues();
@@ -9,10 +8,7 @@ public interface AnnotationDesc {
     boolean isSynthesized();
 
     interface ElementValuePair {
-
         AnnotationTypeElementDoc element();
-
         AnnotationValue value();
     }
-
 }

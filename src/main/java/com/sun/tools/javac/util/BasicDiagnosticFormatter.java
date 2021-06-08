@@ -1,86 +1,20 @@
-/*
- * Copyright (c) 2005, 2012, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package com.sun.tools.javac.util;
 
-import java.util.Collection;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.regex.Matcher;
 import javax.tools.JavaFileObject;
-
-import com.sun.tools.javac.util.AbstractDiagnosticFormatter.SimpleConfiguration;
-import com.sun.tools.javac.util.BasicDiagnosticFormatter.BasicConfiguration;
+import java.util.*;
+import java.util.regex.Matcher;
 
 import static com.sun.tools.javac.api.DiagnosticFormatter.PositionKind.*;
 import static com.sun.tools.javac.util.BasicDiagnosticFormatter.BasicConfiguration.*;
-import static com.sun.tools.javac.util.LayoutCharacters.*;
+import static com.sun.tools.javac.util.LayoutCharacters.DetailsInc;
+import static com.sun.tools.javac.util.LayoutCharacters.DiagInc;
 
-/**
- * A basic formatter for diagnostic messages.
- * The basic formatter will format a diagnostic according to one of three format patterns, depending on whether
- * or not the source name and position are set. The formatter supports a printf-like string for patterns
- * with the following special characters:
- * <ul>
- * <li>%b: the base of the source name
- * <li>%f: the source name (full absolute path)
- * <li>%l: the line number of the diagnostic, derived from the character offset
- * <li>%c: the column number of the diagnostic, derived from the character offset
- * <li>%o: the character offset of the diagnostic if set
- * <li>%p: the prefix for the diagnostic, derived from the diagnostic type
- * <li>%t: the prefix as it normally appears in standard diagnostics. In this case, no prefix is
- *        shown if the type is ERROR and if a source name is set
- * <li>%m: the text or the diagnostic, including any appropriate arguments
- * <li>%_: space delimiter, useful for formatting purposes
- * </ul>
- *
- * <p><b>This is NOT part of any supported API.
- * If you write code that depends on this, you do so at your own risk.
- * This code and its internal interfaces are subject to change or
- * deletion without notice.</b>
- */
 public class BasicDiagnosticFormatter extends AbstractDiagnosticFormatter {
 
-    /**
-     * Create a basic formatter based on the supplied options.
-     *
-     * @param options list of command-line options
-     * @param msgs JavacMessages object used for i18n
-     */
     public BasicDiagnosticFormatter(Options options, JavacMessages msgs) {
         super(msgs, new BasicConfiguration(options));
     }
 
-    /**
-     * Create a standard basic formatter
-     *
-     * @param msgs JavacMessages object used for i18n
-     */
     public BasicDiagnosticFormatter(JavacMessages msgs) {
         super(msgs, new BasicConfiguration());
     }
@@ -113,18 +47,18 @@ public class BasicDiagnosticFormatter extends AbstractDiagnosticFormatter {
         String[] lines = msg.split("\n");
         if (getConfiguration().getVisible().contains(DiagnosticPart.SUMMARY)) {
             currentIndentation += getConfiguration().getIndentation(DiagnosticPart.SUMMARY);
-            buf.append(indent(lines[0], currentIndentation)); //summary
+            buf.append(indent(lines[0], currentIndentation));
         }
         if (lines.length > 1 && getConfiguration().getVisible().contains(DiagnosticPart.DETAILS)) {
             currentIndentation += getConfiguration().getIndentation(DiagnosticPart.DETAILS);
-            for (int i = 1;i < lines.length; i++) {
+            for (int i = 1; i < lines.length; i++) {
                 buf.append("\n" + indent(lines[i], currentIndentation));
             }
         }
         if (d.isMultiline() && getConfiguration().getVisible().contains(DiagnosticPart.SUBDIAGNOSTICS)) {
             currentIndentation += getConfiguration().getIndentation(DiagnosticPart.SUBDIAGNOSTICS);
-                for (String sub : formatSubdiagnostics(d, l)) {
-                    buf.append("\n" + indent(sub, currentIndentation));
+            for (String sub : formatSubdiagnostics(d, l)) {
+                buf.append("\n" + indent(sub, currentIndentation));
             }
         }
         return buf.toString();
@@ -166,14 +100,14 @@ public class BasicDiagnosticFormatter extends AbstractDiagnosticFormatter {
             case 't': {
                 boolean usePrefix;
                 switch (d.getType()) {
-                case FRAGMENT:
-                    usePrefix = false;
-                    break;
-                case ERROR:
-                    usePrefix = (d.getIntPosition() == Position.NOPOS);
-                    break;
-                default:
-                    usePrefix = true;
+                    case FRAGMENT:
+                        usePrefix = false;
+                        break;
+                    case ERROR:
+                        usePrefix = (d.getIntPosition() == Position.NOPOS);
+                        break;
+                    default:
+                        usePrefix = true;
                 }
                 if (usePrefix)
                     return formatKind(d, l);
@@ -200,7 +134,7 @@ public class BasicDiagnosticFormatter extends AbstractDiagnosticFormatter {
             if (d.getIntPosition() != Position.NOPOS) {
                 format = getConfiguration().getFormat(BasicFormatKind.DEFAULT_POS_FORMAT);
             } else if (source.getFile() != null &&
-                       source.getFile().getKind() == JavaFileObject.Kind.CLASS) {
+                    source.getFile().getKind() == JavaFileObject.Kind.CLASS) {
                 format = getConfiguration().getFormat(BasicFormatKind.DEFAULT_CLASS_FORMAT);
             }
         }
@@ -209,12 +143,11 @@ public class BasicDiagnosticFormatter extends AbstractDiagnosticFormatter {
 
     @Override
     public BasicConfiguration getConfiguration() {
-        //the following cast is always safe - see init
-        return (BasicConfiguration)super.getConfiguration();
+
+        return (BasicConfiguration) super.getConfiguration();
     }
 
     static public class BasicConfiguration extends SimpleConfiguration {
-
         protected Map<DiagnosticPart, Integer> indentationLevels;
         protected Map<BasicFormatKind, String> availableFormats;
         protected SourcePosition sourcePosition;
@@ -222,9 +155,9 @@ public class BasicDiagnosticFormatter extends AbstractDiagnosticFormatter {
         @SuppressWarnings("fallthrough")
         public BasicConfiguration(Options options) {
             super(options, EnumSet.of(DiagnosticPart.SUMMARY,
-                            DiagnosticPart.DETAILS,
-                            DiagnosticPart.SUBDIAGNOSTICS,
-                            DiagnosticPart.SOURCE));
+                    DiagnosticPart.DETAILS,
+                    DiagnosticPart.SUBDIAGNOSTICS,
+                    DiagnosticPart.SOURCE));
             initFormat();
             initIndentation();
             if (options.isSet("oldDiags"))
@@ -239,7 +172,7 @@ public class BasicDiagnosticFormatter extends AbstractDiagnosticFormatter {
             String srcPos = null;
             if ((((srcPos = options.get("sourcePosition")) != null)) &&
                     srcPos.equals("bottom"))
-                    setSourcePosition(SourcePosition.BOTTOM);
+                setSourcePosition(SourcePosition.BOTTOM);
             else
                 setSourcePosition(SourcePosition.AFTER_SUMMARY);
             String indent = options.get("diagsIndentation");
@@ -263,8 +196,7 @@ public class BasicDiagnosticFormatter extends AbstractDiagnosticFormatter {
                             setIndentation(DiagnosticPart.SUMMARY,
                                     Integer.parseInt(levels[0]));
                     }
-                }
-                catch (NumberFormatException ex) {
+                } catch (NumberFormatException ex) {
                     initIndentation();
                 }
             }
@@ -272,9 +204,9 @@ public class BasicDiagnosticFormatter extends AbstractDiagnosticFormatter {
 
         public BasicConfiguration() {
             super(EnumSet.of(DiagnosticPart.SUMMARY,
-                  DiagnosticPart.DETAILS,
-                  DiagnosticPart.SUBDIAGNOSTICS,
-                  DiagnosticPart.SOURCE));
+                    DiagnosticPart.DETAILS,
+                    DiagnosticPart.SUBDIAGNOSTICS,
+                    DiagnosticPart.SOURCE));
             initFormat();
             initIndentation();
         }
@@ -289,9 +221,9 @@ public class BasicDiagnosticFormatter extends AbstractDiagnosticFormatter {
 
         private void initFormats(String pos, String nopos, String clazz) {
             availableFormats = new EnumMap<BasicFormatKind, String>(BasicFormatKind.class);
-            setFormat(BasicFormatKind.DEFAULT_POS_FORMAT,    pos);
+            setFormat(BasicFormatKind.DEFAULT_POS_FORMAT, pos);
             setFormat(BasicFormatKind.DEFAULT_NO_POS_FORMAT, nopos);
-            setFormat(BasicFormatKind.DEFAULT_CLASS_FORMAT,  clazz);
+            setFormat(BasicFormatKind.DEFAULT_CLASS_FORMAT, clazz);
         }
 
         @SuppressWarnings("fallthrough")
@@ -315,98 +247,45 @@ public class BasicDiagnosticFormatter extends AbstractDiagnosticFormatter {
             setIndentation(DiagnosticPart.SOURCE, 0);
         }
 
-        /**
-         * Get the amount of spaces for a given indentation kind
-         * @param diagPart the diagnostic part for which the indentation is
-         * to be retrieved
-         * @return the amount of spaces used for the specified indentation kind
-         */
         public int getIndentation(DiagnosticPart diagPart) {
             return indentationLevels.get(diagPart);
         }
 
-        /**
-         * Set the indentation level for various element of a given diagnostic -
-         * this might lead to more readable diagnostics
-         *
-         * @param diagPart
-         * @param nSpaces amount of spaces for the specified diagnostic part
-         */
         public void setIndentation(DiagnosticPart diagPart, int nSpaces) {
             indentationLevels.put(diagPart, nSpaces);
         }
 
-        /**
-         * Set the source line positioning used by this formatter
-         *
-         * @param sourcePos a positioning value for source line
-         */
+        public SourcePosition getSourcePosition() {
+            return sourcePosition;
+        }
+
         public void setSourcePosition(SourcePosition sourcePos) {
             sourcePosition = sourcePos;
         }
 
-        /**
-         * Get the source line positioning used by this formatter
-         *
-         * @return the positioning value used by this formatter
-         */
-        public SourcePosition getSourcePosition() {
-            return sourcePosition;
-        }
-        //where
-        /**
-         * A source positioning value controls the position (within a given
-         * diagnostic message) in which the source line the diagnostic refers to
-         * should be displayed (if applicable)
-         */
-        public enum SourcePosition {
-            /**
-             * Source line is displayed after the diagnostic message
-             */
-            BOTTOM,
-            /**
-             * Source line is displayed after the first line of the diagnostic
-             * message
-             */
-            AFTER_SUMMARY;
-        }
-
-        /**
-         * Set a metachar string for a specific format
-         *
-         * @param kind the format kind to be set
-         * @param s the metachar string specifying the format
-         */
         public void setFormat(BasicFormatKind kind, String s) {
             availableFormats.put(kind, s);
         }
 
-        /**
-         * Get a metachar string for a specific format
-         *
-         * @param kind the format kind for which to get the metachar string
-         */
         public String getFormat(BasicFormatKind kind) {
             return availableFormats.get(kind);
         }
-        //where
-        /**
-         * This enum contains all the kinds of formatting patterns supported
-         * by a basic diagnostic formatter.
-         */
+
+        public enum SourcePosition {
+
+            BOTTOM,
+
+            AFTER_SUMMARY
+        }
+
+
         public enum BasicFormatKind {
-            /**
-            * A format string to be used for diagnostics with a given position.
-            */
+
             DEFAULT_POS_FORMAT,
-            /**
-            * A format string to be used for diagnostics without a given position.
-            */
+
             DEFAULT_NO_POS_FORMAT,
-            /**
-            * A format string to be used for diagnostics regarding classfiles
-            */
-            DEFAULT_CLASS_FORMAT;
+
+            DEFAULT_CLASS_FORMAT
         }
     }
 }

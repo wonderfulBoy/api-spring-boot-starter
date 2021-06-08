@@ -7,7 +7,6 @@ import javax.tools.FileObject;
 import java.io.File;
 
 public class SourcePositionImpl implements SourcePosition {
-
     FileObject filename;
     int position;
     Position.LineMap lineMap;
@@ -59,7 +58,6 @@ public class SourcePositionImpl implements SourcePosition {
                         + File.separatorChar
                         + fn.substring(paren + 1, fn.length() - 1);
         }
-
         if (position == Position.NOPOS)
             return fn;
         else

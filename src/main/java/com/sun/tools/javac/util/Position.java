@@ -1,23 +1,25 @@
 package com.sun.tools.javac.util;
 
 import java.util.BitSet;
-import static com.sun.tools.javac.util.LayoutCharacters.*;
+
+import static com.sun.tools.javac.util.LayoutCharacters.TabInc;
 
 public class Position {
-    public static final int NOPOS        = -1;
-    public static final int FIRSTPOS     = 0;
-    public static final int FIRSTLINE    = 1;
-    public static final int FIRSTCOLUMN  = 1;
-    public static final int LINESHIFT    = 10;
-    public static final int MAXCOLUMN    = (1<<LINESHIFT) - 1;
-    public static final int MAXLINE      = (1<<(Integer.SIZE-LINESHIFT)) - 1;
-    public static final int MAXPOS       = Integer.MAX_VALUE;
+    public static final int NOPOS = -1;
+    public static final int FIRSTPOS = 0;
+    public static final int FIRSTLINE = 1;
+    public static final int FIRSTCOLUMN = 1;
+    public static final int LINESHIFT = 10;
+    public static final int MAXCOLUMN = (1 << LINESHIFT) - 1;
+    public static final int MAXLINE = (1 << (Integer.SIZE - LINESHIFT)) - 1;
+    public static final int MAXPOS = Integer.MAX_VALUE;
 
-    private Position() {}
+    private Position() {
+    }
 
     public static LineMap makeLineMap(char[] src, int max, boolean expandTabs) {
         LineMapImpl lineMap = expandTabs ?
-            new LineTabMapImpl(max) : new LineMapImpl();
+                new LineTabMapImpl(max) : new LineMapImpl();
         lineMap.build(src, max);
         return lineMap;
     }
@@ -27,7 +29,6 @@ public class Position {
             throw new IllegalArgumentException("line must be greater than 0");
         if (col < 1)
             throw new IllegalArgumentException("column must be greater than 0");
-
         if (line > MAXLINE || col > MAXCOLUMN) {
             return NOPOS;
         }
@@ -36,14 +37,29 @@ public class Position {
 
     public interface LineMap extends com.sun.source.tree.LineMap {
         int getStartPosition(int line);
+
         int getPosition(int line, int column);
+
         int getLineNumber(int pos);
+
         int getColumnNumber(int pos);
     }
 
     static class LineMapImpl implements LineMap {
         protected int[] startPosition;
-        protected LineMapImpl() {}
+        private int lastPosition = Position.FIRSTPOS;
+        private int lastLine = Position.FIRSTLINE;
+
+        protected LineMapImpl() {
+        }
+
+        private static int longToInt(long longValue) {
+            int intValue = (int) longValue;
+            if (intValue != longValue)
+                throw new IndexOutOfBoundsException();
+            return intValue;
+        }
+
         protected void build(char[] src, int max) {
             int c = 0;
             int i = 0;
@@ -53,13 +69,12 @@ public class Position {
                 do {
                     char ch = src[i];
                     if (ch == '\r' || ch == '\n') {
-                        if (ch == '\r' && (i+1) < max && src[i+1] == '\n')
+                        if (ch == '\r' && (i + 1) < max && src[i + 1] == '\n')
                             i += 2;
                         else
                             ++i;
                         break;
-                    }
-                    else if (ch == '\t')
+                    } else if (ch == '\t')
                         setTabPosition(i);
                 } while (++i < max);
             }
@@ -83,21 +98,16 @@ public class Position {
             return getPosition(longToInt(line), longToInt(column));
         }
 
-        private int lastPosition = Position.FIRSTPOS;
-        private int lastLine = Position.FIRSTLINE;
-
         public int getLineNumber(int pos) {
             if (pos == lastPosition) {
                 return lastLine;
             }
             lastPosition = pos;
-
             int low = 0;
-            int high = startPosition.length-1;
+            int high = startPosition.length - 1;
             while (low <= high) {
                 int mid = (low + high) >> 1;
                 int midVal = startPosition[mid];
-
                 if (midVal < pos)
                     low = mid + 1;
                 else if (midVal > pos)
@@ -123,18 +133,13 @@ public class Position {
             return getColumnNumber(longToInt(pos));
         }
 
-        private static int longToInt(long longValue) {
-            int intValue = (int)longValue;
-            if (intValue != longValue)
-                throw new IndexOutOfBoundsException();
-            return intValue;
+        protected void setTabPosition(int offset) {
         }
-
-        protected void setTabPosition(int offset) {}
     }
 
     public static class LineTabMapImpl extends LineMapImpl {
         private BitSet tabMap;
+
         public LineTabMapImpl(int max) {
             super();
             tabMap = new BitSet(max);

@@ -19,15 +19,10 @@ import java.net.URLClassLoader;
 import static com.sun.javadoc.LanguageVersion.JAVA_1_1;
 
 public class DocletInvoker {
-
     private final Class<?> docletClass;
-
     private final String docletClassName;
-
     private final ClassLoader appClassLoader;
-
     private final Messager messager;
-
     private final boolean apiMode;
 
     public DocletInvoker(Messager messager, Class<?> docletClass, boolean apiMode) {
@@ -45,7 +40,6 @@ public class DocletInvoker {
         this.messager = messager;
         this.docletClassName = docletClassName;
         this.apiMode = apiMode;
-
         if (fileManager != null && fileManager.hasLocation(DocumentationTool.Location.DOCLET_PATH)) {
             appClassLoader = fileManager.getClassLoader(DocumentationTool.Location.DOCLET_PATH);
         } else {
@@ -59,7 +53,6 @@ public class DocletInvoker {
             else
                 appClassLoader = new URLClassLoader(urls, docletParentClassLoader);
         }
-
         Class<?> dc = null;
         try {
             dc = appClassLoader.loadClass(docletClassName);
@@ -87,7 +80,6 @@ public class DocletInvoker {
             return ctxCL;
         if (ctxCL == null)
             return sysCL;
-
         try {
             sysCL.loadClass(docletClassName);
             try {
@@ -97,7 +89,6 @@ public class DocletInvoker {
             }
         } catch (ClassNotFoundException e) {
         }
-
         try {
             if (getClass() == sysCL.loadClass(getClass().getName())) {
                 try {
@@ -109,7 +100,6 @@ public class DocletInvoker {
             }
         } catch (ClassNotFoundException e) {
         }
-
         return ctxCL;
     }
 
@@ -153,7 +143,7 @@ public class DocletInvoker {
 
     public boolean validOptions(List<String[]> optlist) {
         Object retVal;
-        String options[][] = optlist.toArray(new String[optlist.length()][]);
+        String[][] options = optlist.toArray(new String[optlist.length()][]);
         String methodName = "validOptions";
         DocErrorReporter reporter = messager;
         Class<?>[] paramTypes = {String[][].class, DocErrorReporter.class};

@@ -3,7 +3,6 @@ package com.sun.tools.javadoc;
 import com.sun.javadoc.*;
 
 class ThrowsTagImpl extends TagImpl implements ThrowsTag {
-
     private final String exceptionName;
     private final String exceptionComment;
     private Tag[] inlineTags;

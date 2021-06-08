@@ -3,7 +3,6 @@ package com.sun.tools.javac.api;
 import java.util.Locale;
 
 public interface Formattable {
-
     String toString(Locale locale, Messages messages);
 
     String getKind();

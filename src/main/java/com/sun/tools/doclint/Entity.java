@@ -256,7 +256,6 @@ public enum Entity {
     lsaquo(8249),
     rsaquo(8250),
     euro(8364);
-
     private static final Map<String, Entity> names = new HashMap<String, Entity>();
     private static final Map<Integer, Entity> codes = new HashMap<Integer, Entity>();
 
@@ -272,7 +271,7 @@ public enum Entity {
 
     int code;
 
-    private Entity(int code) {
+    Entity(int code) {
         this.code = code;
     }
 

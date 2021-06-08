@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Queue;
 
 public class DocLint implements Plugin {
-
     public static final String XMSGS_OPTION = "-Xmsgs";
     public static final String XMSGS_CUSTOM_PREFIX = "-Xmsgs:";
     public static final String XIMPLICIT_HEADERS = "-XimplicitHeaders:";
@@ -69,45 +68,34 @@ public class DocLint implements Plugin {
     public void run(PrintWriter out, String... args) throws BadArgs, IOException {
         env = new Env();
         processArgs(args);
-
         if (needHelp)
             showHelp(out);
-
         if (javacFiles.isEmpty()) {
             if (!needHelp)
                 out.println(localize("dc.main.no.files.given"));
         }
-
         JavacTool tool = JavacTool.create();
-
         JavacFileManager fm = new JavacFileManager(new Context(), false, null);
         fm.setSymbolFileEnabled(false);
         fm.setLocation(StandardLocation.PLATFORM_CLASS_PATH, javacBootClassPath);
         fm.setLocation(StandardLocation.CLASS_PATH, javacClassPath);
         fm.setLocation(StandardLocation.SOURCE_PATH, javacSourcePath);
-
         JavacTask task = tool.getTask(out, fm, null, javacOpts, null,
                 fm.getJavaFileObjectsFromFiles(javacFiles));
         Iterable<? extends CompilationUnitTree> units = task.parse();
         ((JavacTaskImpl) task).enter();
-
         env.init(task);
         checker = new Checker(env);
-
         DeclScanner ds = new DeclScanner() {
             @Override
             void visitDecl(Tree tree, Name name) {
                 TreePath p = getCurrentPath();
                 DocCommentTree dc = env.trees.getDocCommentTree(p);
-
                 checker.scan(dc, p);
             }
         };
-
         ds.scan(units, null);
-
         reportStats(out);
-
         Context ctx = ((JavacTaskImpl) task).getContext();
         JavaCompiler c = JavaCompiler.instance(ctx);
         c.printCount("error", c.errorCount());
@@ -117,10 +105,8 @@ public class DocLint implements Plugin {
     void processArgs(String... args) throws BadArgs {
         javacOpts = new ArrayList<>();
         javacFiles = new ArrayList<>();
-
         if (args.length == 0)
             needHelp = true;
-
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
             if (arg.matches("-Xmax(errs|warns)") && i + 1 < args.length) {
@@ -200,20 +186,16 @@ public class DocLint implements Plugin {
                 throw new IllegalArgumentException(arg);
         }
         env.init(task);
-
         checker = new Checker(env);
-
         if (addTaskListener) {
             final DeclScanner ds = new DeclScanner() {
                 @Override
                 void visitDecl(Tree tree, Name name) {
                     TreePath p = getCurrentPath();
                     DocCommentTree dc = env.trees.getDocCommentTree(p);
-
                     checker.scan(dc, p);
                 }
             };
-
             TaskListener tl = new TaskListener() {
                 Queue<CompilationUnitTree> todo = new LinkedList<CompilationUnitTree>();
 
@@ -237,7 +219,6 @@ public class DocLint implements Plugin {
                     }
                 }
             };
-
             task.addTaskListener(tl);
         }
     }
@@ -297,5 +278,4 @@ public class DocLint implements Plugin {
             this.args = args;
         }
     }
-
 }

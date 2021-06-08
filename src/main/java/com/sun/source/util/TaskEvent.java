@@ -1,21 +1,16 @@
 package com.sun.source.util;
 
+import com.sun.source.tree.CompilationUnitTree;
+
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 
-import com.sun.source.tree.CompilationUnitTree;
 @jdk.Exported
 public final class TaskEvent {
-
-    @jdk.Exported
-    public enum Kind {
-        PARSE,
-        ENTER,
-        ANALYZE,
-        GENERATE,
-        ANNOTATION_PROCESSING,
-        ANNOTATION_PROCESSING_ROUND
-    };
+    private Kind kind;
+    private JavaFileObject file;
+    private CompilationUnitTree unit;
+    private TypeElement clazz;
 
     public TaskEvent(Kind kind) {
         this(kind, null, null, null);
@@ -58,13 +53,17 @@ public final class TaskEvent {
 
     public String toString() {
         return "TaskEvent["
-            + kind + ","
-            + file + ","
-            + clazz + "]";
+                + kind + ","
+                + file + ","
+                + clazz + "]";
     }
-
-    private Kind kind;
-    private JavaFileObject file;
-    private CompilationUnitTree unit;
-    private TypeElement clazz;
+    @jdk.Exported
+    public enum Kind {
+        PARSE,
+        ENTER,
+        ANALYZE,
+        GENERATE,
+        ANNOTATION_PROCESSING,
+        ANNOTATION_PROCESSING_ROUND
+    }
 }

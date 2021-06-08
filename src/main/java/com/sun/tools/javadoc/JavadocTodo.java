@@ -6,7 +6,6 @@ import com.sun.tools.javac.comp.Todo;
 import com.sun.tools.javac.util.Context;
 
 public class JavadocTodo extends Todo {
-
     protected JavadocTodo(Context context) {
         super(context);
     }

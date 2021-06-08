@@ -2,7 +2,6 @@ package com.sun.source.tree;
 
 @jdk.Exported
 public interface Tree {
-
     Kind getKind();
 
     <R, D> R accept(TreeVisitor<R, D> visitor, D data);
@@ -110,11 +109,12 @@ public interface Tree {
         ENUM(ClassTree.class),
         ANNOTATION_TYPE(ClassTree.class),
         OTHER(null);
-
         private final Class<? extends Tree> associatedInterface;
+
         Kind(Class<? extends Tree> intf) {
             associatedInterface = intf;
         }
+
         public Class<? extends Tree> asInterface() {
             return associatedInterface;
         }

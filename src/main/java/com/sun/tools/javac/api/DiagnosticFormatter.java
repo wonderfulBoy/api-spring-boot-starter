@@ -5,7 +5,6 @@ import java.util.Locale;
 import java.util.Set;
 
 public interface DiagnosticFormatter<D extends Diagnostic<?>> {
-
     boolean displaySource(D diag);
 
     String format(D diag, Locale l);
@@ -21,20 +20,14 @@ public interface DiagnosticFormatter<D extends Diagnostic<?>> {
     Configuration getConfiguration();
 
     enum PositionKind {
-
         START,
-
         END,
-
         LINE,
-
         COLUMN,
-
         OFFSET
     }
 
     interface Configuration {
-
         Set<DiagnosticPart> getVisible();
 
         void setVisible(Set<DiagnosticPart> visibleParts);
@@ -44,23 +37,16 @@ public interface DiagnosticFormatter<D extends Diagnostic<?>> {
         int getMultilineLimit(MultilineLimit limit);
 
         enum DiagnosticPart {
-
             SUMMARY,
-
             DETAILS,
-
             SOURCE,
-
             SUBDIAGNOSTICS,
-
-            JLS;
+            JLS
         }
 
         enum MultilineLimit {
-
             DEPTH,
-
-            LENGTH;
+            LENGTH
         }
     }
 }

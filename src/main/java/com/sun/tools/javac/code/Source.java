@@ -19,7 +19,6 @@ public enum Source {
     JDK1_6("1.6"),
     JDK1_7("1.7"),
     JDK1_8("1.8");
-
     public static final Source DEFAULT = JDK1_8;
     private static final Context.Key<Source> sourceKey
             = new Context.Key<Source>();

@@ -1,7 +1,6 @@
 package com.sun.javadoc;
 
 public interface Type {
-
     String typeName();
 
     String qualifiedTypeName();
@@ -27,5 +26,4 @@ public interface Type {
     AnnotationTypeDoc asAnnotationTypeDoc();
 
     Type getElementType();
-
 }

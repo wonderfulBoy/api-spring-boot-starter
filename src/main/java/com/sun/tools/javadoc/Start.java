@@ -27,7 +27,6 @@ public class Start extends ToolOption.Helper {
     private final Messager messager;
     private long defaultFilter = PUBLIC | PROTECTED;
     private DocletInvoker docletInvoker;
-
     private boolean apiMode;
 
     Start(String programName,
@@ -89,10 +88,8 @@ public class Start extends ToolOption.Helper {
         if (docletInvoker != null) {
             docletInvoker.optionLength(doclet);
         }
-
         if (foot != null)
             messager.notice(foot);
-
         if (exit) exit();
     }
 
@@ -101,7 +98,7 @@ public class Start extends ToolOption.Helper {
     }
 
     int begin(String... argv) {
-        boolean ok = begin(null, argv, Collections.<JavaFileObject>emptySet());
+        boolean ok = begin(null, argv, Collections.emptySet());
         return ok ? 0 : 1;
     }
 
@@ -113,7 +110,6 @@ public class Start extends ToolOption.Helper {
 
     private boolean begin(Class<?> docletClass, String[] options, Iterable<? extends JavaFileObject> fileObjects) {
         boolean failed = false;
-
         try {
             failed = !parseAndExecute(docletClass, options, fileObjects);
         } catch (Messager.ExitJavadoc exc) {
@@ -144,9 +140,7 @@ public class Start extends ToolOption.Helper {
             String[] argv,
             Iterable<? extends JavaFileObject> fileObjects) throws IOException {
         long tm = System.currentTimeMillis();
-
         ListBuffer<String> javaNames = new ListBuffer<String>();
-
         try {
             argv = CommandLine.parse(argv);
         } catch (FileNotFoundException e) {
@@ -156,22 +150,16 @@ public class Start extends ToolOption.Helper {
             e.printStackTrace(System.err);
             exit();
         }
-
-
         JavaFileManager fileManager = context.get(JavaFileManager.class);
         setDocletInvoker(docletClass, fileManager, argv);
-
         compOpts = Options.instance(context);
         compOpts.put("-Xlint:-options", "-Xlint:-options");
-
         for (int i = 0; i < argv.length; i++) {
             String arg = argv[i];
-
             ToolOption o = ToolOption.get(arg);
             if (o != null) {
                 if (o == ToolOption.LOCALE && i > 0)
                     usageError("main.locale_first");
-
                 if (o.hasArg) {
                     oneArg(argv, i++);
                     o.process(this, argv[i]);
@@ -179,7 +167,6 @@ public class Start extends ToolOption.Helper {
                     setOption(arg);
                     o.process(this);
                 }
-
             } else if (arg.startsWith("-XD")) {
                 String s = arg.substring("-XD".length());
                 int eq = s.indexOf('=');
@@ -208,22 +195,17 @@ public class Start extends ToolOption.Helper {
             }
         }
         compOpts.notifyListeners();
-
         if (javaNames.isEmpty() && subPackages.isEmpty() && isEmpty(fileObjects)) {
             usageError("main.No_packages_or_classes_specified");
         }
-
         if (!docletInvoker.validOptions(options.toList())) {
             exit();
         }
-
         JavadocTool comp = JavadocTool.make0(context);
         if (comp == null) return false;
-
         if (showAccess == null) {
             setFilter(defaultFilter);
         }
-
         LanguageVersion languageVersion = docletInvoker.languageVersion();
         RootDocImpl root = comp.getRootDocImpl(
                 docLocale,
@@ -238,18 +220,14 @@ public class Start extends ToolOption.Helper {
                 docClasses,
                 languageVersion == null || languageVersion == LanguageVersion.JAVA_1_1,
                 quiet);
-
         comp = null;
-
         boolean ok = root != null;
         if (ok) ok = docletInvoker.start(root);
 
-        // We're done.
         if (compOpts.get("-verbose") != null) {
             tm = System.currentTimeMillis() - tm;
             messager.notice("main.done_in", Long.toString(tm));
         }
-
         return ok;
     }
 
@@ -260,13 +238,11 @@ public class Start extends ToolOption.Helper {
     private void setDocletInvoker(Class<?> docletClass, JavaFileManager fileManager, String[] argv) {
         if (docletClass != null) {
             docletInvoker = new DocletInvoker(messager, docletClass, apiMode);
-            // TODO, check no -doclet, -docletpath
+
             return;
         }
-
         String docletClassName = null;
         String docletPath = null;
-
         for (int i = 0; i < argv.length; i++) {
             String arg = argv[i];
             if (arg.equals(ToolOption.DOCLET.opt)) {
@@ -285,11 +261,9 @@ public class Start extends ToolOption.Helper {
                 }
             }
         }
-
         if (docletClassName == null) {
             docletClassName = defaultDocletClassName;
         }
-
         docletInvoker = new DocletInvoker(messager, fileManager,
                 docletClassName, docletPath,
                 docletParentClassLoader,
@@ -319,7 +293,6 @@ public class Start extends ToolOption.Helper {
         String[] option = {opt, argument};
         options.append(option);
     }
-
 
     private void setOption(String opt, List<String> arguments) {
         String[] args = new String[arguments.length() + 1];

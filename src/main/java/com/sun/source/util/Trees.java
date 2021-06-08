@@ -1,28 +1,18 @@
 package com.sun.source.util;
 
-import java.lang.reflect.Method;
+import com.sun.source.tree.*;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.JavaCompiler.CompilationTask;
+import java.lang.reflect.Method;
 
-import com.sun.source.tree.CatchTree;
-import com.sun.source.tree.ClassTree;
-import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.MethodTree;
-import com.sun.source.tree.Scope;
-import com.sun.source.tree.Tree;
 @jdk.Exported
 public abstract class Trees {
-
     public static Trees instance(CompilationTask task) {
         String taskClassName = task.getClass().getName();
         if (!taskClassName.equals("com.sun.tools.javac.api.JavacTaskImpl")
@@ -42,8 +32,8 @@ public abstract class Trees {
             ClassLoader cl = arg.getClass().getClassLoader();
             Class<?> c = Class.forName("com.sun.tools.javac.api.JavacTrees", false, cl);
             argType = Class.forName(argType.getName(), false, cl);
-            Method m = c.getMethod("instance", new Class<?>[] { argType });
-            return (Trees) m.invoke(null, new Object[] { arg });
+            Method m = c.getMethod("instance", argType);
+            return (Trees) m.invoke(null, new Object[]{arg});
         } catch (Throwable e) {
             throw new AssertionError(e);
         }

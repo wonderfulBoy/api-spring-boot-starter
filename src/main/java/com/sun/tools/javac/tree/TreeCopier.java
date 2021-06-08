@@ -4,8 +4,10 @@ import com.sun.source.tree.*;
 import com.sun.tools.javac.tree.JCTree.*;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.ListBuffer;
-public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
+
+public class TreeCopier<P> implements TreeVisitor<JCTree, P> {
     private TreeMaker M;
+
     public TreeCopier(TreeMaker M) {
         this.M = M;
     }
@@ -29,7 +31,7 @@ public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
         if (trees == null)
             return null;
         ListBuffer<T> lb = new ListBuffer<T>();
-        for (T tree: trees)
+        for (T tree : trees)
             lb.append(copy(tree, p));
         return lb.toList();
     }
@@ -206,7 +208,7 @@ public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
     }
 
     public JCTree visitMethod(MethodTree node, P p) {
-        JCMethodDecl t  = (JCMethodDecl) node;
+        JCMethodDecl t = (JCMethodDecl) node;
         JCModifiers mods = copy(t.mods, p);
         JCExpression restype = copy(t.restype, p);
         List<JCTypeParameter> typarams = copy(t.typarams, p);
@@ -421,5 +423,4 @@ public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
                 throw new AssertionError("unknown tree tag: " + tree.getTag());
         }
     }
-
 }

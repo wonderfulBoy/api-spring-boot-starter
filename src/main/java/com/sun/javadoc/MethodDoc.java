@@ -1,7 +1,6 @@
 package com.sun.javadoc;
 
 public interface MethodDoc extends ExecutableMemberDoc {
-
     boolean isAbstract();
 
     boolean isDefault();
@@ -15,5 +14,4 @@ public interface MethodDoc extends ExecutableMemberDoc {
     MethodDoc overriddenMethod();
 
     boolean overrides(MethodDoc meth);
-
 }

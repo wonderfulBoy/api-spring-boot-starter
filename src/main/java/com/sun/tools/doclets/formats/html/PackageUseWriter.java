@@ -1,70 +1,25 @@
-/*
- * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package com.sun.tools.doclets.formats.html;
 
-import java.io.*;
-import java.util.*;
-
-import com.sun.javadoc.*;
+import com.sun.javadoc.ClassDoc;
+import com.sun.javadoc.PackageDoc;
 import com.sun.tools.doclets.formats.html.markup.*;
-import com.sun.tools.doclets.internal.toolkit.*;
+import com.sun.tools.doclets.internal.toolkit.Content;
 import com.sun.tools.doclets.internal.toolkit.util.*;
 
-/**
- * Generate package usage information.
- *
- *  <p><b>This is NOT part of any supported API.
- *  If you write code that depends on this, you do so at your own risk.
- *  This code and its internal interfaces are subject to change or
- *  deletion without notice.</b>
- *
- * @author Robert G. Field
- * @author Bhavesh Patel (Modified)
- */
+import java.io.IOException;
+import java.util.*;
+
 public class PackageUseWriter extends SubWriterHolderWriter {
-
     final PackageDoc pkgdoc;
-    final SortedMap<String,Set<ClassDoc>> usingPackageToUsedClasses = new TreeMap<String,Set<ClassDoc>>();
+    final SortedMap<String, Set<ClassDoc>> usingPackageToUsedClasses = new TreeMap<String, Set<ClassDoc>>();
 
-    /**
-     * Constructor.
-     *
-     * @param filename the file to be generated.
-     * @throws IOException
-     * @throws DocletAbortException
-     */
     public PackageUseWriter(ConfigurationImpl configuration,
                             ClassUseMapper mapper, DocPath filename,
                             PackageDoc pkgdoc) throws IOException {
         super(configuration, DocPath.forPackage(pkgdoc).resolve(filename));
         this.pkgdoc = pkgdoc;
 
-        // by examining all classes in this package, find what packages
-        // use these classes - produce a map between using package and
-        // used classes.
+
         ClassDoc[] content = pkgdoc.allClasses();
         for (int i = 0; i < content.length; ++i) {
             ClassDoc usedClass = content[i];
@@ -74,11 +29,11 @@ public class PackageUseWriter extends SubWriterHolderWriter {
                     ClassDoc usingClass = it.next();
                     PackageDoc usingPackage = usingClass.containingPackage();
                     Set<ClassDoc> usedClasses = usingPackageToUsedClasses
-                        .get(usingPackage.name());
+                            .get(usingPackage.name());
                     if (usedClasses == null) {
                         usedClasses = new TreeSet<ClassDoc>();
                         usingPackageToUsedClasses.put(Util.getPackageName(usingPackage),
-                                                      usedClasses);
+                                usedClasses);
                     }
                     usedClasses.add(usedClass);
                 }
@@ -86,34 +41,23 @@ public class PackageUseWriter extends SubWriterHolderWriter {
         }
     }
 
-    /**
-     * Generate a class page.
-     *
-     * @param configuration the current configuration of the doclet.
-     * @param mapper        the mapping of the class usage.
-     * @param pkgdoc        the package doc being documented.
-     */
     public static void generate(ConfigurationImpl configuration,
                                 ClassUseMapper mapper, PackageDoc pkgdoc) {
         PackageUseWriter pkgusegen;
         DocPath filename = DocPaths.PACKAGE_USE;
         try {
             pkgusegen = new PackageUseWriter(configuration,
-                                             mapper, filename, pkgdoc);
+                    mapper, filename, pkgdoc);
             pkgusegen.generatePackageUseFile();
             pkgusegen.close();
         } catch (IOException exc) {
             configuration.standardmessage.error(
-                "doclet.exception_encountered",
-                exc.toString(), filename);
+                    "doclet.exception_encountered",
+                    exc.toString(), filename);
             throw new DocletAbortException(exc);
         }
     }
 
-
-    /**
-     * Generate the package use list.
-     */
     protected void generatePackageUseFile() throws IOException {
         Content body = getPackageUseHeader();
         HtmlTree div = new HtmlTree(HtmlTag.DIV);
@@ -130,11 +74,6 @@ public class PackageUseWriter extends SubWriterHolderWriter {
         printHtmlDocument(null, true, body);
     }
 
-    /**
-     * Add the package use information.
-     *
-     * @param contentTree the content tree to which the package use information will be added
-     */
     protected void addPackageUse(Content contentTree) throws IOException {
         HtmlTree ul = new HtmlTree(HtmlTag.UL);
         ul.addStyle(HtmlStyle.blockList);
@@ -145,16 +84,11 @@ public class PackageUseWriter extends SubWriterHolderWriter {
         contentTree.addContent(ul);
     }
 
-    /**
-     * Add the list of packages that use the given package.
-     *
-     * @param contentTree the content tree to which the package list will be added
-     */
     protected void addPackageList(Content contentTree) throws IOException {
         Content table = HtmlTree.TABLE(HtmlStyle.useSummary, 0, 3, 0, useTableSummary,
                 getTableCaption(configuration.getResource(
-                "doclet.ClassUse_Packages.that.use.0",
-                getPackageLink(pkgdoc, Util.getPackageName(pkgdoc)))));
+                        "doclet.ClassUse_Packages.that.use.0",
+                        getPackageLink(pkgdoc, Util.getPackageName(pkgdoc)))));
         table.addContent(getSummaryTableHeader(packageTableHeader, "col"));
         Content tbody = new HtmlTree(HtmlTag.TBODY);
         Iterator<String> it = usingPackageToUsedClasses.keySet().iterator();
@@ -174,16 +108,11 @@ public class PackageUseWriter extends SubWriterHolderWriter {
         contentTree.addContent(li);
     }
 
-    /**
-     * Add the list of classes that use the given package.
-     *
-     * @param contentTree the content tree to which the class list will be added
-     */
     protected void addClassList(Content contentTree) throws IOException {
-        String[] classTableHeader = new String[] {
-            configuration.getText("doclet.0_and_1",
-                    configuration.getText("doclet.Class"),
-                    configuration.getText("doclet.Description"))
+        String[] classTableHeader = new String[]{
+                configuration.getText("doclet.0_and_1",
+                        configuration.getText("doclet.Class"),
+                        configuration.getText("doclet.Description"))
         };
         Iterator<String> itp = usingPackageToUsedClasses.keySet().iterator();
         while (itp.hasNext()) {
@@ -198,9 +127,9 @@ public class PackageUseWriter extends SubWriterHolderWriter {
                     configuration.getText("doclet.classes"));
             Content table = HtmlTree.TABLE(HtmlStyle.useSummary, 0, 3, 0, tableSummary,
                     getTableCaption(configuration.getResource(
-                    "doclet.ClassUse_Classes.in.0.used.by.1",
-                    getPackageLink(pkgdoc, Util.getPackageName(pkgdoc)),
-                    getPackageLink(usingPackage, Util.getPackageName(usingPackage)))));
+                            "doclet.ClassUse_Classes.in.0.used.by.1",
+                            getPackageLink(pkgdoc, Util.getPackageName(pkgdoc)),
+                            getPackageLink(usingPackage, Util.getPackageName(usingPackage)))));
             table.addContent(getSummaryTableHeader(classTableHeader, "col"));
             Content tbody = new HtmlTree(HtmlTag.TBODY);
             Iterator<ClassDoc> itc =
@@ -221,15 +150,8 @@ public class PackageUseWriter extends SubWriterHolderWriter {
         }
     }
 
-    /**
-     * Add a row for the class that uses the given package.
-     *
-     * @param usedClass the class that uses the given package
-     * @param packageName the name of the package to which the class belongs
-     * @param contentTree the content tree to which the row will be added
-     */
     protected void addClassRow(ClassDoc usedClass, String packageName,
-            Content contentTree) {
+                               Content contentTree) {
         DocPath dp = pathString(usedClass,
                 DocPaths.CLASS_USE.resolve(DocPath.forName(usedClass)));
         Content td = HtmlTree.TD(HtmlStyle.colOne,
@@ -238,16 +160,10 @@ public class PackageUseWriter extends SubWriterHolderWriter {
         contentTree.addContent(td);
     }
 
-    /**
-     * Add the package use information.
-     *
-     * @param pkg the package that used the given package
-     * @param contentTree the content tree to which the information will be added
-     */
     protected void addPackageUse(PackageDoc pkg, Content contentTree) throws IOException {
         Content tdFirst = HtmlTree.TD(HtmlStyle.colFirst,
                 getHyperLink(Util.getPackageName(pkg),
-                new StringContent(Util.getPackageName(pkg))));
+                        new StringContent(Util.getPackageName(pkg))));
         contentTree.addContent(tdFirst);
         HtmlTree tdLast = new HtmlTree(HtmlTag.TD);
         tdLast.addStyle(HtmlStyle.colLast);
@@ -259,11 +175,6 @@ public class PackageUseWriter extends SubWriterHolderWriter {
         contentTree.addContent(tdLast);
     }
 
-    /**
-     * Get the header for the package use listing.
-     *
-     * @return a content tree representing the package use header
-     */
     protected Content getPackageUseHeader() {
         String packageText = configuration.getText("doclet.Package");
         String name = pkgdoc.name();
@@ -283,11 +194,6 @@ public class PackageUseWriter extends SubWriterHolderWriter {
         return bodyTree;
     }
 
-    /**
-     * Get this package link.
-     *
-     * @return a content tree for the package link
-     */
     protected Content getNavLinkPackage() {
         Content linkContent = getHyperLink(DocPaths.PACKAGE_SUMMARY,
                 packageLabel);
@@ -295,21 +201,11 @@ public class PackageUseWriter extends SubWriterHolderWriter {
         return li;
     }
 
-    /**
-     * Get the use link.
-     *
-     * @return a content tree for the use link
-     */
     protected Content getNavLinkClassUse() {
         Content li = HtmlTree.LI(HtmlStyle.navBarCell1Rev, useLabel);
         return li;
     }
 
-    /**
-     * Get the tree link.
-     *
-     * @return a content tree for the tree link
-     */
     protected Content getNavLinkTree() {
         Content linkContent = getHyperLink(DocPaths.PACKAGE_TREE,
                 treeLabel);

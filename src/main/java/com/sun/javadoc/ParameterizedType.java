@@ -1,7 +1,6 @@
 package com.sun.javadoc;
 
 public interface ParameterizedType extends Type {
-
     ClassDoc asClassDoc();
 
     Type[] typeArguments();
@@ -11,5 +10,4 @@ public interface ParameterizedType extends Type {
     Type[] interfaceTypes();
 
     Type containingType();
-
 }

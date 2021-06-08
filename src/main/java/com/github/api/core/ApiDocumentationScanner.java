@@ -252,6 +252,7 @@ public class ApiDocumentationScanner {
      * @param handlerMethod {@link HandlerMethod}
      * @return {@link Response}
      */
+    @SuppressWarnings("deprecation")
     private Response responseBuild(HandlerMethod handlerMethod) {
         Class<?> controllerClass = handlerMethod.getBeanType();
         Optional<ResolvedMethod> resolvedMethodOptional
