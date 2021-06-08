@@ -19,7 +19,6 @@ import java.util.regex.Pattern;
 
 public abstract class DocImpl implements Doc, Comparable<Object> {
 
-
     protected final DocEnv env;
 
     protected TreePath treePath;

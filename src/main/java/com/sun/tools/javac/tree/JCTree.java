@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 package com.sun.tools.javac.tree;
 
 import java.io.IOException;
@@ -43,317 +18,112 @@ import com.sun.tools.javac.util.*;
 import com.sun.tools.javac.util.JCDiagnostic.DiagnosticPosition;
 import com.sun.tools.javac.util.List;
 import static com.sun.tools.javac.tree.JCTree.Tag.*;
-
-/**
- * Root class for abstract syntax tree nodes. It provides definitions
- * for specific tree nodes as subclasses nested inside.
- *
- * <p>Each subclass is highly standardized.  It generally contains
- * only tree fields for the syntactic subcomponents of the node.  Some
- * classes that represent identifier uses or definitions also define a
- * Symbol field that denotes the represented identifier.  Classes for
- * non-local jumps also carry the jump target as a field.  The root
- * class Tree itself defines fields for the tree's type and position.
- * No other fields are kept in a tree node; instead parameters are
- * passed to methods accessing the node.
- *
- * <p>Except for the methods defined by com.sun.source, the only
- * method defined in subclasses is `visit' which applies a given
- * visitor to the tree. The actual tree processing is done by visitor
- * classes in other packages. The abstract class Visitor, as well as
- * an Factory interface for trees, are defined as inner classes in
- * Tree.
- *
- * <p>To avoid ambiguities with the Tree API in com.sun.source all sub
- * classes should, by convention, start with JC (javac).
- *
- * <p><b>This is NOT part of any supported API.
- * If you write code that depends on this, you do so at your own risk.
- * This code and its internal interfaces are subject to change or
- * deletion without notice.</b>
- *
- * @see TreeMaker
- * @see TreeInfo
- * @see TreeTranslator
- * @see Pretty
- */
 public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
 
-    /* Tree tag values, identifying kinds of trees */
     public enum Tag {
-        /** For methods that return an invalid tag if a given condition is not met
-         */
+
         NO_TAG,
-
-        /** Toplevel nodes, of type TopLevel, representing entire source files.
-        */
         TOPLEVEL,
-
-        /** Import clauses, of type Import.
-         */
         IMPORT,
-
-        /** Class definitions, of type ClassDef.
-         */
         CLASSDEF,
-
-        /** Method definitions, of type MethodDef.
-         */
         METHODDEF,
-
-        /** Variable definitions, of type VarDef.
-         */
         VARDEF,
-
-        /** The no-op statement ";", of type Skip
-         */
         SKIP,
-
-        /** Blocks, of type Block.
-         */
         BLOCK,
-
-        /** Do-while loops, of type DoLoop.
-         */
         DOLOOP,
-
-        /** While-loops, of type WhileLoop.
-         */
         WHILELOOP,
-
-        /** For-loops, of type ForLoop.
-         */
         FORLOOP,
-
-        /** Foreach-loops, of type ForeachLoop.
-         */
         FOREACHLOOP,
-
-        /** Labelled statements, of type Labelled.
-         */
         LABELLED,
-
-        /** Switch statements, of type Switch.
-         */
         SWITCH,
-
-        /** Case parts in switch statements, of type Case.
-         */
         CASE,
-
-        /** Synchronized statements, of type Synchonized.
-         */
         SYNCHRONIZED,
-
-        /** Try statements, of type Try.
-         */
         TRY,
-
-        /** Catch clauses in try statements, of type Catch.
-         */
         CATCH,
-
-        /** Conditional expressions, of type Conditional.
-         */
         CONDEXPR,
-
-        /** Conditional statements, of type If.
-         */
         IF,
-
-        /** Expression statements, of type Exec.
-         */
         EXEC,
-
-        /** Break statements, of type Break.
-         */
         BREAK,
-
-        /** Continue statements, of type Continue.
-         */
         CONTINUE,
-
-        /** Return statements, of type Return.
-         */
         RETURN,
-
-        /** Throw statements, of type Throw.
-         */
         THROW,
-
-        /** Assert statements, of type Assert.
-         */
         ASSERT,
-
-        /** Method invocation expressions, of type Apply.
-         */
         APPLY,
-
-        /** Class instance creation expressions, of type NewClass.
-         */
         NEWCLASS,
-
-        /** Array creation expressions, of type NewArray.
-         */
         NEWARRAY,
-
-        /** Lambda expression, of type Lambda.
-         */
         LAMBDA,
-
-        /** Parenthesized subexpressions, of type Parens.
-         */
         PARENS,
-
-        /** Assignment expressions, of type Assign.
-         */
         ASSIGN,
-
-        /** Type cast expressions, of type TypeCast.
-         */
         TYPECAST,
-
-        /** Type test expressions, of type TypeTest.
-         */
         TYPETEST,
-
-        /** Indexed array expressions, of type Indexed.
-         */
         INDEXED,
-
-        /** Selections, of type Select.
-         */
         SELECT,
-
-        /** Member references, of type Reference.
-         */
         REFERENCE,
-
-        /** Simple identifiers, of type Ident.
-         */
         IDENT,
-
-        /** Literals, of type Literal.
-         */
         LITERAL,
-
-        /** Basic type identifiers, of type TypeIdent.
-         */
         TYPEIDENT,
-
-        /** Array types, of type TypeArray.
-         */
         TYPEARRAY,
-
-        /** Parameterized types, of type TypeApply.
-         */
         TYPEAPPLY,
-
-        /** Union types, of type TypeUnion.
-         */
         TYPEUNION,
-
-        /** Intersection types, of type TypeIntersection.
-         */
         TYPEINTERSECTION,
-
-        /** Formal type parameters, of type TypeParameter.
-         */
         TYPEPARAMETER,
-
-        /** Type argument.
-         */
         WILDCARD,
-
-        /** Bound kind: extends, super, exact, or unbound
-         */
         TYPEBOUNDKIND,
-
-        /** metadata: Annotation.
-         */
         ANNOTATION,
-
-        /** metadata: Type annotation.
-         */
         TYPE_ANNOTATION,
-
-        /** metadata: Modifiers
-         */
         MODIFIERS,
-
-        /** An annotated type tree.
-         */
         ANNOTATED_TYPE,
-
-        /** Error trees, of type Erroneous.
-         */
         ERRONEOUS,
-
-        /** Unary operators, of type Unary.
-         */
-        POS,                             // +
-        NEG,                             // -
-        NOT,                             // !
-        COMPL,                           // ~
-        PREINC,                          // ++ _
-        PREDEC,                          // -- _
-        POSTINC,                         // _ ++
-        POSTDEC,                         // _ --
-
-        /** unary operator for null reference checks, only used internally.
-         */
+        POS,
+        NEG,
+        NOT,
+        COMPL,
+        PREINC,
+        PREDEC,
+        POSTINC,
+        POSTDEC,
         NULLCHK,
-
-        /** Binary operators, of type Binary.
-         */
-        OR,                              // ||
-        AND,                             // &&
-        BITOR,                           // |
-        BITXOR,                          // ^
-        BITAND,                          // &
-        EQ,                              // ==
-        NE,                              // !=
-        LT,                              // <
-        GT,                              // >
-        LE,                              // <=
-        GE,                              // >=
-        SL,                              // <<
-        SR,                              // >>
-        USR,                             // >>>
-        PLUS,                            // +
-        MINUS,                           // -
-        MUL,                             // *
-        DIV,                             // /
-        MOD,                             // %
-
-        /** Assignment operators, of type Assignop.
-         */
-        BITOR_ASG(BITOR),                // |=
-        BITXOR_ASG(BITXOR),              // ^=
-        BITAND_ASG(BITAND),              // &=
-
-        SL_ASG(SL),                      // <<=
-        SR_ASG(SR),                      // >>=
-        USR_ASG(USR),                    // >>>=
-        PLUS_ASG(PLUS),                  // +=
-        MINUS_ASG(MINUS),                // -=
-        MUL_ASG(MUL),                    // *=
-        DIV_ASG(DIV),                    // /=
-        MOD_ASG(MOD),                    // %=
-
-        /** A synthetic let expression, of type LetExpr.
-         */
-        LETEXPR;                         // ala scheme
+        OR,
+        AND,
+        BITOR,
+        BITXOR,
+        BITAND,
+        EQ,
+        NE,
+        LT,
+        GT,
+        LE,
+        GE,
+        SL,
+        SR,
+        USR,
+        PLUS,
+        MINUS,
+        MUL,
+        DIV,
+        MOD,
+        BITOR_ASG(BITOR),
+        BITXOR_ASG(BITXOR),
+        BITAND_ASG(BITAND),
+        SL_ASG(SL),
+        SR_ASG(SR),
+        USR_ASG(USR),
+        PLUS_ASG(PLUS),
+        MINUS_ASG(MINUS),
+        MUL_ASG(MUL),
+        DIV_ASG(DIV),
+        MOD_ASG(MOD),
+        LETEXPR;
 
         private final Tag noAssignTag;
 
         private static final int numberOfOperators = MOD.ordinal() - POS.ordinal() + 1;
 
-        private Tag(Tag noAssignTag) {
+        Tag(Tag noAssignTag) {
             this.noAssignTag = noAssignTag;
         }
 
-        private Tag() {
+        Tag() {
             this(null);
         }
 
@@ -384,25 +154,15 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /* The (encoded) position in the source file. @see util.Position.
-     */
     public int pos;
-
-    /* The type of this node.
-     */
     public Type type;
 
-    /* The tag of this node -- one of the constants declared above.
-     */
     public abstract Tag getTag();
 
-    /* Returns true if the tag of this node is equals to tag.
-     */
     public boolean hasTag(Tag tag) {
         return tag == getTag();
     }
 
-    /** Convert a tree to a pretty-printed string. */
     @Override
     public String toString() {
         StringWriter s = new StringWriter();
@@ -410,35 +170,25 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
             new Pretty(s, false).printExpr(this);
         }
         catch (IOException e) {
-            // should never happen, because StringWriter is defined
-            // never to throw any IOExceptions
             throw new AssertionError(e);
         }
         return s.toString();
     }
 
-    /** Set position field and return this tree.
-     */
     public JCTree setPos(int pos) {
         this.pos = pos;
         return this;
     }
 
-    /** Set type field and return this tree.
-     */
     public JCTree setType(Type type) {
         this.type = type;
         return this;
     }
 
-    /** Visit this tree with a given visitor.
-     */
     public abstract void accept(Visitor v);
 
     public abstract <R,D> R accept(TreeVisitor<R,D> v, D d);
 
-    /** Return a shallow copy of this tree.
-     */
     @Override
     public Object clone() {
         try {
@@ -448,56 +198,36 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /** Get a default position for this tree node.
-     */
     public DiagnosticPosition pos() {
         return this;
     }
 
-    // for default DiagnosticPosition
     public JCTree getTree() {
         return this;
     }
 
-    // for default DiagnosticPosition
     public int getStartPosition() {
         return TreeInfo.getStartPos(this);
     }
 
-    // for default DiagnosticPosition
     public int getPreferredPosition() {
         return pos;
     }
 
-    // for default DiagnosticPosition
     public int getEndPosition(EndPosTable endPosTable) {
         return TreeInfo.getEndPos(this, endPosTable);
     }
 
-    /**
-     * Everything in one source file is kept in a {@linkplain JCCompilationUnit} structure.
-     */
     public static class JCCompilationUnit extends JCTree implements CompilationUnitTree {
         public List<JCAnnotation> packageAnnotations;
-        /** The tree representing the package clause. */
         public JCExpression pid;
-        /** All definitions in this file (ClassDef, Import, and Skip) */
         public List<JCTree> defs;
-        /* The source file name. */
         public JavaFileObject sourcefile;
-        /** The package to which this compilation unit belongs. */
         public PackageSymbol packge;
-        /** A scope for all named imports. */
         public ImportScope namedImportScope;
-        /** A scope for all import-on-demands. */
         public StarImportScope starImportScope;
-        /** Line starting positions, defined only if option -g is set. */
         public Position.LineMap lineMap = null;
-        /** A table that stores all documentation comments indexed by the tree
-         * nodes they refer to. defined only if option -s is set. */
         public DocCommentTable docComments = null;
-        /* An object encapsulating ending positions of source ranges indexed by
-         * the tree nodes they belong to. Defined only if option -Xjcov is set. */
         public EndPosTable endPositions = null;
         protected JCCompilationUnit(List<JCAnnotation> packageAnnotations,
                         JCExpression pid,
@@ -556,12 +286,8 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * An import clause.
-     */
     public static class JCImport extends JCTree implements ImportTree {
         public boolean staticImport;
-        /** The imported class(es). */
         public JCTree qualid;
         protected JCImport(JCTree qualid, boolean importStatic) {
             this.qualid = qualid;
@@ -611,37 +337,21 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * Common supertype for all poly expression trees (lambda, method references,
-     * conditionals, method and constructor calls)
-     */
     public static abstract class JCPolyExpression extends JCExpression {
 
-        /**
-         * A poly expression can only be truly 'poly' in certain contexts
-         */
         public enum PolyKind {
-            /** poly expression to be treated as a standalone expression */
             STANDALONE,
-            /** true poly expression */
             POLY;
         }
-
-        /** is this poly expression a 'true' poly expression? */
         public PolyKind polyKind;
     }
 
-    /**
-     * Common supertype for all functional expression trees (lambda and method references)
-     */
     public static abstract class JCFunctionalExpression extends JCPolyExpression {
 
         public JCFunctionalExpression() {
-            //a functional expression is always a 'true' poly
             polyKind = PolyKind.POLY;
         }
 
-        /** list of target types inferred for this functional expression. */
         public List<Type> targets;
 
         public Type getDescriptorType(Types types) {
@@ -649,23 +359,13 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A class definition.
-     */
     public static class JCClassDecl extends JCStatement implements ClassTree {
-        /** the modifiers */
         public JCModifiers mods;
-        /** the name of the class */
         public Name name;
-        /** formal class parameters */
         public List<JCTypeParameter> typarams;
-        /** the classes this class extends */
         public JCExpression extending;
-        /** the interfaces implemented by this class */
         public List<JCExpression> implementing;
-        /** all variables and methods defined in this class */
         public List<JCTree> defs;
-        /** the symbol */
         public ClassSymbol sym;
         protected JCClassDecl(JCModifiers mods,
                            Name name,
@@ -720,29 +420,16 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A method definition.
-     */
     public static class JCMethodDecl extends JCTree implements MethodTree {
-        /** method modifiers */
         public JCModifiers mods;
-        /** method name */
         public Name name;
-        /** type of method return value */
         public JCExpression restype;
-        /** type parameters */
         public List<JCTypeParameter> typarams;
-        /** receiver parameter */
         public JCVariableDecl recvparam;
-        /** value parameters */
         public List<JCVariableDecl> params;
-        /** exceptions thrown by this method */
         public List<JCExpression> thrown;
-        /** statements in the method */
         public JCBlock body;
-        /** default value, for annotation types */
         public JCExpression defaultValue;
-        /** method symbol */
         public MethodSymbol sym;
         protected JCMethodDecl(JCModifiers mods,
                             Name name,
@@ -761,8 +448,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
             this.typarams = typarams;
             this.params = params;
             this.recvparam = recvparam;
-            // TODO: do something special if the given type is null?
-            // receiver != null ? receiver : List.<JCTypeAnnotation>nil());
             this.thrown = thrown;
             this.body = body;
             this.defaultValue = defaultValue;
@@ -800,21 +485,12 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
   }
 
-    /**
-     * A variable definition.
-     */
     public static class JCVariableDecl extends JCStatement implements VariableTree {
-        /** variable modifiers */
         public JCModifiers mods;
-        /** variable name */
         public Name name;
-        /** variable name expression */
         public JCExpression nameexpr;
-        /** type of the variable */
         public JCExpression vartype;
-        /** variable's initial value */
         public JCExpression init;
-        /** symbol */
         public VarSymbol sym;
 
         protected JCVariableDecl(JCModifiers mods,
@@ -837,7 +513,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
             if (nameexpr.hasTag(Tag.IDENT)) {
                 this.name = ((JCIdent)nameexpr).name;
             } else {
-                // Only other option is qualified name x.y.this;
                 this.name = ((JCFieldAccess)nameexpr).name;
             }
         }
@@ -864,9 +539,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A no-op statement ";".
-     */
     public static class JCSkip extends JCStatement implements EmptyStatementTree {
         protected JCSkip() {
         }
@@ -885,15 +557,9 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A statement block.
-     */
     public static class JCBlock extends JCStatement implements BlockTree {
-        /** flags */
         public long flags;
-        /** statements */
         public List<JCStatement> stats;
-        /** Position of closing brace, optional. */
         public int endpos = Position.NOPOS;
         protected JCBlock(long flags, List<JCStatement> stats) {
             this.stats = stats;
@@ -918,9 +584,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A do loop
-     */
     public static class JCDoWhileLoop extends JCStatement implements DoWhileLoopTree {
         public JCStatement body;
         public JCExpression cond;
@@ -945,9 +608,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A while loop
-     */
     public static class JCWhileLoop extends JCStatement implements WhileLoopTree {
         public JCExpression cond;
         public JCStatement body;
@@ -972,9 +632,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A for loop.
-     */
     public static class JCForLoop extends JCStatement implements ForLoopTree {
         public List<JCStatement> init;
         public JCExpression cond;
@@ -1013,9 +670,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * The enhanced for loop.
-     */
     public static class JCEnhancedForLoop extends JCStatement implements EnhancedForLoopTree {
         public JCVariableDecl var;
         public JCExpression expr;
@@ -1042,9 +696,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A labelled expression or statement.
-     */
     public static class JCLabeledStatement extends JCStatement implements LabeledStatementTree {
         public Name label;
         public JCStatement body;
@@ -1067,9 +718,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A "switch ( ) { }" construction.
-     */
     public static class JCSwitch extends JCStatement implements SwitchTree {
         public JCExpression selector;
         public List<JCCase> cases;
@@ -1093,9 +741,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A "case  :" of a switch.
-     */
     public static class JCCase extends JCStatement implements CaseTree {
         public JCExpression pat;
         public List<JCStatement> stats;
@@ -1119,9 +764,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A synchronized block.
-     */
     public static class JCSynchronized extends JCStatement implements SynchronizedTree {
         public JCExpression lock;
         public JCBlock body;
@@ -1145,9 +787,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A "try { } catch ( ) { } finally { }" block.
-     */
     public static class JCTry extends JCStatement implements TryTree {
         public JCBlock body;
         public List<JCCatch> catchers;
@@ -1186,9 +825,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A catch block.
-     */
     public static class JCCatch extends JCTree implements CatchTree {
         public JCVariableDecl param;
         public JCBlock body;
@@ -1212,9 +848,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A ( ) ? ( ) : ( ) conditional expression
-     */
     public static class JCConditional extends JCPolyExpression implements ConditionalExpressionTree {
         public JCExpression cond;
         public JCExpression truepart;
@@ -1244,9 +877,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * An "if ( ) { } else { }" block
-     */
     public static class JCIf extends JCStatement implements IfTree {
         public JCExpression cond;
         public JCStatement thenpart;
@@ -1276,11 +906,7 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * an expression statement
-     */
     public static class JCExpressionStatement extends JCStatement implements ExpressionStatementTree {
-        /** expression structure */
         public JCExpression expr;
         protected JCExpressionStatement(JCExpression expr)
         {
@@ -1300,25 +926,18 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
             return EXEC;
         }
 
-        /** Convert a expression-statement tree to a pretty-printed string. */
         @Override
         public String toString() {
             StringWriter s = new StringWriter();
             try {
                 new Pretty(s, false).printStat(this);
-            }
-            catch (IOException e) {
-                // should never happen, because StringWriter is defined
-                // never to throw any IOExceptions
+            } catch (IOException e) {
                 throw new AssertionError(e);
             }
             return s.toString();
         }
     }
 
-    /**
-     * A break from a loop or switch.
-     */
     public static class JCBreak extends JCStatement implements BreakTree {
         public Name label;
         public JCTree target;
@@ -1341,9 +960,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A continue of a loop.
-     */
     public static class JCContinue extends JCStatement implements ContinueTree {
         public Name label;
         public JCTree target;
@@ -1366,9 +982,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A return statement.
-     */
     public static class JCReturn extends JCStatement implements ReturnTree {
         public JCExpression expr;
         protected JCReturn(JCExpression expr) {
@@ -1389,9 +1002,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A throw statement.
-     */
     public static class JCThrow extends JCStatement implements ThrowTree {
         public JCExpression expr;
         protected JCThrow(JCExpression expr) {
@@ -1412,9 +1022,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * An assert statement.
-     */
     public static class JCAssert extends JCStatement implements AssertTree {
         public JCExpression cond;
         public JCExpression detail;
@@ -1438,9 +1045,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A method invocation
-     */
     public static class JCMethodInvocation extends JCPolyExpression implements MethodInvocationTree {
         public List<JCExpression> typeargs;
         public JCExpression meth;
@@ -1481,9 +1085,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A new(...) operation.
-     */
     public static class JCNewClass extends JCPolyExpression implements NewClassTree {
         public JCExpression encl;
         public List<JCExpression> typeargs;
@@ -1531,15 +1132,10 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A new[...] operation.
-     */
     public static class JCNewArray extends JCExpression implements NewArrayTree {
         public JCExpression elemtype;
         public List<JCExpression> dims;
-        // type annotations on inner-most component
         public List<JCAnnotation> annotations;
-        // type annotations on dimensions
         public List<List<JCAnnotation>> dimAnnotations;
         public List<JCExpression> elems;
         protected JCNewArray(JCExpression elemtype,
@@ -1583,9 +1179,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A lambda expression.
-     */
     public static class JCLambda extends JCFunctionalExpression implements LambdaExpressionTree {
 
         public enum ParameterKind {
@@ -1643,9 +1236,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A parenthesized subexpression ( ... )
-     */
     public static class JCParens extends JCExpression implements ParenthesizedTree {
         public JCExpression expr;
         protected JCParens(JCExpression expr) {
@@ -1666,9 +1256,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A assignment with "=".
-     */
     public static class JCAssign extends JCExpression implements AssignmentTree {
         public JCExpression lhs;
         public JCExpression rhs;
@@ -1692,9 +1279,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * An assignment with "+=", "|=" ...
-     */
     public static class JCAssignOp extends JCExpression implements CompoundAssignmentTree {
         private Tag opcode;
         public JCExpression lhs;
@@ -1725,9 +1309,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A unary operation.
-     */
     public static class JCUnary extends JCExpression implements UnaryTree {
         private Tag opcode;
         public JCExpression arg;
@@ -1758,9 +1339,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A binary operation.
-     */
     public static class JCBinary extends JCExpression implements BinaryTree {
         private Tag opcode;
         public JCExpression lhs;
@@ -1794,9 +1372,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A type cast.
-     */
     public static class JCTypeCast extends JCExpression implements TypeCastTree {
         public JCTree clazz;
         public JCExpression expr;
@@ -1820,9 +1395,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A type test.
-     */
     public static class JCInstanceOf extends JCExpression implements InstanceOfTree {
         public JCExpression expr;
         public JCTree clazz;
@@ -1846,9 +1418,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * An array selection
-     */
     public static class JCArrayAccess extends JCExpression implements ArrayAccessTree {
         public JCExpression indexed;
         public JCExpression index;
@@ -1872,15 +1441,9 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * Selects through packages and classes
-     */
     public static class JCFieldAccess extends JCExpression implements MemberSelectTree {
-        /** selected Tree hierarchy */
         public JCExpression selected;
-        /** name of field to select thru */
         public Name name;
-        /** symbol of the selected class */
         public Symbol sym;
         protected JCFieldAccess(JCExpression selected, Name name, Symbol sym) {
             this.selected = selected;
@@ -1903,9 +1466,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * Selects a member expression.
-     */
     public static class JCMemberReference extends JCFunctionalExpression implements MemberReferenceTree {
 
         public ReferenceMode mode;
@@ -1924,30 +1484,19 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
             UNOVERLOADED;
         }
 
-        /**
-         * Javac-dependent classification for member references, based
-         * on relevant properties w.r.t. code-generation
-         */
         public enum ReferenceKind {
-            /** super # instMethod */
             SUPER(ReferenceMode.INVOKE, false),
-            /** Type # instMethod */
             UNBOUND(ReferenceMode.INVOKE, true),
-            /** Type # staticMethod */
             STATIC(ReferenceMode.INVOKE, false),
-            /** Expr # instMethod */
             BOUND(ReferenceMode.INVOKE, false),
-            /** Inner # new */
             IMPLICIT_INNER(ReferenceMode.NEW, false),
-            /** Toplevel # new */
             TOPLEVEL(ReferenceMode.NEW, false),
-            /** ArrayType # new */
             ARRAY_CTOR(ReferenceMode.NEW, false);
 
             final ReferenceMode mode;
             final boolean unbound;
 
-            private ReferenceKind(ReferenceMode mode, boolean unbound) {
+            ReferenceKind(ReferenceMode mode, boolean unbound) {
                 this.mode = mode;
                 this.unbound = unbound;
             }
@@ -1989,13 +1538,8 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * An identifier
-     */
     public static class JCIdent extends JCExpression implements IdentifierTree {
-        /** the name */
         public Name name;
-        /** the symbol */
         public Symbol sym;
         protected JCIdent(Name name, Symbol sym) {
             this.name = name;
@@ -2016,12 +1560,8 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A constant value given literally.
-     */
     public static class JCLiteral extends JCExpression implements LiteralTree {
         public TypeTag typetag;
-        /** value representation */
         public Object value;
         protected JCLiteral(TypeTag typetag, Object value) {
             this.typetag = typetag;
@@ -2064,12 +1604,7 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * Identifies a basic type.
-     * @see TypeTag
-     */
     public static class JCPrimitiveTypeTree extends JCExpression implements PrimitiveTypeTree {
-        /** the basic type id */
         public TypeTag typetag;
         protected JCPrimitiveTypeTree(TypeTag typetag) {
             this.typetag = typetag;
@@ -2092,9 +1627,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * An array type, A[]
-     */
     public static class JCArrayTypeTree extends JCExpression implements ArrayTypeTree {
         public JCExpression elemtype;
         protected JCArrayTypeTree(JCExpression elemtype) {
@@ -2115,9 +1647,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A parameterized type, {@literal T<...>}
-     */
     public static class JCTypeApply extends JCExpression implements ParameterizedTypeTree {
         public JCExpression clazz;
         public List<JCExpression> arguments;
@@ -2142,10 +1671,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
             return TYPEAPPLY;
         }
     }
-
-    /**
-     * A union type, T1 | T2 | ... Tn (used in multicatch statements)
-     */
     public static class JCTypeUnion extends JCExpression implements UnionTypeTree {
 
         public List<JCExpression> alternatives;
@@ -2170,10 +1695,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
             return TYPEUNION;
         }
     }
-
-    /**
-     * An intersection type, T1 & T2 & ... Tn (used in cast expressions)
-     */
     public static class JCTypeIntersection extends JCExpression implements IntersectionTypeTree {
 
         public List<JCExpression> bounds;
@@ -2199,15 +1720,9 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /**
-     * A formal class parameter.
-     */
     public static class JCTypeParameter extends JCTree implements TypeParameterTree {
-        /** name */
         public Name name;
-        /** bounds */
         public List<JCExpression> bounds;
-        /** type annotations on type parameter */
         public List<JCAnnotation> annotations;
         protected JCTypeParameter(Name name, List<JCExpression> bounds, List<JCAnnotation> annotations) {
             this.name = name;
@@ -2239,7 +1754,7 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         public TypeBoundKind kind;
         public JCTree inner;
         protected JCWildcard(TypeBoundKind kind, JCTree inner) {
-            kind.getClass(); // null-check
+            kind.getClass();
             this.kind = kind;
             this.inner = inner;
         }
@@ -2291,14 +1806,9 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
     }
 
     public static class JCAnnotation extends JCExpression implements AnnotationTree {
-        // Either Tag.ANNOTATION or Tag.TYPE_ANNOTATION
         private Tag tag;
-
         public JCTree annotationType;
         public List<JCExpression> args;
-
-        // Attribute.Compound if tag is ANNOTATION
-        // Attribute.TypeCompound if tag is TYPE_ANNOTATION
         public Attribute.Compound attribute;
 
         protected JCAnnotation(Tag tag, JCTree annotationType, List<JCExpression> args) {
@@ -2354,7 +1864,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
     }
 
     public static class JCAnnotatedType extends JCExpression implements AnnotatedTypeTree {
-        // type annotations
         public List<JCAnnotation> annotations;
         public JCExpression underlyingType;
 
@@ -2408,7 +1917,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /** (let int x = 3; in x+2) */
     public static class LetExpr extends JCExpression {
         public List<JCVariableDecl> defs;
         public JCTree expr;
@@ -2432,8 +1940,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         }
     }
 
-    /** An interface for tree factories
-     */
     public interface Factory {
         JCCompilationUnit TopLevel(List<JCAnnotation> packageAnnotations,
                                    JCExpression pid,
@@ -2521,8 +2027,6 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         LetExpr LetExpr(List<JCVariableDecl> defs, JCTree expr);
     }
 
-    /** A generic visitor class for trees.
-     */
     public static abstract class Visitor {
         public void visitTopLevel(JCCompilationUnit that)    { visitTree(that); }
         public void visitImport(JCImport that)               { visitTree(that); }
