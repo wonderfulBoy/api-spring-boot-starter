@@ -16,8 +16,25 @@
             margin: 0px;
         }
 
-        #echils-starter {
+        #starter {
             font-size: 1.3em;
+        }
+
+        .container {
+            height: 100%;
+            max-width: 880px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #editor-wrapper {
+            height: 100%;
+            border: 1em solid #000;
+            border: none;
+        }
+
+        .Pane2 {
+            overflow-y: scroll;
         }
 
     </style>
@@ -27,16 +44,16 @@
 </head>
 
 <body>
-<div id="echils-starter"></div>
+<div id="starter"></div>
 <script src="starter-bundle.js"></script>
 <script src="starter-standalone-preset.js"></script>
 <script>
     window.onload = function () {
-        const editor = StarterBundle({
-            dom_id: '#echils-starter',
+        const editor = SwaggerEditorBundle({
+            dom_id: '#starter',
             layout: 'StandaloneLayout',
             presets: [
-                StarterStandalonePreset
+                SwaggerEditorStandalonePreset
             ]
         })
         window.editor = editor
