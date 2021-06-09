@@ -341,7 +341,7 @@
 
             function X(t, e, n) {
                 if (!(this instanceof X)) return new X(t, e, n);
-                if ($(0 !== n, "Cannot step a Range by 0"), t = t || 0, void 0 === e && (e = 1 / 0), n = void 0 === n ? 1 : Math.abs(n), e < t && (n = -n), this._start = t, this._end = e, this._step = n, this.size = Math.max(0, Math.ceil((e - t) / n - 1) + 1), 0 === this.size) {
+                if ($(0 !== n, "Cannot step a Range by zero"), t = t || 0, void 0 === e && (e = 1 / 0), n = void 0 === n ? 1 : Math.abs(n), e < t && (n = -n), this._start = t, this._end = e, this._step = n, this.size = Math.max(0, Math.ceil((e - t) / n - 1) + 1), 0 === this.size) {
                     if (ln) return ln;
                     ln = this
                 }
@@ -421,7 +421,7 @@
             }
 
             function at(t) {
-                $(t !== 1 / 0, "Cannot perform this action with an infinite size.")
+                $(t !== 1 / 0, "Cannot perform this action with an infinite size")
             }
 
             function st(t) {
@@ -1046,7 +1046,7 @@
                                         get: function () {
                                             return this.get(e)
                                         }, set: function (t) {
-                                            $(this.__ownerID, "Cannot set on an immutable record."), this.set(e, t)
+                                            $(this.__ownerID, "Cannot set on an immutable record"), this.set(e, t)
                                         }
                                     })
                                 }.bind(void 0, t))

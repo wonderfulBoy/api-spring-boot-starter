@@ -375,11 +375,10 @@ public class JavacParser implements Parser {
         return syntaxError(pos, List.nil(), key, args);
     }
 
-    @SuppressWarnings("all")
     private JCErroneous syntaxError(int pos, List<JCTree> errs, String key, TokenKind... args) {
         setErrorEndPos(pos);
         JCErroneous err = F.at(pos).Erroneous(errs);
-        reportSyntaxError(err, key, args);
+        reportSyntaxError(err, key, (Object) args);
         if (errs != null) {
             JCTree last = errs.last();
             if (last != null)
