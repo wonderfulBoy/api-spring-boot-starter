@@ -1,6 +1,5 @@
 package com.github.api.core.arch;
 
-import com.github.api.utils.CommonParseUtils;
 import org.eclipse.jgit.api.Git;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,8 +64,10 @@ class GitRepositoryManager {
             if (StringUtils.isEmpty(fileRelativePath)) {
                 return;
             }
-            fileRelativePath = CommonParseUtils.fileSeparatorJoin(fileRelativePath);
-            if (fileRelativePath.startsWith(File.separator)) {
+            if (fileRelativePath.contains("\\")) {
+                fileRelativePath = fileRelativePath.replaceAll("\\\\", "/");
+            }
+            if (fileRelativePath.startsWith("/")) {
                 fileRelativePath = fileRelativePath.substring(1);
             }
             manager.add().addFilepattern(fileRelativePath).call();

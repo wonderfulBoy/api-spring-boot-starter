@@ -1,5 +1,6 @@
 package com.github.api;
 
+import com.github.api.core.Documentation;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,7 @@ public class ApiDocumentFileProvider {
      * Show the api document
      */
     @GetMapping(value = {DEFAULT_API_QUERY_REQUEST}, produces = {"application/json", "application/hal+json"})
-    public ResponseEntity<String> showDocument() {
+    public ResponseEntity<Documentation.Json> showDocument() {
         if (apiDocumentProperties.getProfile() == ApiDocumentProperties.Profile.LOCAL) {
             if (ApiDocumentContext.documentation != null) {
                 return new ResponseEntity<>(ApiDocumentContext.documentation.toJson(), HttpStatus.OK);
@@ -46,8 +47,8 @@ public class ApiDocumentFileProvider {
                 Resource[] resources = (new PathMatchingResourcePatternResolver())
                         .getResources("classpath:" + ApiDocumentContext.DEFAULT_MATCHING_PATH);
                 if (resources.length > 0) {
-                    return new ResponseEntity<>(new Gson().toJson(new Yaml()
-                            .load(resources[0].getInputStream())), HttpStatus.OK);
+                    return new ResponseEntity<>(new Documentation.Json(new Gson().toJson(new Yaml()
+                            .load(resources[0].getInputStream()))), HttpStatus.OK);
                 }
             } catch (Exception e) {
                 logger.error("Load local api file failed:{}", e.getMessage());
