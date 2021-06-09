@@ -135,7 +135,8 @@ public class Messager extends Log implements DocErrorReporter {
     }
 
     public void warning(SourcePosition pos, String key, Object... args) {
-        printWarning(pos, getText(key, args));
+//        echils
+//        printWarning(pos, getText(key, args));
     }
 
     public void notice(String key, Object... args) {

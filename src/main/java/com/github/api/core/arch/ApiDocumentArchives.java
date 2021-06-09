@@ -68,7 +68,8 @@ public class ApiDocumentArchives {
                 = new GitRepositoryManager(ApiDocumentContext.projectDirectory);
 
         if (gitRepositoryManager.isGitProject()) {
-            gitRepositoryManager.addFile(outputPath);
+            gitRepositoryManager.addFile(apiDocumentProperties.getStruct().getResource() + File.separator
+                    + ApiDocumentContext.DEFAULT_ARCHIVES_DIRECTORY);
         }
     }
 
