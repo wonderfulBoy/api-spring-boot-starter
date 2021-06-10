@@ -38,7 +38,7 @@ public class ApiInfoBeanPostProcessor implements BeanPostProcessor {
 
         Class<?> beanClass = bean.getClass();
         SpringBootApplication springBootApplication = beanClass.getAnnotation(SpringBootApplication.class);
-        if (springBootApplication != null ) {
+        if (springBootApplication != null) {
 
             if (apiDocumentProperties.getProfile() == ApiDocumentProperties.Profile.CLOUD) {
                 return bean;
@@ -120,12 +120,7 @@ public class ApiInfoBeanPostProcessor implements BeanPostProcessor {
     private void defaultApiInfoBuild(File pomFile) {
 
         ApiDocumentProperties.ApiInfo apiInfo = apiDocumentProperties.getInfo();
-        if (pomFile == null || !pomFile.exists()) {
-            if (apiInfo.isBlank()) {
-                logger.info("Api document base info not configured,will use default");
-                apiInfo.setTitle(DEFAULT_API_INFO_TITTLE);
-                apiInfo.setVersion(DEFAULT_API_INFO_VERSION);
-            }
+        if (!apiInfo.isBlank()) {
             return;
         }
 
@@ -140,7 +135,9 @@ public class ApiInfoBeanPostProcessor implements BeanPostProcessor {
                 apiInfo.setVersion(model.getVersion());
             }
         } catch (Exception e) {
-            logger.warn("Api document base info build with pom failed");
+            logger.warn("Api document base info build with pom failed,will use default");
+            apiInfo.setTitle(DEFAULT_API_INFO_TITTLE);
+            apiInfo.setVersion(DEFAULT_API_INFO_VERSION);
         }
 
     }

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.stream.Stream;
 
 import static com.github.api.ApiDocumentContext.MAVEN_DEFAULT_ARTIFACT_ID_SEPARATOR;
 
@@ -55,7 +56,16 @@ public class ApiDocumentArchives {
         }
 
         File outputFile = new File(outputPath);
-        outputFile.getParentFile().mkdirs();
+        File parentFile = outputFile.getParentFile();
+        if (parentFile.exists()) {
+            File[] files = parentFile.listFiles();
+            if (files != null && files.length > 0) {
+                Stream.of(files).forEach(File::delete);
+
+            }
+        }else {
+            parentFile.mkdirs();
+        }
         try (FileOutputStream outputStream = new FileOutputStream(outputFile)) {
             outputStream.write(documentation.toYaml().getBytes());
             outputStream.flush();
