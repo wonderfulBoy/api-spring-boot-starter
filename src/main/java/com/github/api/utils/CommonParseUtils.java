@@ -8,8 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
-import static com.github.api.ApiDocumentContext.DEFAULT_OS_DIRECTORY;
-import static com.github.api.ApiDocumentContext.SUPPORT_PARSE_FILE_TYPE;
+import static com.github.api.ApiDocumentContext.*;
 
 /**
  * Some general or messy tools and methods in the parsing process
@@ -108,6 +107,22 @@ public class CommonParseUtils {
             return source;
         }
         return source.replace(" ", "");
+    }
+
+
+    /**
+     * whether in jar
+     *
+     * @param clazz the class need to judge
+     * @return whether in jar
+     */
+    public static boolean inJar(Class<?> clazz) {
+
+        if (clazz == null) {
+            return false;
+        }
+        String resourcePath = clazz.getResource("/").toString();
+        return resourcePath.contains(SPRING_BOOT_JAR_TAG);
     }
 
 }

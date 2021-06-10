@@ -1,6 +1,7 @@
 package com.github.api;
 
 import com.github.api.core.Documentation;
+import com.github.api.utils.CommonParseUtils;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,8 +45,14 @@ public class ApiDocumentFileProvider {
             }
         } else {
             try {
-                Resource[] resources = (new PathMatchingResourcePatternResolver())
-                        .getResources("classpath:" + ApiDocumentContext.DEFAULT_MATCHING_PATH);
+                Resource[] resources;
+                if (CommonParseUtils.inJar(ApiDocumentFileProvider.class)) {
+                    resources = (new PathMatchingResourcePatternResolver())
+                            .getResources("classpath:" + ApiDocumentContext.DEFAULT_MATCHING_PATH);
+                } else {
+                    resources = (new PathMatchingResourcePatternResolver())
+                            .getResources("classpath:" + ApiDocumentContext.DEFAULT_LOCAL_MATCHING_PATH);
+                }
                 if (resources.length > 0) {
                     return new ResponseEntity<>(new Documentation.Json(new Gson().toJson(new Yaml()
                             .load(resources[0].getInputStream()))), HttpStatus.OK);

@@ -44,13 +44,13 @@ public class ApiInfoBeanPostProcessor implements BeanPostProcessor {
                 return bean;
             }
 
-            String classPath = beanClass.getResource("/").getPath();
-            if (classPath.contains(SPRING_BOOT_TAG)) {
+            if (CommonParseUtils.inJar(beanClass)) {
                 logger.debug("Program running with jar...");
                 apiDocumentProperties.setProfile(ApiDocumentProperties.Profile.CLOUD);
                 return bean;
             }
 
+            String classPath = beanClass.getResource("/").getPath();
             apiDocumentProperties.setProfile(ApiDocumentProperties.Profile.LOCAL);
             String projectPath = obtainProjectRoot(new File(classPath));
             if (StringUtils.isBlank(projectPath)) {
