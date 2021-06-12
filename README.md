@@ -36,7 +36,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * 启动类
+ * The startup class of application
  *
  * @author echils
  * @since 2021-6-11 13:06:25
@@ -54,4 +54,4 @@ public class Application {
 ````
 
 ## More Usage Samples
-[quick-start-sample](quick-start-sample) 
+Demo:&nbsp;&nbsp;[quick-start-sample](quick-start-sample) 
