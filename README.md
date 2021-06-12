@@ -52,7 +52,7 @@ public class Application {
 }
 
 ````
-##### 3、Start the service, and visit <font color=Blue>http://\<ip>:\<port>/index.html</font> after the service starts normally, you can see the automatically generated swagger api document
+##### 3、Start the service, and visit *http://\<ip>:\<port>/index.html* after the service starts normally, you can see the automatically generated swagger api document
 
 
 ## More Usage Samples
