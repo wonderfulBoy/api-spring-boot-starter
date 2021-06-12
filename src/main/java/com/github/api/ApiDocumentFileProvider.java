@@ -61,7 +61,7 @@ public class ApiDocumentFileProvider {
                 logger.error("Load local api file failed:{}", e.getMessage());
             }
         }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 }

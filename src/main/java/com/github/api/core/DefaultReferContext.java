@@ -153,7 +153,7 @@ class DefaultReferContext {
         ResolvableType[] generics = resolvableType.getGenerics();
         if (Types.isContainerType(memberResolvedType) || generics.length == 0) {
             Type genericType = rawField.getRawMember().getGenericType();
-            if (!genericType.toString().contains(JAVA_CLASS)) {
+            if (!genericType.toString().contains(JAVA_CLASS) && !Types.isBaseType(genericType)) {
                 TypeBindings typeBindings = rawField.getDeclaringType().getTypeBindings();
                 List<ResolvedType> typeParameters = typeBindings.getTypeParameters();
                 if (!CollectionUtils.isEmpty(typeParameters)) {
@@ -213,13 +213,8 @@ class DefaultReferContext {
                         pathParameter.setItems(new StringProperty());
                     }
                     if (argumentType.getErasedType().isEnum()) {
-                        Class<?> erasedType = argumentType.getErasedType();
-                        ClassDoc classDoc = CLASS_DOC_MAP.get(erasedType.getName());
-                        if (classDoc == null) {
-                            pathParameter._enum(Arrays.stream(erasedType.getFields()).map(Field::getName).collect(Collectors.toList()));
-                        } else {
-                            pathParameter._enum(getEnumValue(erasedType, classDoc));
-                        }
+                        pathParameter._enum(Arrays.stream(argumentType.getErasedType()
+                                .getFields()).map(Field::getName).collect(Collectors.toList()));
                     }
                 }
                 return pathParameter;
@@ -276,6 +271,9 @@ class DefaultReferContext {
                         RequestParam annotation = reflectParameter.getAnnotation(RequestParam.class);
                         if (annotation != null) {
                             formParameter.setRequired(annotation.required());
+                            if (!DEFAULT_NONE.equals(annotation.defaultValue())) {
+                                formParameter.setDefaultValue(annotation.defaultValue());
+                            }
                         }
                     }
                     return formParameter;
@@ -290,6 +288,9 @@ class DefaultReferContext {
                         }
                         String name = StringUtils.isEmpty(annotation.value()) ? annotation.name() : annotation.value();
                         queryParameter.setName(name);
+                        if (!DEFAULT_NONE.equals(annotation.defaultValue())) {
+                            queryParameter.setDefaultValue(annotation.defaultValue());
+                        }
                         String parameterType = getParameterType(argumentType);
                         if (StringUtils.isEmpty(parameterType)) {
                             queryParameter.type(Types.Common.STRING.getValue());
@@ -299,20 +300,16 @@ class DefaultReferContext {
                             if (argumentType.isArray()) {
                                 Class<?> erasedType = argumentType.getArrayElementType().getErasedType();
                                 if (erasedType.isEnum()) {
-                                    ClassDoc classDoc = CLASS_DOC_MAP.get(erasedType.getName());
-                                    List<String> enumValues = classDoc == null ? Arrays.stream(erasedType.getFields())
-                                            .map(Field::getName).collect(Collectors.toList()) : getEnumValue(erasedType, classDoc);
-                                    stringProperty._enum(enumValues);
+                                    stringProperty._enum(Arrays.stream(erasedType.getFields())
+                                            .map(Field::getName).collect(Collectors.toList()));
                                 }
                             }
                             List<ResolvedType> typeParameters = argumentType.getTypeBindings().getTypeParameters();
                             if (!CollectionUtils.isEmpty(typeParameters) && typeParameters.size() == 1) {
                                 Class<?> erasedType = typeParameters.get(0).getErasedType();
                                 if (erasedType.isEnum()) {
-                                    ClassDoc classDoc = CLASS_DOC_MAP.get(erasedType.getName());
-                                    List<String> enumValues = classDoc != null ? getEnumValue(erasedType, classDoc) :
-                                            Arrays.stream(erasedType.getFields()).map(Field::getName).collect(Collectors.toList());
-                                    stringProperty._enum(enumValues);
+                                    stringProperty._enum(Arrays.stream(erasedType.getFields())
+                                            .map(Field::getName).collect(Collectors.toList()));
                                 }
                             }
                             queryParameter.setItems(stringProperty);
@@ -321,10 +318,8 @@ class DefaultReferContext {
                         }
                         if (argumentType.getErasedType().isEnum()) {
                             Class<?> erasedType = argumentType.getErasedType();
-                            ClassDoc classDoc = CLASS_DOC_MAP.get(erasedType.getName());
-                            List<String> enumValues = classDoc == null ? Arrays.stream(erasedType.getFields())
-                                    .map(Field::getName).collect(Collectors.toList()) : getEnumValue(erasedType, classDoc);
-                            queryParameter._enum(enumValues);
+                            queryParameter._enum(Arrays.stream(erasedType.getFields())
+                                    .map(Field::getName).collect(Collectors.toList()));
                         }
                     }
                 }
@@ -564,6 +559,10 @@ class DefaultReferContext {
 
         static boolean isBaseType(Class<?> clazz) {
             return baseTypes.contains(typeNameFor(clazz));
+        }
+
+        static boolean isBaseType(Type type) {
+            return baseTypes.contains(typeNameFor(type));
         }
 
         static boolean isIgnoredType(ResolvedType type) {

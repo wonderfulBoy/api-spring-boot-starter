@@ -1,0 +1,423 @@
+---
+swagger: "2.0"
+info:
+  version: "1.0-RELEASE"
+  title: "API文档托管示例"
+tags:
+- name: "department-controller"
+  description: "部门控制器"
+- name: "employee-controller"
+  description: "员工控制器"
+paths:
+  /department_upload:
+    post:
+      tags:
+      - "department-controller"
+      summary: "批量导入部门"
+      operationId: "DepartmentController#uploadUsingPOST@f68f7d4369"
+      consumes:
+      - "multipart/form-data"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "file"
+        in: "formData"
+        description: "部门导入文件"
+        required: true
+        type: "file"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultData"
+      deprecated: false
+  /employees:
+    get:
+      tags:
+      - "employee-controller"
+      summary: "查询所有员工"
+      operationId: "EmployeeController#findAllEmployeesUsingGET@59721ce8ab"
+      consumes:
+      - "application/json"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "names"
+        in: "query"
+        description: "员工姓名"
+        required: false
+        type: "string"
+      - name: "departmentIds"
+        in: "query"
+        description: "部门唯一标识列表"
+        required: false
+        type: "array"
+        items:
+          type: "string"
+        collectionFormat: "multi"
+      - name: "state"
+        in: "query"
+        description: "员工状态"
+        required: false
+        type: "string"
+        default: "NORMAL"
+        enum:
+        - "NORMAL"
+        - "DIMISSION"
+        - "FREE"
+        - "OUT"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultDataOfListOfEmployee"
+      deprecated: false
+  /employee_upload:
+    post:
+      tags:
+      - "employee-controller"
+      summary: "批量导入员工"
+      operationId: "EmployeeController#uploadUsingPOST@60f9f62522"
+      consumes:
+      - "multipart/form-data"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "file"
+        in: "formData"
+        description: "员工导入文件"
+        required: true
+        type: "file"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultData"
+      deprecated: false
+  /departments:
+    get:
+      tags:
+      - "department-controller"
+      summary: "查询所有部门"
+      operationId: "DepartmentController#findAllEmployeesUsingGET@84be179f8e"
+      consumes:
+      - "application/json"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "name"
+        in: "query"
+        description: "部门名称"
+        required: false
+        type: "string"
+      - name: "showStaff"
+        in: "query"
+        description: "是否展示部门员工"
+        required: false
+        type: "boolean"
+        default: false
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultDataOfListOfDepartment"
+      deprecated: false
+  /employee/{id}:
+    get:
+      tags:
+      - "employee-controller"
+      summary: "查询员工信息"
+      operationId: "EmployeeController#findByIdUsingGET@0fc6dcdd2e"
+      consumes:
+      - "application/json"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "员工唯一标识"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultDataOfEmployee"
+      deprecated: false
+    put:
+      tags:
+      - "employee-controller"
+      summary: "更新员工信息"
+      operationId: "EmployeeController#updateUsingPUT@5605d83368"
+      consumes:
+      - "application/json"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "员工唯一标识"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "employee"
+        description: "员工信息"
+        required: true
+        schema:
+          $ref: "#/definitions/Employee"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultDataOfEmployee"
+      deprecated: false
+    delete:
+      tags:
+      - "employee-controller"
+      summary: "删除员工"
+      operationId: "EmployeeController#deleteUsingDELETE@d2a5a22b0b"
+      consumes:
+      - "application/json"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "员工唯一标识"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultData"
+      deprecated: false
+  /department:
+    post:
+      tags:
+      - "department-controller"
+      summary: "新增部门"
+      operationId: "DepartmentController#insertUsingPOST@db18b1f0de"
+      consumes:
+      - "application/json"
+      produces:
+      - "*/*"
+      parameters:
+      - in: "body"
+        name: "department"
+        description: "部门信息"
+        required: true
+        schema:
+          $ref: "#/definitions/Department"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultDataOfDepartment"
+      deprecated: false
+  /department/{id}:
+    get:
+      tags:
+      - "department-controller"
+      summary: "查询部门信息"
+      operationId: "DepartmentController#findByIdUsingGET@7252b9de96"
+      consumes:
+      - "application/json"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "部门唯一标识"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultDataOfDepartment"
+      deprecated: false
+    put:
+      tags:
+      - "department-controller"
+      summary: "更新部门信息"
+      operationId: "DepartmentController#updateUsingPUT@9c4249afa9"
+      consumes:
+      - "application/json"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "部门唯一标识"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "department"
+        description: "部门信息"
+        required: true
+        schema:
+          $ref: "#/definitions/Department"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultDataOfDepartment"
+      deprecated: false
+    delete:
+      tags:
+      - "department-controller"
+      summary: "删除部门"
+      operationId: "DepartmentController#deleteUsingDELETE@574819fe51"
+      consumes:
+      - "application/json"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "部门唯一标识"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultData"
+      deprecated: false
+  /employee:
+    post:
+      tags:
+      - "employee-controller"
+      summary: "新增员工"
+      operationId: "EmployeeController#insertUsingPOST@59de0ace34"
+      consumes:
+      - "application/json"
+      produces:
+      - "*/*"
+      parameters:
+      - in: "body"
+        name: "employee"
+        description: "员工信息"
+        required: true
+        schema:
+          $ref: "#/definitions/Employee"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultDataOfEmployee"
+      deprecated: false
+definitions:
+  ResultDataOfListOfDepartment:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      data:
+        type: "array"
+        items:
+          $ref: "#/definitions/Department"
+      msg:
+        type: "string"
+  Department:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        description: "唯一标识"
+      name:
+        type: "string"
+        description: "部门名称"
+      leaderUserId:
+        type: "string"
+        description: "部门领导人唯一标识"
+      employees:
+        type: "array"
+        description: "部门员工列表"
+        items:
+          $ref: "#/definitions/Employee"
+      establishedTime:
+        type: "string"
+        format: "date-time"
+        description: "部门成立时间"
+    description: "部门实体类"
+  ResultData:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+        description: "状态码"
+      data:
+        type: "object"
+        description: "结果集"
+      msg:
+        type: "string"
+        description: "描述"
+    description: "结果集包装类"
+  Employee:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        description: "唯一标识"
+      name:
+        type: "string"
+        description: "员工姓名"
+      age:
+        type: "integer"
+        format: "int32"
+        description: "员工年龄"
+      department:
+        description: "所属部门信息"
+        $ref: "#/definitions/Department"
+      email:
+        type: "string"
+        description: "员工工作邮箱"
+      entryTime:
+        type: "string"
+        format: "date-time"
+        description: "入职时间"
+      workState:
+        type: "string"
+        description: "工作状态"
+        enum:
+        - "NORMAL (正常)"
+        - "DIMISSION (离职)"
+        - "FREE (请假)"
+        - "OUT (外出)"
+    description: "员工实体类"
+  ResultDataOfListOfEmployee:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      data:
+        type: "array"
+        items:
+          $ref: "#/definitions/Employee"
+      msg:
+        type: "string"
+  ResultDataOfDepartment:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      data:
+        $ref: "#/definitions/Department"
+      msg:
+        type: "string"
+  ResultDataOfEmployee:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      data:
+        $ref: "#/definitions/Employee"
+      msg:
+        type: "string"

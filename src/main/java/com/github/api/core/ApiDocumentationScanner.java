@@ -7,10 +7,10 @@ import com.fasterxml.classmate.TypeResolver;
 import com.fasterxml.classmate.members.ResolvedMethod;
 import com.github.api.ApiDocumentContext;
 import com.github.api.ApiDocumentProperties;
-import com.github.api.utils.CommonParseUtils;
-import com.github.api.utils.ControllerParseUtils;
 import com.github.api.sun.javadoc.*;
 import com.github.api.sun.tools.javadoc.MethodDocImpl;
+import com.github.api.utils.CommonParseUtils;
+import com.github.api.utils.ControllerParseUtils;
 import io.swagger.models.Tag;
 import io.swagger.models.*;
 import io.swagger.models.parameters.FormParameter;
@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -62,6 +63,8 @@ public class ApiDocumentationScanner {
     private ApiDocumentProperties apiDocumentProperties;
 
     private Map<Class<?>, List<ResolvedMethod>> methodsResolvedForHostClasses = new HashMap<>();
+
+    private LocalVariableTableParameterNameDiscoverer variableDiscoverer = new LocalVariableTableParameterNameDiscoverer();
 
 
     Documentation scan(Map<RequestMappingInfo, HandlerMethod> requestMappingMap, RootDoc rootDoc) {
@@ -222,17 +225,18 @@ public class ApiDocumentationScanner {
             MethodParameter methodParameter = methodParameters[i];
             ResolvedType argumentType = resolvedMethod.getArgumentType(i);
             Parameter parameter = DefaultReferContext.getParameter(methodParameter, argumentType);
-            if (parameter != null) {
-                java.lang.reflect.Parameter reflectParameter = DefaultReferContext.getReflectParameter(methodParameter);
-                if (reflectParameter != null) {
+            if (parameter != null && methodParameter.getMethod() != null) {
+                String[] parameterNames = variableDiscoverer.getParameterNames(methodParameter.getMethod());
+                if (parameterNames != null && parameterNames.length > methodParameter.getParameterIndex()) {
+                    String parameterName = parameterNames[methodParameter.getParameterIndex()];
                     if (StringUtils.isBlank(parameter.getName())) {
-                        parameter.setName(reflectParameter.getName());
+                        parameter.setName(parameterName);
                     }
                     Map<String, MethodDocImpl> methodDocMap = CLASS_METHOD_DOC_MAP.get(controllerClass.getName());
                     methodDocMap.values().forEach(methodDoc -> {
                         if (isMatched(handlerMethod, methodDoc)) {
                             for (ParamTag paramTag : methodDoc.paramTags()) {
-                                if (paramTag.parameterName().equals(reflectParameter.getName())) {
+                                if (paramTag.parameterName().equals(parameterName)) {
                                     parameter.setDescription(paramTag.parameterComment());
                                     return;
                                 }
@@ -254,6 +258,7 @@ public class ApiDocumentationScanner {
      */
     @SuppressWarnings("deprecation")
     private Response responseBuild(HandlerMethod handlerMethod) {
+
         Class<?> controllerClass = handlerMethod.getBeanType();
         Optional<ResolvedMethod> resolvedMethodOptional
                 = matchedMethod(handlerMethod.getMethod(), getMemberMethods(controllerClass));
@@ -262,7 +267,6 @@ public class ApiDocumentationScanner {
         Response response = new Response().description(HttpStatus.OK.getReasonPhrase());
         response.schema(DefaultReferContext.getProperty(returnType));
         return response;
-
     }
 
 
