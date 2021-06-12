@@ -1,6 +1,6 @@
 # API Spring Boot Starter Quickstart Guide
 
-This README.md describes how to quickly configure and use the starter
+This README.md describes how to quickly configure and use the starter.
 
 <p align="center">
   <a>
@@ -14,12 +14,12 @@ Maven   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Spring Boot &nbsp;&nbsp;&nbsp;&nbsp;2.3.4.RELEASE  
 
 ## Functional Description
-This starter will solve the developer's annoyance when writing the Swagger API, eliminating the need for developers to add intrusive swagger usage to their code. Instead, just write standard Javadoc comments to automatically generate api documents, which can help developers reduce write documentation time and improve development efficiency
+This starter will solve the developer's annoyance when writing the Swagger API, eliminating the need for developers to add intrusive swagger usage to their code. Instead, just write standard Javadoc comments to automatically generate api documents, which can help developers reduce write documentation time and improve development efficiency.
 
 
 ## Quick Start Example  
 
-##### 1、Add the dependency to the pom.xml  
+##### 1、Add the dependency to the pom.xml.  
 ````
 <dependency>
     <groupId>com.github.echils</groupId>
@@ -27,7 +27,7 @@ This starter will solve the developer's annoyance when writing the Swagger API, 
     <version>1.0-SNAPSHOT</version>
 </dependency>
 ````
-##### 2、Add the annotation {@link @EnableDocumentDelegate} to the startup class to turn on the api document automation function  
+##### 2、Add the annotation {@link EnableDocumentDelegate} to the startup class to turn on the api document automation function.
 ````
 package com.github.api.sample;
 
