@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.MethodParameter;
+import org.springframework.core.ResolvableType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -437,10 +438,17 @@ public class ApiDocumentationScanner {
                     for (int index = 0; index < resolvedMethod.getArgumentCount(); index++) {
                         ResolvedType resolvedArgumentType = resolvedMethod.getArgumentType(index);
                         Type genericParameterType = method.getGenericParameterTypes()[index];
-                        if (!((genericParameterType instanceof Class && ((Class<?>) genericParameterType)
-                                .isAssignableFrom(resolvedArgumentType.getErasedType()))
-                                || (genericParameterType instanceof ParameterizedType && resolvedArgumentType.getErasedType()
-                                .isAssignableFrom((Class<?>) ((ParameterizedType) genericParameterType).getRawType())))) {
+                        try {
+                            if (!((genericParameterType instanceof Class && ((Class<?>) genericParameterType)
+                                    .isAssignableFrom(resolvedArgumentType.getErasedType()))
+                                    || (genericParameterType instanceof ParameterizedType && resolvedArgumentType.getErasedType()
+                                    .isAssignableFrom((Class<?>) ((ParameterizedType) genericParameterType).getRawType())) || (
+                                    ResolvableType.forType(genericParameterType).resolve() == resolvedArgumentType.getErasedType()))) {
+                                same = false;
+                                break;
+                            }
+                        } catch (Exception e) {
+                            logger.error("match method failed:{}", method);
                             same = false;
                             break;
                         }
