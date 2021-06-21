@@ -8,7 +8,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * 启动类
  *
  * @author echils
- * @since 2021-6-11 13:06:25
  */
 @SpringBootApplication
 @EnableDocumentDelegate

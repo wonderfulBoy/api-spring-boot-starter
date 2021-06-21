@@ -12,7 +12,6 @@ import java.util.List;
  * 部门控制器
  *
  * @author echils
- * @since 2021-06-12 15:41:58
  */
 @RestController
 public class DepartmentController {

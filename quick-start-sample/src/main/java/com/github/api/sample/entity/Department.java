@@ -7,7 +7,6 @@ import java.util.List;
  * 部门实体类
  *
  * @author echils
- * @since 2021-06-12 15:43:54
  */
 public class Department {
 

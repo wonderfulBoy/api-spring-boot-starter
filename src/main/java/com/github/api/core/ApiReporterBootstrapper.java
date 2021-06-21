@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * ApiReporterBootstrapper
  *
  * @author echils
- * @since 2020-12-01 20:41
  */
 @Component
 public class ApiReporterBootstrapper implements SmartLifecycle, ApplicationContextAware {

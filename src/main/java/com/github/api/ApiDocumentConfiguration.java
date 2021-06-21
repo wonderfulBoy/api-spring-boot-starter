@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Import;
  * parsing components in the spring container
  *
  * @author echils
- * @since 2021-02-25 21:34:31
  */
 @Configuration
 @EnableConfigurationProperties(ApiDocumentProperties.class)

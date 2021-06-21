@@ -20,7 +20,6 @@ import static com.github.api.ApiDocumentContext.DEFAULT_API_QUERY_REQUEST;
  * This class will provide the ability to view the project documentation
  *
  * @author echils
- * @since 2021-02-25 21:34:31
  */
 @RestController
 public class ApiDocumentFileProvider {

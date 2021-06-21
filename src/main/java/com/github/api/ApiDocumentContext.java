@@ -13,7 +13,6 @@ import java.util.Map;
  * and agree on common configurations and parameters
  *
  * @author echils
- * @since 2021-02-25 23:15:18
  */
 public class ApiDocumentContext {
 

@@ -17,7 +17,6 @@ import static com.github.api.ApiDocumentContext.DEFAULT_INNER_ERROR_REQUEST;
  * Request used to exclude the application framework
  *
  * @author echils
- * @since 2021-02-28 18:40:30
  */
 public class DefaultRequestHandlerEjector implements IRequestHandlerEjector {
 

@@ -13,7 +13,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * tags in pom.xml
  *
  * @author echils
- * @since 2021-02-25 21:05:55
  */
 @Data
 @ConfigurationProperties("api")

@@ -15,7 +15,6 @@ import org.springframework.core.type.AnnotationMetadata;
  * Add the API to parse the required bean definitions and assemble them as needed
  *
  * @author echils
- * @since 2021-03-11 23:08:19
  */
 public class ApiBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
 

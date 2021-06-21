@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
  * 结果集包装类
  *
  * @author echils
- * @since 2021-06-12 16:03:12
  */
 public class ResultData<T> {
 

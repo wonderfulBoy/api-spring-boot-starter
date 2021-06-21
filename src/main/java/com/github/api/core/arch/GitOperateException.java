@@ -4,7 +4,6 @@ package com.github.api.core.arch;
  * GitOperateException
  *
  * @author echils
- * @since 2021-02-27 19:52:48
  */
 public class GitOperateException extends RuntimeException {
 

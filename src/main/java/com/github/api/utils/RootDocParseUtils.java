@@ -15,7 +15,6 @@ import java.util.List;
  * RootDocParseUtils
  *
  * @author echils
- * @since 2021-03-06 11:30:43
  */
 public class RootDocParseUtils {
 

@@ -47,7 +47,6 @@ import static com.google.common.collect.Lists.newArrayList;
  * ApiDocumentationScanner
  *
  * @author echils
- * @since 2021-03-08 22:16:28
  */
 @Component
 public class ApiDocumentationScanner {

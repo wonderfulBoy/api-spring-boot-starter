@@ -18,7 +18,6 @@ import static com.github.api.ApiDocumentContext.MAVEN_DEFAULT_ARTIFACT_ID_SEPARA
  * Api archives
  *
  * @author echils
- * @since 2021-02-27 20:05:58
  */
 public class ApiDocumentArchives {
 

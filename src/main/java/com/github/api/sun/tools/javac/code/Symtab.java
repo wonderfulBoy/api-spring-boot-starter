@@ -244,7 +244,7 @@ public class Symtab {
         proprietaryType = enterSyntheticAnnotation("sun.Proprietary+Annotation");
 
 
-        profileType = enterSyntheticAnnotation("jdk.Profile+Annotation");
+        profileType = enterSyntheticAnnotation("map.Profile+Annotation");
         MethodSymbol m = new MethodSymbol(PUBLIC | ABSTRACT, names.value, intType, profileType.tsym);
         profileType.tsym.members().enter(m);
 

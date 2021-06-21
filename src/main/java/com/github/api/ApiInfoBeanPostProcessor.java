@@ -21,7 +21,6 @@ import static com.github.api.ApiDocumentContext.*;
  * parse the contents of the pom file to fill in the necessary information
  *
  * @author echils
- * @since 2021-03-11 21:26:45
  */
 public class ApiInfoBeanPostProcessor implements BeanPostProcessor {
 

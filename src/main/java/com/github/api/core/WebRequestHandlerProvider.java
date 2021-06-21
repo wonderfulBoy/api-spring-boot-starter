@@ -16,7 +16,6 @@ import java.util.Set;
  * Provide all urls that need to be resolved
  *
  * @author echils
- * @since 2021-02-27 21:24:45
  */
 public class WebRequestHandlerProvider {
 

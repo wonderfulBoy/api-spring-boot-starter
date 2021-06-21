@@ -14,7 +14,6 @@ import static com.github.api.ApiDocumentContext.*;
  * Some general or messy tools and methods in the parsing process
  *
  * @author echils
- * @since 2021-03-08 20:55:34
  */
 public class CommonParseUtils {
 

@@ -12,7 +12,6 @@ import io.swagger.util.Yaml;
  * Documentation
  *
  * @author echils
- * @since 2021-02-28 22:30:53
  */
 public class Documentation {
 
