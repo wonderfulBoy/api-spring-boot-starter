@@ -113,8 +113,19 @@ class DefaultReferContext {
 
                 List<RawField> memberFields = resolvedType.getMemberFields();
                 if (!CollectionUtils.isEmpty(memberFields)) {
+                    ClassDoc classDoc = null;
                     if (classDocMap.containsKey(typeName)) {
-                        ClassDoc classDoc = classDocMap.get(typeName);
+                        classDoc = classDocMap.get(typeName);
+                    } else {
+                        TypeBindings typeBindings = resolvedType.getTypeBindings();
+                        if (typeBindings != null && !CollectionUtils.isEmpty(typeBindings.getTypeParameters())) {
+                            String externalTypeName = Types.typeName(typeResolver.resolve(resolvedType.getErasedType()));
+                            if (!StringUtils.isEmpty(externalTypeName) && classDocMap.containsKey(externalTypeName)) {
+                                classDoc = classDocMap.get(externalTypeName);
+                            }
+                        }
+                    }
+                    if (classDoc != null) {
                         model.setDescription(classDoc.commentText());
                         fieldCommentMap.putAll(Arrays.stream(classDoc.fields(false))
                                 .collect(Collectors.toMap(FieldDoc::name, FieldDoc::commentText)));

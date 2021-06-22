@@ -14,7 +14,7 @@ paths:
       tags:
       - "department-controller"
       summary: "批量导入部门"
-      operationId: "DepartmentController#uploadUsingPOST@f68f7d4369"
+      operationId: "DepartmentController#uploadUsingPOST@751651647"
       consumes:
       - "multipart/form-data"
       produces:
@@ -36,7 +36,7 @@ paths:
       tags:
       - "employee-controller"
       summary: "查询所有员工"
-      operationId: "EmployeeController#findAllEmployeesUsingGET@59721ce8ab"
+      operationId: "EmployeeController#findAllEmployeesUsingGET@1991619638"
       consumes:
       - "application/json"
       produces:
@@ -72,34 +72,12 @@ paths:
           schema:
             $ref: "#/definitions/ResultDataOfListOfEmployee"
       deprecated: false
-  /employee_upload:
-    post:
-      tags:
-      - "employee-controller"
-      summary: "批量导入员工"
-      operationId: "EmployeeController#uploadUsingPOST@60f9f62522"
-      consumes:
-      - "multipart/form-data"
-      produces:
-      - "*/*"
-      parameters:
-      - name: "file"
-        in: "formData"
-        description: "员工导入文件"
-        required: true
-        type: "file"
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            $ref: "#/definitions/ResultData"
-      deprecated: false
   /departments:
     get:
       tags:
       - "department-controller"
       summary: "查询所有部门"
-      operationId: "DepartmentController#findAllEmployeesUsingGET@84be179f8e"
+      operationId: "DepartmentController#findAllEmployeesUsingGET@1999141934"
       consumes:
       - "application/json"
       produces:
@@ -122,12 +100,34 @@ paths:
           schema:
             $ref: "#/definitions/ResultDataOfListOfDepartment"
       deprecated: false
+  /employee_upload:
+    post:
+      tags:
+      - "employee-controller"
+      summary: "批量导入员工"
+      operationId: "EmployeeController#uploadUsingPOST@1858690909"
+      consumes:
+      - "multipart/form-data"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "file"
+        in: "formData"
+        description: "员工导入文件"
+        required: true
+        type: "file"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultData"
+      deprecated: false
   /employee/{id}:
     get:
       tags:
       - "employee-controller"
       summary: "查询员工信息"
-      operationId: "EmployeeController#findByIdUsingGET@0fc6dcdd2e"
+      operationId: "EmployeeController#findByIdUsingGET@63968423"
       consumes:
       - "application/json"
       produces:
@@ -148,7 +148,7 @@ paths:
       tags:
       - "employee-controller"
       summary: "更新员工信息"
-      operationId: "EmployeeController#updateUsingPUT@5605d83368"
+      operationId: "EmployeeController#updateUsingPUT@63968423"
       consumes:
       - "application/json"
       produces:
@@ -175,7 +175,7 @@ paths:
       tags:
       - "employee-controller"
       summary: "删除员工"
-      operationId: "EmployeeController#deleteUsingDELETE@d2a5a22b0b"
+      operationId: "EmployeeController#deleteUsingDELETE@63968423"
       consumes:
       - "application/json"
       produces:
@@ -197,7 +197,7 @@ paths:
       tags:
       - "department-controller"
       summary: "新增部门"
-      operationId: "DepartmentController#insertUsingPOST@db18b1f0de"
+      operationId: "DepartmentController#insertUsingPOST@2004151103"
       consumes:
       - "application/json"
       produces:
@@ -220,7 +220,7 @@ paths:
       tags:
       - "department-controller"
       summary: "查询部门信息"
-      operationId: "DepartmentController#findByIdUsingGET@7252b9de96"
+      operationId: "DepartmentController#findByIdUsingGET@2090300171"
       consumes:
       - "application/json"
       produces:
@@ -241,7 +241,7 @@ paths:
       tags:
       - "department-controller"
       summary: "更新部门信息"
-      operationId: "DepartmentController#updateUsingPUT@9c4249afa9"
+      operationId: "DepartmentController#updateUsingPUT@2090300171"
       consumes:
       - "application/json"
       produces:
@@ -268,7 +268,7 @@ paths:
       tags:
       - "department-controller"
       summary: "删除部门"
-      operationId: "DepartmentController#deleteUsingDELETE@574819fe51"
+      operationId: "DepartmentController#deleteUsingDELETE@2090300171"
       consumes:
       - "application/json"
       produces:
@@ -290,7 +290,7 @@ paths:
       tags:
       - "employee-controller"
       summary: "新增员工"
-      operationId: "EmployeeController#insertUsingPOST@59de0ace34"
+      operationId: "EmployeeController#insertUsingPOST@2142455773"
       consumes:
       - "application/json"
       produces:
@@ -315,12 +315,16 @@ definitions:
       code:
         type: "integer"
         format: "int32"
+        description: "状态码"
       data:
         type: "array"
+        description: "结果集"
         items:
           $ref: "#/definitions/Department"
       msg:
         type: "string"
+        description: "描述"
+    description: "结果集包装类"
   Department:
     type: "object"
     properties:
@@ -343,20 +347,6 @@ definitions:
         format: "date-time"
         description: "部门成立时间"
     description: "部门实体类"
-  ResultData:
-    type: "object"
-    properties:
-      code:
-        type: "integer"
-        format: "int32"
-        description: "状态码"
-      data:
-        type: "object"
-        description: "结果集"
-      msg:
-        type: "string"
-        description: "描述"
-    description: "结果集包装类"
   Employee:
     type: "object"
     properties:
@@ -389,35 +379,61 @@ definitions:
         - "FREE (请假)"
         - "OUT (外出)"
     description: "员工实体类"
+  ResultData:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+        description: "状态码"
+      data:
+        type: "object"
+        description: "结果集"
+      msg:
+        type: "string"
+        description: "描述"
+    description: "结果集包装类"
   ResultDataOfListOfEmployee:
     type: "object"
     properties:
       code:
         type: "integer"
         format: "int32"
+        description: "状态码"
       data:
         type: "array"
+        description: "结果集"
         items:
           $ref: "#/definitions/Employee"
       msg:
         type: "string"
+        description: "描述"
+    description: "结果集包装类"
   ResultDataOfDepartment:
     type: "object"
     properties:
       code:
         type: "integer"
         format: "int32"
+        description: "状态码"
       data:
+        description: "结果集"
         $ref: "#/definitions/Department"
       msg:
         type: "string"
+        description: "描述"
+    description: "结果集包装类"
   ResultDataOfEmployee:
     type: "object"
     properties:
       code:
         type: "integer"
         format: "int32"
+        description: "状态码"
       data:
+        description: "结果集"
         $ref: "#/definitions/Employee"
       msg:
         type: "string"
+        description: "描述"
+    description: "结果集包装类"
