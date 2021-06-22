@@ -51,8 +51,9 @@ public class Application {
 }
 
 ````
-##### 3、Start the service, and visit *http://\<ip>:\<port>/index.html* after the service starts normally, you can see the automatically generated swagger api document
-
+##### 3、Start the service, and visit *http://\<ip>:\<port>/index.html* after the service starts normally, you can see the automatically generated swagger api document.
+  
+  
 <p align="center">
   <a>
    <img alt="Framework" src="DEMO.PNG">
