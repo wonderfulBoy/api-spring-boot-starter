@@ -1,8 +1,9 @@
 server:
   port: 8080
 
+#默认可以不配置,采用缺省规则
 api:
   info:
-    title: API文档托管示例    #未配置时，默认读取pom.xml#artifactId来作为名称
+    title: API文档托管示例      #未配置时，默认读取pom.xml#artifactId来作为名称
     version: 1.0-RELEASE      #未配置时，默认读取pom.xml#version来作为版本号
   profile: LOCAL              #未配置时，默认为LOCAL，当切换为CLOUD时，将不会自动解析源码并刷新文档，转而读取之前生成的文档

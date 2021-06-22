@@ -399,9 +399,8 @@ public class ApiDocumentationScanner {
      */
     private String uniqueOperationId(RequestMappingInfo requestMappingInfo, HandlerMethod handlerMethod) {
         String controllerClass = handlerMethod.getBeanType().getSimpleName();
-        String uuid = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 10);
         return String.format("%s#%sUsing%s@%s", controllerClass, handlerMethod.getMethod().getName(),
-                getRequestMethod(requestMappingInfo).name(), uuid);
+                getRequestMethod(requestMappingInfo).name(), Math.abs(getRequestPath(requestMappingInfo).hashCode()));
     }
 
 
