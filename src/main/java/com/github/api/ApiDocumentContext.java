@@ -38,6 +38,9 @@ public class ApiDocumentContext {
     public static final String DEFAULT_OS_DIRECTORY = "windows";
 
 
+    public static final String CLASS_PATH = "classpath:";
+
+
     public static RootDoc rootDoc;
 
 

@@ -199,6 +199,7 @@ class DefaultReferContext {
      * @return {@link Annotation}
      */
     static Parameter getParameter(MethodParameter methodParameter, ResolvedType argumentType) {
+
         Annotation[] parameterAnnotations = methodParameter.getParameterAnnotations();
         if (ArrayUtils.isEmpty(parameterAnnotations)) {
             return null;
@@ -374,6 +375,7 @@ class DefaultReferContext {
      * @return the param name
      */
     static java.lang.reflect.Parameter getReflectParameter(MethodParameter methodParameter) {
+
         Method method = methodParameter.getMethod();
         if (method != null && ArrayUtils.isNotEmpty(method.getParameters())) {
             return method.getParameters()[methodParameter.getParameterIndex()];
@@ -445,6 +447,7 @@ class DefaultReferContext {
      * @return the parameter type
      */
     private static String getParameterType(ResolvedType argumentType) {
+
         if (Types.isContainerType(argumentType)) {
             return "array";
         }
@@ -473,6 +476,7 @@ class DefaultReferContext {
      * @return {@link Property}
      */
     private static Property getBaseProperty(String typeName) {
+
         if (Arrays.asList("float", "double", "bigdecimal").contains(typeName)) {
             return new DecimalProperty();
         } else if (Arrays.asList("byte", "int", "long", "biginteger").contains(typeName)) {

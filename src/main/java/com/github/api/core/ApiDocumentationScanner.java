@@ -153,6 +153,7 @@ public class ApiDocumentationScanner {
         return info;
     }
 
+
     /**
      * Build the swagger path
      *
@@ -249,6 +250,7 @@ public class ApiDocumentationScanner {
         }
         return parameters;
     }
+
 
     /**
      * Build request response info
@@ -349,6 +351,7 @@ public class ApiDocumentationScanner {
      * @return the result of match
      */
     private boolean isMatched(HandlerMethod handlerMethod, MethodDocImpl methodDoc) {
+
         AnnotationDesc[] methodDocAnnotations = methodDoc.annotations();
         Annotation[] handlerMethodAnnotations = handlerMethod.getMethod().getAnnotations();
         if (handlerMethodAnnotations.length == methodDocAnnotations.length) {
@@ -398,6 +401,7 @@ public class ApiDocumentationScanner {
      * @return Unique operation id
      */
     private String uniqueOperationId(RequestMappingInfo requestMappingInfo, HandlerMethod handlerMethod) {
+
         String controllerClass = handlerMethod.getBeanType().getSimpleName();
         return String.format("%s#%sUsing%s@%s", controllerClass, handlerMethod.getMethod().getName(),
                 getRequestMethod(requestMappingInfo).name(), Math.abs(getRequestPath(requestMappingInfo).hashCode()));
@@ -410,6 +414,7 @@ public class ApiDocumentationScanner {
      * @param hostClass the controller class
      */
     private List<ResolvedMethod> getMemberMethods(Class<?> hostClass) {
+
         if (!methodsResolvedForHostClasses.containsKey(hostClass)) {
             ResolvedType beanType = typeResolver.resolve(hostClass);
             MemberResolver resolver = new MemberResolver(typeResolver);
@@ -426,6 +431,7 @@ public class ApiDocumentationScanner {
      * The method cannot be matched by URL, so it can only be matched according to the overload mechanism
      */
     private Optional<ResolvedMethod> matchedMethod(Method method, List<ResolvedMethod> filteredMethod) {
+
         for (ResolvedMethod resolvedMethod : filteredMethod) {
             //same method name
             if (resolvedMethod.getName().equals(method.getName())) {

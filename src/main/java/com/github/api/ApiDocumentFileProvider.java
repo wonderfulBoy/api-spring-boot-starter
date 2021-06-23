@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.yaml.snakeyaml.Yaml;
 
-import static com.github.api.ApiDocumentContext.DEFAULT_API_QUERY_REQUEST;
+import static com.github.api.ApiDocumentContext.*;
 
 /**
  * This class will provide the ability to view the project documentation
@@ -47,10 +47,10 @@ public class ApiDocumentFileProvider {
                 Resource[] resources;
                 if (CommonParseUtils.inJar(ApiDocumentFileProvider.class)) {
                     resources = (new PathMatchingResourcePatternResolver())
-                            .getResources("classpath:" + ApiDocumentContext.DEFAULT_MATCHING_PATH);
+                            .getResources(CLASS_PATH + DEFAULT_MATCHING_PATH);
                 } else {
                     resources = (new PathMatchingResourcePatternResolver())
-                            .getResources("classpath:" + ApiDocumentContext.DEFAULT_LOCAL_MATCHING_PATH);
+                            .getResources(CLASS_PATH + DEFAULT_LOCAL_MATCHING_PATH);
                 }
                 if (resources.length > 0) {
                     return new ResponseEntity<>(new Documentation.Json(new Gson().toJson(new Yaml()
