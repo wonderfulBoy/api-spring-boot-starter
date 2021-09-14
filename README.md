@@ -27,7 +27,7 @@ This starter will solve the developer's annoyance when writing the Swagger API, 
     <version>1.0-SNAPSHOT</version>
 </dependency>
 ````
-##### 2、Add the annotation {@link EnableDocumentDelegate} to the startup class to turn on the api document automation function.
+##### 2、Add the annotation {@link [EnableDocumentDelegate](./src/main/java/com/github/api/EnableDocumentDelegate.java)} to the startup class to turn on the api document automation function.
 ````
 package com.github.api.sample;
 
