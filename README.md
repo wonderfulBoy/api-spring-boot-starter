@@ -11,7 +11,7 @@ This README.md describes how to quickly configure and use the starter.
 ## Development Environment  
 JDK     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.8.0_202  
 Maven   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.5.4  
-Spring Boot &nbsp;&nbsp;&nbsp;&nbsp;2.3.4.RELEASE  
+Spring Boot &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.3.4.RELEASE  
 
 ## Functional Description
 This starter will solve the developer's annoyance when writing the Swagger API, eliminating the need for developers to add intrusive swagger usage to their code. Instead, just write standard Javadoc comments to automatically generate api documents, which can help developers reduce write documentation time and improve development efficiency.
