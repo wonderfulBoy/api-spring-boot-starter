@@ -222,28 +222,26 @@ public class ApiDocumentationScanner {
 
         ResolvedMethod resolvedMethod = resolvedMethodOptional.get();
         List<Parameter> parameters = new ArrayList<>();
+        Map<Method, String[]> methodParamNameMap = new HashMap<>();
         for (int i = 0; i < methodParameters.length; i++) {
             MethodParameter methodParameter = methodParameters[i];
             ResolvedType argumentType = resolvedMethod.getArgumentType(i);
             Parameter parameter = DefaultReferContext.getParameter(methodParameter, argumentType);
-            if (parameter != null && methodParameter.getMethod() != null) {
-                String[] parameterNames = variableDiscoverer.getParameterNames(methodParameter.getMethod());
+            Method method = methodParameter.getMethod();
+            if (parameter != null && method != null) {
+                String[] parameterNames = methodParamNameMap.computeIfAbsent(method,
+                        reflectMethod -> variableDiscoverer.getParameterNames(reflectMethod));
                 if (parameterNames != null && parameterNames.length > methodParameter.getParameterIndex()) {
                     String parameterName = parameterNames[methodParameter.getParameterIndex()];
                     if (StringUtils.isBlank(parameter.getName())) {
                         parameter.setName(parameterName);
                     }
                     Map<String, MethodDocImpl> methodDocMap = CLASS_METHOD_DOC_MAP.get(controllerClass.getName());
-                    methodDocMap.values().forEach(methodDoc -> {
-                        if (isMatched(handlerMethod, methodDoc)) {
-                            for (ParamTag paramTag : methodDoc.paramTags()) {
-                                if (paramTag.parameterName().equals(parameterName)) {
-                                    parameter.setDescription(paramTag.parameterComment());
-                                    return;
-                                }
-                            }
-                        }
-                    });
+                    methodDocMap.values().stream().filter(methodDoc
+                            -> isMatched(handlerMethod, methodDoc)).findFirst().flatMap(methodDoc
+                            -> Arrays.stream(methodDoc.paramTags()).filter(paramTag
+                            -> paramTag.parameterName().equals(parameterName)).findFirst()).ifPresent(paramTag
+                            -> parameter.setDescription(paramTag.parameterComment()));
                 }
                 parameters.add(parameter);
             }
@@ -444,8 +442,8 @@ public class ApiDocumentationScanner {
                         Type genericParameterType = method.getGenericParameterTypes()[index];
                         try {
                             if (!((genericParameterType instanceof Class && ((Class<?>) genericParameterType)
-                                    .isAssignableFrom(resolvedArgumentType.getErasedType()))
-                                    || (genericParameterType instanceof ParameterizedType && resolvedArgumentType.getErasedType()
+                                    .isAssignableFrom(resolvedArgumentType.getErasedType())) ||
+                                    (genericParameterType instanceof ParameterizedType && resolvedArgumentType.getErasedType()
                                     .isAssignableFrom((Class<?>) ((ParameterizedType) genericParameterType).getRawType())) || (
                                     ResolvableType.forType(genericParameterType).resolve() == resolvedArgumentType.getErasedType()))) {
                                 same = false;

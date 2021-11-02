@@ -184,7 +184,8 @@ class DefaultReferContext {
             if (erasedType.isEnum()) {
                 ClassDoc classDoc = CLASS_DOC_MAP.get(erasedType.getName());
                 if (classDoc == null) {
-                    ((StringProperty) fieldProperty)._enum(Arrays.stream(erasedType.getFields()).map(Field::getName).collect(Collectors.toList()));
+                    ((StringProperty) fieldProperty)._enum(Arrays.stream(erasedType.getFields())
+                            .map(Field::getName).collect(Collectors.toList()));
                 } else {
                     ((StringProperty) fieldProperty)._enum(getEnumValue(erasedType, classDoc));
                 }
@@ -705,6 +706,7 @@ class DefaultReferContext {
         }
 
         enum Common {
+
             STRING("string"),
             ARRAY("array"),
             FILE("file");
