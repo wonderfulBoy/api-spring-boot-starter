@@ -17,6 +17,8 @@ import io.swagger.models.RefModel;
 import io.swagger.models.parameters.*;
 import io.swagger.models.properties.*;
 import org.apache.commons.lang3.ArrayUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
 import org.springframework.http.HttpHeaders;
@@ -54,6 +56,8 @@ import static org.springframework.web.bind.annotation.ValueConstants.DEFAULT_NON
  * @author echils
  */
 class DefaultReferContext {
+
+    private static final Logger logger = LoggerFactory.getLogger(DefaultReferContext.class);
 
     //The symbol represented before the transfer: "«";
     private static final String OPEN = "Of";
@@ -337,7 +341,8 @@ class DefaultReferContext {
                 return queryParameter;
             }
         }
-        throw new RuntimeException("This version does not support this annotation at this time");
+        logger.warn("This version does not support the annotation {} at this time",Arrays.toString(parameterAnnotations));
+        return null;
     }
 
     /**
