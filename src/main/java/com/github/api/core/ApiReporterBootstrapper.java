@@ -13,7 +13,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.lang.NonNull;
-import org.springframework.lang.NonNullApi;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -44,7 +43,7 @@ public class ApiReporterBootstrapper implements SmartLifecycle, ApplicationConte
 
     private ApiDocumentationScanner apiDocumentationScanner;
 
-    private AtomicBoolean initialized = new AtomicBoolean(false);
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
 
     @Override
     public void start() {

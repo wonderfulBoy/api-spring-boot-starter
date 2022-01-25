@@ -72,7 +72,7 @@ class DefaultReferContext {
     private static final Map<String, ResolvedType> refTypeNameCache = new HashMap<>();
 
     //Default type resolver
-    private static TypeResolver typeResolver = new TypeResolver();
+    private static final TypeResolver typeResolver = new TypeResolver();
 
     /**
      * Build the class definitions of the method
@@ -711,7 +711,7 @@ class DefaultReferContext {
             ARRAY("array"),
             FILE("file");
 
-            private String value;
+            private final String value;
 
             Common(String value) {
                 this.value = value;

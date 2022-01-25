@@ -62,9 +62,9 @@ public class ApiDocumentationScanner {
     @Autowired
     private ApiDocumentProperties apiDocumentProperties;
 
-    private Map<Class<?>, List<ResolvedMethod>> methodsResolvedForHostClasses = new HashMap<>();
+    private final Map<Class<?>, List<ResolvedMethod>> methodsResolvedForHostClasses = new HashMap<>();
 
-    private LocalVariableTableParameterNameDiscoverer variableDiscoverer = new LocalVariableTableParameterNameDiscoverer();
+    private final LocalVariableTableParameterNameDiscoverer variableDiscoverer = new LocalVariableTableParameterNameDiscoverer();
 
 
     Documentation scan(Map<RequestMappingInfo, HandlerMethod> requestMappingMap, RootDoc rootDoc) {
@@ -230,7 +230,7 @@ public class ApiDocumentationScanner {
             Method method = methodParameter.getMethod();
             if (parameter != null && method != null) {
                 String[] parameterNames = methodParamNameMap.computeIfAbsent(method,
-                        reflectMethod -> variableDiscoverer.getParameterNames(reflectMethod));
+                        variableDiscoverer::getParameterNames);
                 if (parameterNames != null && parameterNames.length > methodParameter.getParameterIndex()) {
                     String parameterName = parameterNames[methodParameter.getParameterIndex()];
                     if (StringUtils.isBlank(parameter.getName())) {

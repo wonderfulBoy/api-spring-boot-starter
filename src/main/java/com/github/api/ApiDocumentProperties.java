@@ -60,7 +60,7 @@ public class ApiDocumentProperties {
      * Api base information
      */
     @Data
-    public class ApiInfo {
+    public static class ApiInfo {
 
         /**
          * Project title
@@ -84,7 +84,7 @@ public class ApiDocumentProperties {
      * default maven standard project directory structure
      */
     @Data
-    public class Project {
+    public static class Project {
 
         /**
          * Project source path,used to load and parse source file information
