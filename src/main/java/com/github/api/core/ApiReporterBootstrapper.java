@@ -86,7 +86,8 @@ public class ApiReporterBootstrapper implements SmartLifecycle, ApplicationConte
 
     @Override
     public int getPhase() {
-        return Integer.MAX_VALUE;
+        //1024 is meaningless,just respect.
+        return Integer.MAX_VALUE - 1024;
     }
 
     @Override
@@ -107,4 +108,5 @@ public class ApiReporterBootstrapper implements SmartLifecycle, ApplicationConte
                     applicationContext.getBean(WebRequestHandlerProvider.class.getName());
         }
     }
+
 }
