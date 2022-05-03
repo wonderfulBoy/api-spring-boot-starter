@@ -55,7 +55,7 @@
         <springfox.version>2.9.2</springfox.version>
         <spring.boot.version>2.3.4.RELEASE</spring.boot.version>
         <fasterxml.classmate.version>1.5.1</fasterxml.classmate.version>
-        <fasterxml.jackson.version>2.12.6.1</fasterxml.jackson.version>
+        <fasterxml.jackson.version>2.13.2.2</fasterxml.jackson.version>
     </properties>
 
     <dependencies>

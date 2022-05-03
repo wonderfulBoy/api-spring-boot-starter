@@ -72,6 +72,28 @@ paths:
           schema:
             $ref: "#/definitions/ResultDataOfListOfEmployee"
       deprecated: false
+  /employee_upload:
+    post:
+      tags:
+      - "employee-controller"
+      summary: "批量导入员工"
+      operationId: "EmployeeController#uploadUsingPOST@1858690909"
+      consumes:
+      - "multipart/form-data"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "file"
+        in: "formData"
+        description: "员工导入文件"
+        required: true
+        type: "file"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultData"
+      deprecated: false
   /departments:
     get:
       tags:
@@ -99,28 +121,6 @@ paths:
           description: "OK"
           schema:
             $ref: "#/definitions/ResultDataOfListOfDepartment"
-      deprecated: false
-  /employee_upload:
-    post:
-      tags:
-      - "employee-controller"
-      summary: "批量导入员工"
-      operationId: "EmployeeController#uploadUsingPOST@1858690909"
-      consumes:
-      - "multipart/form-data"
-      produces:
-      - "*/*"
-      parameters:
-      - name: "file"
-        in: "formData"
-        description: "员工导入文件"
-        required: true
-        type: "file"
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            $ref: "#/definitions/ResultData"
       deprecated: false
   /employee/{id}:
     get:
@@ -347,6 +347,20 @@ definitions:
         format: "date-time"
         description: "部门成立时间"
     description: "部门实体类"
+  ResultData:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+        description: "状态码"
+      data:
+        type: "object"
+        description: "结果集"
+      msg:
+        type: "string"
+        description: "描述"
+    description: "结果集包装类"
   Employee:
     type: "object"
     properties:
@@ -379,20 +393,6 @@ definitions:
         - "FREE (请假)"
         - "OUT (外出)"
     description: "员工实体类"
-  ResultData:
-    type: "object"
-    properties:
-      code:
-        type: "integer"
-        format: "int32"
-        description: "状态码"
-      data:
-        type: "object"
-        description: "结果集"
-      msg:
-        type: "string"
-        description: "描述"
-    description: "结果集包装类"
   ResultDataOfListOfEmployee:
     type: "object"
     properties:
