@@ -7,11 +7,14 @@ import com.fasterxml.classmate.TypeResolver;
 import com.fasterxml.classmate.members.ResolvedMethod;
 import com.github.api.ApiDocumentContext;
 import com.github.api.ApiDocumentProperties;
-import com.github.api.sun.javadoc.*;
+import com.github.api.sun.javadoc.AnnotationDesc;
+import com.github.api.sun.javadoc.ClassDoc;
+import com.github.api.sun.javadoc.MethodDoc;
+import com.github.api.sun.javadoc.RootDoc;
 import com.github.api.sun.tools.javadoc.MethodDocImpl;
 import com.github.api.utils.CommonParseUtils;
 import com.github.api.utils.ControllerParseUtils;
-import io.swagger.models.Tag;
+import com.google.common.collect.Maps;
 import io.swagger.models.*;
 import io.swagger.models.parameters.FormParameter;
 import io.swagger.models.parameters.Parameter;
@@ -36,6 +39,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -64,9 +68,18 @@ public class ApiDocumentationScanner {
 
     private final Map<Class<?>, List<ResolvedMethod>> methodsResolvedForHostClasses = new HashMap<>();
 
-    private final LocalVariableTableParameterNameDiscoverer variableDiscoverer = new LocalVariableTableParameterNameDiscoverer();
+    private final LocalVariableTableParameterNameDiscoverer variableDiscoverer
+            = new LocalVariableTableParameterNameDiscoverer();
 
+    private final Function<Map<String, ?>, Map<String, ?>> DEFAULT_ORDER = source -> {
+        if (source == null || source.size() == 0) return source;
+        LinkedHashMap<String, Object> result = Maps.newLinkedHashMapWithExpectedSize(source.size());
+        source.entrySet().stream().sorted(Map.Entry.comparingByKey())
+                .forEachOrdered(e -> result.put(e.getKey(), e.getValue()));
+        return result;
+    };
 
+    @SuppressWarnings("all")
     Documentation scan(Map<RequestMappingInfo, HandlerMethod> requestMappingMap, RootDoc rootDoc) {
 
         Swagger body = swaggerInit();
@@ -92,8 +105,9 @@ public class ApiDocumentationScanner {
             pathMap.put(requestPath, pathBuild(path, getRequestMethod(requestMappingInfo),
                     operationBuild(requestTag, requestMappingInfo, handlerMethod)));
         }
-        body.paths(pathMap);
-        body.setDefinitions(definitions());
+
+        body.paths((Map<String, Path>) DEFAULT_ORDER.apply(pathMap));
+        body.setDefinitions((Map<String, Model>) DEFAULT_ORDER.apply(definitions()));
         body.tags(new ArrayList<>(tagMap.values()));
         return new Documentation(body);
     }
