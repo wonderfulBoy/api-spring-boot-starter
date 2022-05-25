@@ -9,6 +9,99 @@ tags:
 - name: "employee-controller"
   description: "员工控制器"
 paths:
+  /department/{id}:
+    get:
+      tags:
+      - "department-controller"
+      summary: "查询部门信息"
+      operationId: "DepartmentController#findByIdUsingGET@2090300171"
+      consumes:
+      - "application/json"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "部门唯一标识"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultDataOfDepartment"
+      deprecated: false
+    put:
+      tags:
+      - "department-controller"
+      summary: "更新部门信息"
+      operationId: "DepartmentController#updateUsingPUT@2090300171"
+      consumes:
+      - "application/json"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "部门唯一标识"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "department"
+        description: "部门信息"
+        required: true
+        schema:
+          $ref: "#/definitions/Department"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultDataOfDepartment"
+      deprecated: false
+    delete:
+      tags:
+      - "department-controller"
+      summary: "删除部门"
+      operationId: "DepartmentController#deleteUsingDELETE@2090300171"
+      consumes:
+      - "application/json"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "部门唯一标识"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultData"
+      deprecated: false
+  /department:
+    post:
+      tags:
+      - "department-controller"
+      summary: "新增部门"
+      operationId: "DepartmentController#insertUsingPOST@2004151103"
+      consumes:
+      - "application/json"
+      produces:
+      - "*/*"
+      parameters:
+      - in: "body"
+        name: "department"
+        description: "部门信息"
+        required: true
+        schema:
+          $ref: "#/definitions/Department"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultDataOfDepartment"
+      deprecated: false
   /department_upload:
     post:
       tags:
@@ -23,69 +116,6 @@ paths:
       - name: "file"
         in: "formData"
         description: "部门导入文件"
-        required: true
-        type: "file"
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            $ref: "#/definitions/ResultData"
-      deprecated: false
-  /employees:
-    get:
-      tags:
-      - "employee-controller"
-      summary: "查询所有员工"
-      operationId: "EmployeeController#findAllEmployeesUsingGET@1991619638"
-      consumes:
-      - "application/json"
-      produces:
-      - "*/*"
-      parameters:
-      - name: "names"
-        in: "query"
-        description: "员工姓名"
-        required: false
-        type: "string"
-      - name: "departmentIds"
-        in: "query"
-        description: "部门唯一标识列表"
-        required: false
-        type: "array"
-        items:
-          type: "string"
-        collectionFormat: "multi"
-      - name: "state"
-        in: "query"
-        description: "员工状态"
-        required: false
-        type: "string"
-        default: "NORMAL"
-        enum:
-        - "NORMAL"
-        - "DIMISSION"
-        - "FREE"
-        - "OUT"
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            $ref: "#/definitions/ResultDataOfListOfEmployee"
-      deprecated: false
-  /employee_upload:
-    post:
-      tags:
-      - "employee-controller"
-      summary: "批量导入员工"
-      operationId: "EmployeeController#uploadUsingPOST@1858690909"
-      consumes:
-      - "multipart/form-data"
-      produces:
-      - "*/*"
-      parameters:
-      - name: "file"
-        in: "formData"
-        description: "员工导入文件"
         required: true
         type: "file"
       responses:
@@ -192,99 +222,6 @@ paths:
           schema:
             $ref: "#/definitions/ResultData"
       deprecated: false
-  /department:
-    post:
-      tags:
-      - "department-controller"
-      summary: "新增部门"
-      operationId: "DepartmentController#insertUsingPOST@2004151103"
-      consumes:
-      - "application/json"
-      produces:
-      - "*/*"
-      parameters:
-      - in: "body"
-        name: "department"
-        description: "部门信息"
-        required: true
-        schema:
-          $ref: "#/definitions/Department"
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            $ref: "#/definitions/ResultDataOfDepartment"
-      deprecated: false
-  /department/{id}:
-    get:
-      tags:
-      - "department-controller"
-      summary: "查询部门信息"
-      operationId: "DepartmentController#findByIdUsingGET@2090300171"
-      consumes:
-      - "application/json"
-      produces:
-      - "*/*"
-      parameters:
-      - name: "id"
-        in: "path"
-        description: "部门唯一标识"
-        required: true
-        type: "string"
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            $ref: "#/definitions/ResultDataOfDepartment"
-      deprecated: false
-    put:
-      tags:
-      - "department-controller"
-      summary: "更新部门信息"
-      operationId: "DepartmentController#updateUsingPUT@2090300171"
-      consumes:
-      - "application/json"
-      produces:
-      - "*/*"
-      parameters:
-      - name: "id"
-        in: "path"
-        description: "部门唯一标识"
-        required: true
-        type: "string"
-      - in: "body"
-        name: "department"
-        description: "部门信息"
-        required: true
-        schema:
-          $ref: "#/definitions/Department"
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            $ref: "#/definitions/ResultDataOfDepartment"
-      deprecated: false
-    delete:
-      tags:
-      - "department-controller"
-      summary: "删除部门"
-      operationId: "DepartmentController#deleteUsingDELETE@2090300171"
-      consumes:
-      - "application/json"
-      produces:
-      - "*/*"
-      parameters:
-      - name: "id"
-        in: "path"
-        description: "部门唯一标识"
-        required: true
-        type: "string"
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            $ref: "#/definitions/ResultData"
-      deprecated: false
   /employee:
     post:
       tags:
@@ -307,6 +244,69 @@ paths:
           description: "OK"
           schema:
             $ref: "#/definitions/ResultDataOfEmployee"
+      deprecated: false
+  /employee_upload:
+    post:
+      tags:
+      - "employee-controller"
+      summary: "批量导入员工"
+      operationId: "EmployeeController#uploadUsingPOST@1858690909"
+      consumes:
+      - "multipart/form-data"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "file"
+        in: "formData"
+        description: "员工导入文件"
+        required: true
+        type: "file"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultData"
+      deprecated: false
+  /employees:
+    get:
+      tags:
+      - "employee-controller"
+      summary: "查询所有员工"
+      operationId: "EmployeeController#findAllEmployeesUsingGET@1991619638"
+      consumes:
+      - "application/json"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "names"
+        in: "query"
+        description: "员工姓名"
+        required: false
+        type: "string"
+      - name: "departmentIds"
+        in: "query"
+        description: "部门唯一标识列表"
+        required: false
+        type: "array"
+        items:
+          type: "string"
+        collectionFormat: "multi"
+      - name: "state"
+        in: "query"
+        description: "员工状态"
+        required: false
+        type: "string"
+        default: "NORMAL"
+        enum:
+        - "NORMAL"
+        - "DIMISSION"
+        - "FREE"
+        - "OUT"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/ResultDataOfListOfEmployee"
       deprecated: false
 definitions:
   ResultDataOfListOfDepartment:

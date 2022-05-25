@@ -6,10 +6,7 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * WebRequestHandlerProvider
@@ -31,7 +28,7 @@ public class WebRequestHandlerProvider {
     Map<RequestMappingInfo, HandlerMethod> list() {
 
         Map<RequestMappingInfo, HandlerMethod> handlerMethodMap
-                = new HashMap<>(requestMappingHandlerMapping.getHandlerMethods());
+                = new LinkedHashMap<>(requestMappingHandlerMapping.getHandlerMethods());
         Set<RequestMappingInfo> requestMappingInfos = handlerMethodMap.keySet();
         if (!CollectionUtils.isEmpty(requestHandlerEjectors)) {
             requestHandlerEjectors.forEach(ejector -> ejector.handle(requestMappingInfos));

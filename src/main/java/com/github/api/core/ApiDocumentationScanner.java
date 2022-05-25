@@ -72,8 +72,8 @@ public class ApiDocumentationScanner {
         Swagger body = swaggerInit();
         CLASS_DOC_MAP.putAll(Stream.of(rootDoc.classes())
                 .collect(Collectors.toMap(ClassDoc::toString, classDoc -> classDoc)));
-        Map<String, Tag> tagMap = new HashMap<>();
-        Map<String, Path> pathMap = new HashMap<>();
+        Map<String, Tag> tagMap = new LinkedHashMap<>();
+        Map<String, Path> pathMap = new LinkedHashMap<>();
         for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : requestMappingMap.entrySet()) {
             HandlerMethod handlerMethod = entry.getValue();
             RequestMappingInfo requestMappingInfo = entry.getKey();
