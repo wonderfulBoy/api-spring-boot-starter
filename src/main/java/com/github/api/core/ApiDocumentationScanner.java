@@ -85,6 +85,7 @@ public class ApiDocumentationScanner {
         Swagger body = swaggerInit();
         CLASS_DOC_MAP.putAll(Stream.of(rootDoc.classes())
                 .collect(Collectors.toMap(ClassDoc::toString, classDoc -> classDoc)));
+        List<Tag> tags = new ArrayList<>();
         Map<String, Tag> tagMap = new LinkedHashMap<>();
         Map<String, Path> pathMap = new LinkedHashMap<>();
         for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : requestMappingMap.entrySet()) {
@@ -98,6 +99,7 @@ public class ApiDocumentationScanner {
                     ClassDoc classDoc = CLASS_DOC_MAP.get(cn);
                     tag.description(classDoc.commentText());
                 }
+                tags.add(tag);
                 return tag;
             });
             String requestPath = getRequestPath(requestMappingInfo);
@@ -108,7 +110,7 @@ public class ApiDocumentationScanner {
 
         body.paths((Map<String, Path>) DEFAULT_ORDER.apply(pathMap));
         body.setDefinitions((Map<String, Model>) DEFAULT_ORDER.apply(definitions()));
-        body.tags(new ArrayList<>(tagMap.values()));
+        body.tags(tags);
         return new Documentation(body);
     }
 

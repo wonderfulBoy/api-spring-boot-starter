@@ -1,8 +1,8 @@
 package com.github.api;
 
 import com.github.api.core.ApiDocumentationScanner;
-import com.github.api.core.DefaultRequestHandlerEjector;
-import com.github.api.core.IRequestHandlerEjector;
+import com.github.api.core.DefaultRequestHandlerPostProcessor;
+import com.github.api.core.IRequestHandlerPostProcessor;
 import com.github.api.core.WebRequestHandlerProvider;
 import com.github.api.core.arch.ApiDocumentArchives;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -36,10 +36,10 @@ public class ApiBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar
                 apiDocumentArchivesBeanDefinition);
 
         RootBeanDefinition defaultRequestHandlerEjectorBeanDefinition
-                = new RootBeanDefinition(DefaultRequestHandlerEjector.class);
+                = new RootBeanDefinition(DefaultRequestHandlerPostProcessor.class);
         defaultRequestHandlerEjectorBeanDefinition.setLazyInit(true);
         defaultRequestHandlerEjectorBeanDefinition.setSynthetic(true);
-        registry.registerBeanDefinition(IRequestHandlerEjector.class.getName(),
+        registry.registerBeanDefinition(IRequestHandlerPostProcessor.class.getName(),
                 defaultRequestHandlerEjectorBeanDefinition);
 
         RootBeanDefinition apiDocumentationScannerBeanDefinition

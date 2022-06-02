@@ -9,7 +9,7 @@ import java.util.Set;
  *
  * @author echils
  */
-public interface IRequestHandlerEjector {
+public interface IRequestHandlerPostProcessor {
 
     /**
      * Exclude the request mapping form the list

@@ -1,5 +1,6 @@
 package com.github.api.core;
 
+import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.method.HandlerMethod;
@@ -17,7 +18,7 @@ import java.util.*;
 public class WebRequestHandlerProvider {
 
     @Autowired
-    private List<IRequestHandlerEjector> requestHandlerEjectors;
+    private List<IRequestHandlerPostProcessor> requestHandlerPostProcessors;
 
     @Autowired
     private RequestMappingHandlerMapping requestMappingHandlerMapping;
@@ -30,11 +31,16 @@ public class WebRequestHandlerProvider {
         Map<RequestMappingInfo, HandlerMethod> handlerMethodMap
                 = new LinkedHashMap<>(requestMappingHandlerMapping.getHandlerMethods());
         Set<RequestMappingInfo> requestMappingInfos = handlerMethodMap.keySet();
-        if (!CollectionUtils.isEmpty(requestHandlerEjectors)) {
-            requestHandlerEjectors.forEach(ejector -> ejector.handle(requestMappingInfos));
+        if (!CollectionUtils.isEmpty(requestHandlerPostProcessors)) {
+            requestHandlerPostProcessors.forEach(ejector -> ejector.handle(requestMappingInfos));
         }
         handlerMethodMap.entrySet().removeIf(entry -> !requestMappingInfos.contains(entry.getKey()));
-        return handlerMethodMap;
+        LinkedHashMap<RequestMappingInfo, HandlerMethod> result
+                = Maps.newLinkedHashMapWithExpectedSize(handlerMethodMap.size());
+
+        handlerMethodMap.entrySet().stream().sorted(Comparator.comparing(o -> o.getKey().toString()))
+                .forEach(e -> result.put(e.getKey(), e.getValue()));
+        return result;
     }
 
 }

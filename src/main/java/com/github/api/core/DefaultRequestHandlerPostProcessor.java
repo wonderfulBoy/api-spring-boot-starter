@@ -13,21 +13,21 @@ import static com.github.api.ApiDocumentContext.DEFAULT_API_QUERY_REQUEST;
 import static com.github.api.ApiDocumentContext.DEFAULT_INNER_ERROR_REQUEST;
 
 /**
- * DefaultRequestHandlerEjector
+ * DefaultRequestHandlerPostProcessor
  * Request used to exclude the application framework
  *
  * @author echils
  */
-public class DefaultRequestHandlerEjector implements IRequestHandlerEjector {
+public class DefaultRequestHandlerPostProcessor implements IRequestHandlerPostProcessor {
 
     /**
      * Logger
      */
-    private static final Logger logger = LoggerFactory.getLogger(DefaultRequestHandlerEjector.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultRequestHandlerPostProcessor.class);
 
     private List<String> excludePatternList;
 
-    public DefaultRequestHandlerEjector() {
+    public DefaultRequestHandlerPostProcessor() {
         excludePatternList = new ArrayList<>();
         excludePatternList.add(DEFAULT_INNER_ERROR_REQUEST);
         excludePatternList.add(DEFAULT_API_QUERY_REQUEST);
