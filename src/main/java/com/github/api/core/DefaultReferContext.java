@@ -174,7 +174,8 @@ class DefaultReferContext {
                     memberResolvedType = typeParameters.get(0);
                 }
             }
-        } else if (generics.length == 1) {
+        } else if (generics.length == 1 && generics[0].getType().toString().contains(JAVA_CLASS)
+                && !Types.isBaseType(generics[0].getType())) {
             memberResolvedType = typeResolver.resolve(generics[0].getType());
         }
 
