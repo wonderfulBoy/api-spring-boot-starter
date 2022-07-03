@@ -59,7 +59,7 @@ public class ApiDocumentContext {
     public static Documentation documentation;
 
 
-    public static final String SPRING_BOOT_JAR_TAG = ".jar!/BOOT-INF/classes/";
+    public static final String SPRING_BOOT_JAR_TAG = ".jar!/BOOT-INF/classes";
 
 
     public static String DEFAULT_MATCHING_PATH = "/BOOT-INF/classes/archives/*.yaml";
