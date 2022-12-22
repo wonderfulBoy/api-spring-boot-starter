@@ -74,6 +74,9 @@ public class ApiDocumentContext {
     public static String DEFAULT_API_INFO_VERSION = "1.0-SNAPSHOT";
 
 
+    public static String DEFAULT_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+
+
     public static final String COMMENT_NEWLINE_SEPARATOR = "\n ";
 
 

@@ -8,6 +8,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.models.Swagger;
 import io.swagger.util.Yaml;
 
+import java.text.SimpleDateFormat;
+
+import static com.github.api.ApiDocumentContext.DEFAULT_DATE_FORMAT;
+
 /**
  * Documentation
  *
@@ -50,6 +54,7 @@ public class Documentation {
         }
         try {
             ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.setDateFormat(new SimpleDateFormat(DEFAULT_DATE_FORMAT));
             objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
             return new Json(objectMapper.writeValueAsString(swagger));
